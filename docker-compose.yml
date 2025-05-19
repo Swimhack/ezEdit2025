@@ -1,0 +1,21 @@
+services:
+  neon-mcp:
+    image: ghcr.io/neondatabase-labs/mcp-server-neon:latest    # Natural-language Postgres
+    environment:
+      - NEON_API_KEY=${NEON_API_KEY}
+    ports: ["5001:3000"]
+
+  crawl4ai-mcp:
+    image: ghcr.io/bjornmelin/crawl4ai-mcp-server:latest       # Live docs/RAG
+    ports: ["5002:3000"]
+
+  brave-mcp:
+    image: ghcr.io/arben-adm/brave-mcp-search:latest           # Web search
+    environment:
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+    ports: ["5003:3000"]
+
+volumes: {}
+networks:
+  default:
+    driver: bridge 

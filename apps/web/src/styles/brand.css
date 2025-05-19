@@ -1,0 +1,15 @@
+:root {
+  --ezedit-blue: #3498db;
+  --ezedit-light-blue: #5bb6ff;
+  --ezedit-dark-blue: #2c3e50;
+  --ezedit-bg: #23272f;
+  --ezedit-white: #fff;
+  --ezedit-text: #23272f;
+}
+body {
+  background: var(--ezedit-bg);
+  color: var(--ezedit-white);
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+} 

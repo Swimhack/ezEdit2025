@@ -1,0 +1,5 @@
+{
+  "previewCommand": "pnpm --filter apps/web dev",
+  "previewUrl": "http://localhost:5174",
+  "autoPreview": true
+} 

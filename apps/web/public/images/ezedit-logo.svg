@@ -1,0 +1,8 @@
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10 10 H50 V20 H20 V35 H45 V45 H20 V60 H50 V70 H10 V10 Z" fill="#FFFFFF"/>
+  <path d="M55 10 H90 V20 H65 V35 H85 V45 H65 V70 H55 V10 Z" fill="#FFFFFF"/>
+  <path d="M95 10 H135 V20 H105 V35 H130 V45 H105 V60 H135 V70 H95 V10 Z" fill="#29A8FF"/>
+  <path d="M140 10 H160 V60 H190 V70 H140 V10 Z" fill="#29A8FF"/>
+  <circle cx="175" cy="25" r="10" fill="#29A8FF"/>
+  <path d="M180 40 H190 V70 H180 V40 Z" fill="#29A8FF"/>
+</svg>

@@ -1,0 +1,20 @@
+{
+  "name": "@ezedit/supabase",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "migrate": "supabase db push",
+    "types": "supabase gen types typescript --local > types.ts",
+    "start": "supabase start",
+    "stop": "supabase stop"
+  },
+  "dependencies": {
+    "@ezedit/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "supabase": "^1.115.4",
+    "typescript": "^5.2.2"
+  }
+}

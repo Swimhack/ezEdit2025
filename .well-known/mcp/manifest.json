@@ -1,0 +1,8 @@
+{
+  "schema_version": "v1",
+  "servers": [
+    { "name": "neon",      "url": "http://localhost:5001" },
+    { "name": "crawl4ai",  "url": "http://localhost:5002" },
+    { "name": "brave",     "url": "http://localhost:5003" }
+  ]
+} 
