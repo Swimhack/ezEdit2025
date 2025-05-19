@@ -1,6 +1,6 @@
-# EzEdit
+# ezEdit
 
-EzEdit is an AI-powered legacy-site editor that connects to any FTP/SFTP server, lists directories & files, opens them in Monaco, live-previews HTML in TinyMCE, saves edits back to the server, and offers an "AI Refactor" chat that returns a unified diff and applies it.
+ezEdit is an AI-powered legacy website editor that allows users to connect via FTP, modify content using a live Monaco code editor, and receive AI-based code suggestions for legacy site modernization.
 
 ## Setup
 
