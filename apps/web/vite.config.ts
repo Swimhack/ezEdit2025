@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -30,5 +31,21 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // Ensure clean build for Netlify
+    emptyOutDir: true,
+    // Improve error reporting
+    reportCompressedSize: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: true
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src')
+    }
   },
 })

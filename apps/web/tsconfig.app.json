@@ -32,7 +32,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],
-  "references": [
-    { "path": "../../packages/shared" }
-  ]
+  "references": []
 }
