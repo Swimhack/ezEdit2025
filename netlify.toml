@@ -1,7 +1,10 @@
 [build]
-  base = "apps/web"
-  command = "npm run build:netlify"
-  publish = "dist"
+  # Base directory should be root as Netlify UI is configured to look there
+  base = "."
+  # Command explicitly navigates to apps/web and runs the build
+  command = "cd apps/web && npm install --legacy-peer-deps && npm run build"
+  # Publish directory needs to be relative to the repo root
+  publish = "apps/web/dist"
 
 [build.environment]
   NODE_VERSION = "20"
