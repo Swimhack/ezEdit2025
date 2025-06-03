@@ -11,6 +11,9 @@ import { attachUser } from './lib/auth';
 
 // Import routes
 import ftpRouter from './routes/ftp';
+import sftpRouter from './routes/sftp.routes';
+import sftpClientRouter from './routes/sftp-client.routes';
+import llmRouter from './routes/llm.routes';
 
 // Import placeholders until these routes are properly implemented
 const files = express.Router();
@@ -40,7 +43,20 @@ app.get('/', (_req, res) => {
       '/ftp/content - Get or update file content',
       '/ftp/directory - Create directory',
       '/ftp/file - Delete file',
-      '/ftp/directory - Delete directory'
+      '/ftp/directory - Delete directory',
+      '/sftp/connect - Test SFTP connection',
+      '/sftp/list - List SFTP directory contents',
+      '/sftp/read - Read file content',
+      '/sftp/write - Write file content',
+      '/sftp/directory - Create directory',
+      '/sftp/file - Delete file',
+      '/sftp/directory - Delete directory',
+      '/api/sftp-client/connect - Test SFTP connection (new client)',
+      '/api/sftp-client/list - List SFTP directory contents',
+      '/api/sftp-client/read - Read file content',
+      '/api/sftp-client/write - Write file content',
+      '/api/llm/prompt - Send prompt to LLM',
+      '/api/llm/status - Check LLM integration status'
     ]
   });
 });
@@ -48,6 +64,9 @@ app.get('/', (_req, res) => {
 // Mount route handlers
 app.use('/api', chatRouter);
 app.use('/ftp', ftpRouter);
+app.use('/sftp', sftpRouter);
+app.use('/api/sftp-client', sftpClientRouter);
+app.use('/api/llm', llmRouter);
 
 app.use('/files', files);
 app.use('/ai/refactor', refactor);

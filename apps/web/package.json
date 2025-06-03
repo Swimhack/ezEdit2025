@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": "18.x"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "vite --strictPort --port 5173",
     "build": "tsc && vite build",
-    "build:netlify": "pnpm install --no-frozen-lockfile && tsc --skipLibCheck && vite build"
+    "build:netlify": "tsc --skipLibCheck && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest"
