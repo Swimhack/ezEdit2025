@@ -1,0 +1,21 @@
+[build]
+  command = "pnpm install && pnpm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[dev]
+  command = "pnpm run dev"
+  port = 5173
+  publish = "dist"
+  targetPort = 5173
+
+[context.production.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
