@@ -12,9 +12,6 @@
   publish = "dist"
   targetPort = 5173
 
-[context.production.environment]
-  NODE_VERSION = "18"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
