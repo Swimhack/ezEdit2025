@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite --strictPort --port 5173",
     "build": "tsc && vite build",
-    "build:netlify": "npm ci --legacy-peer-deps && tsc --skipLibCheck && vite build",
+    "build:netlify": "pnpm install --no-frozen-lockfile && tsc --skipLibCheck && vite build"
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest"
