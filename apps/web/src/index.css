@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Enable legacy color utilities for Tailwind v4 compatibility */
+@config "../tailwind.config.js";
+
 :root {
   --ezedit-white: #ffffff;
   --ezedit-black: #1a1a1a;
