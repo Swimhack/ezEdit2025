@@ -44,8 +44,13 @@ const Navbar = () => (
 );
 
 export default function Home() {
+  console.log('Home component rendering');
   return (
     <div className="min-h-screen">
+      {/* Debug rendering message */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'rgba(0,0,0,0.7)', color: 'white', padding: '5px 10px', borderRadius: '4px', zIndex: 9999 }}>
+        EzEdit App Loaded ✅ - {new Date().toLocaleTimeString()}
+      </div>
       <Navbar />
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-blue-50 to-white py-20">

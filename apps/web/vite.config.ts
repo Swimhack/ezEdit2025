@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 // https://vite.dev/config/
+// For Netlify deployment - detect if we're in production
+const isProduction = process.env.NODE_ENV === 'production';
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -29,6 +32,9 @@ export default defineConfig({
       });
     },
   },
+  // Ensure proper base path for assets in production
+  base: '/',
+  
   build: {
     outDir: 'dist',
     // Ensure clean build for Netlify

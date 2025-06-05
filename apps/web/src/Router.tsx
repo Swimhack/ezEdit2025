@@ -63,8 +63,27 @@ const Loading = () => (
   </div>
 );
 
+// Debug fallback component to help diagnose routing issues
+const DebugFallback = () => (
+  <div className="flex items-center justify-center h-screen bg-blue-50">
+    <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md">
+      <h2 className="text-2xl font-bold text-blue-600 mb-4">EzEdit Debug Page</h2>
+      <p className="text-gray-700 mb-4">This is a fallback route to help diagnose rendering issues.</p>
+      <div className="bg-gray-100 p-4 rounded mb-4 text-left overflow-auto max-h-48">
+        <p className="font-mono text-sm">Time: {new Date().toISOString()}</p>
+        <p className="font-mono text-sm">Path: {window.location.pathname + window.location.hash}</p>
+        <p className="font-mono text-sm">User Agent: {navigator.userAgent}</p>
+      </div>
+      <div className="flex gap-3 justify-center">
+        <button onClick={() => window.location.href = '/#/'} className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">Go Home</button>
+        <button onClick={() => window.location.reload()} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md">Reload</button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function AppRouter() {
-  console.log('AppRouter rendering');
+  console.log('AppRouter rendering - ' + new Date().toISOString());
   return (
     <HashRouter>
       <div className="app-container">
@@ -89,7 +108,8 @@ export default function AppRouter() {
                 </ErrorBoundaryWrapper>
               } 
             />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Fallback route that shows debug info instead of silent redirect */}
+            <Route path="*" element={<DebugFallback />} />
           </Routes>
         </Suspense>
       </div>
