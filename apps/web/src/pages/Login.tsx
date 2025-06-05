@@ -1,9 +1,20 @@
 import { Link } from 'react-router-dom';
 import { useState, ChangeEvent } from 'react';
 // Import components with correct paths for src directory structure
-import { Button } from '../components/ui/button';
+// Use inline Button component to avoid case sensitivity issues
+// Instead of: import { Button } from '../components/ui/button';
 // Using a simple input until we confirm UI component paths
 const Input = (props: any) => <input {...props} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />;
+
+// Inline Button component
+const Button = ({ children, className, variant, ...props }: { children: React.ReactNode, className?: string, variant?: string, [key: string]: any }) => (
+  <button 
+    className={`px-4 py-2 rounded-md font-medium ${variant === 'outline' ? 'border border-blue-500 text-blue-500' : 'bg-blue-500 text-white'} ${className || ''}`}
+    {...props}
+  >
+    {children}
+  </button>
+);
 // Simple navbar component
 const Navbar = () => (
   <nav className="bg-white shadow-sm py-4 px-6">
