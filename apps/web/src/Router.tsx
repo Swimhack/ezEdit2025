@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Explorer from './pages/Explorer';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import { Suspense, Component, type ReactNode } from 'react';
 
 // Error boundary component
@@ -71,6 +72,7 @@ export default function AppRouter() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/login" element={<Login />} />
             <Route 
               path="/dashboard" 
               element={

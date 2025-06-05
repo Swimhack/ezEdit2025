@@ -22,6 +22,6 @@ if (-not (Test-Path -Path "dist\index.html")) {
 
 # Deploy to Netlify
 Write-Host "Deploying to Netlify..." -ForegroundColor Green
-netlify deploy --prod --dir=dist
+npx netlify deploy --prod --dir=dist
 
 Write-Host "Deployment process completed!" -ForegroundColor Green
