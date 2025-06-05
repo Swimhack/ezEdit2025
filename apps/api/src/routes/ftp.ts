@@ -2,8 +2,69 @@ import express from 'express';
 import type { Request, Response } from 'express';
 import { Client } from 'basic-ftp';
 import { z } from 'zod';
+import { Readable } from 'stream';
 
 const router = express.Router();
+
+/**
+ * Retry Configuration for FTP operations
+ */
+interface RetryOptions {
+  maxRetries: number;
+  initialDelayMs: number;
+  backoffFactor: number;
+  maxDelayMs: number;
+}
+
+const DEFAULT_RETRY_OPTIONS: RetryOptions = {
+  maxRetries: 3,
+  initialDelayMs: 1000, // 1 second
+  backoffFactor: 2,
+  maxDelayMs: 30000, // 30 seconds
+};
+
+/**
+ * Sleep for the specified number of milliseconds
+ */
+const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Execute an operation with retry logic and exponential back-off
+ */
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  options: Partial<RetryOptions> = {}
+): Promise<T> {
+  const config = { ...DEFAULT_RETRY_OPTIONS, ...options };
+  let lastError: any;
+  let delay = config.initialDelayMs;
+
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      // First attempt (attempt=0) has no delay
+      if (attempt > 0) {
+        await sleep(delay);
+        // Increase the delay for the next attempt (with a max cap)
+        delay = Math.min(delay * config.backoffFactor, config.maxDelayMs);
+        console.log(`FTP retry attempt ${attempt}/${config.maxRetries} after ${delay}ms delay`);
+      }
+
+      // Attempt the operation
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      console.error(`FTP operation failed (attempt ${attempt + 1}/${config.maxRetries + 1}):`, error);
+      
+      // If this was the last attempt, we'll throw the error
+      if (attempt === config.maxRetries) {
+        break;
+      }
+    }
+  }
+
+  // If we get here, all retries failed
+  throw lastError;
+}
 
 // Site Credentials Schema - this is what we use for FTP connections
 const SiteCredSchema = z.object({
@@ -228,9 +289,21 @@ router.put('/content', async (req: Request, res: Response) => {
         secure: credentials.secure
       });
       
-      // Upload the content
+      // Upload the content with retry logic
       const buffer = Buffer.from(content);
-      await client.uploadFrom(buffer, path);
+      
+      // Define the upload operation for retry
+      await withRetry(async () => {
+        // Create a readable stream from the buffer for each attempt
+        const readable = Readable.from(buffer);
+        return await client.uploadFrom(readable, path);
+      }, {
+        // Custom retry options can be specified here
+        maxRetries: 5,
+        initialDelayMs: 1000,
+        backoffFactor: 1.5,
+        maxDelayMs: 15000
+      });
       
       client.close();
       res.json({ 

@@ -62,24 +62,33 @@ const Loading = () => (
 );
 
 export default function AppRouter() {
+  console.log('AppRouter rendering');
   return (
     <HashRouter>
-      <Suspense fallback={<Loading />}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={
-            <ErrorBoundaryWrapper>
-              <Dashboard />
-            </ErrorBoundaryWrapper>
-          } />
-          <Route path="/explorer/:id" element={
-            <ErrorBoundaryWrapper>
-              <Explorer />
-            </ErrorBoundaryWrapper>
-          } />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Suspense>
+      <div className="app-container">
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ErrorBoundaryWrapper>
+                  <Dashboard />
+                </ErrorBoundaryWrapper>
+              } 
+            />
+            <Route 
+              path="/explorer/:id" 
+              element={
+                <ErrorBoundaryWrapper>
+                  <Explorer />
+                </ErrorBoundaryWrapper>
+              } 
+            />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
+      </div>
     </HashRouter>
   );
 }

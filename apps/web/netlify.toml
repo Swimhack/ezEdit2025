@@ -1,7 +1,6 @@
 [build]
-  base = "apps/web"
   publish = "dist"
-  command = "pnpm install && pnpm run build"
+  command = "pnpm run build:netlify"
 
 [context.production.environment]
   NODE_VERSION = "20"
