@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Explorer from './pages/Explorer';
+import Home from './pages/Home';
 import { Suspense, Component, type ReactNode } from 'react';
 
 // Error boundary component
@@ -68,7 +69,8 @@ export default function AppRouter() {
       <div className="app-container">
         <Suspense fallback={<Loading />}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
             <Route 
               path="/dashboard" 
               element={
