@@ -1,0 +1,2 @@
+# Exclude Next.js app directory from builds
+app/

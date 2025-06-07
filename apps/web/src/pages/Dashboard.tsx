@@ -1,232 +1,236 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import SiteCard from '../components/SiteCard';
-import { useSitesStore, type Site } from '../stores/sites';
-import { ftpService } from '../api/ftp';
-import AppLayout from '../layout/AppLayout';
-import FtpConnectionModal from '../components/modals/FtpConnectionModal';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Container } from '../components/ui/container';
+import { Button } from '../components/ui/button';
+import { SiteCard } from '../components/dashboard/SiteCard';
+import { AddSiteModal } from '../components/dashboard/AddSiteModal';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { ThemeToggle } from '../components/ui/theme-toggle';
+import { LayoutDashboard, Home, Settings, LogOut, Plus, Camera, Image } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from '../components/ui/toast';
 
-interface FtpConnectionFormData {
+// Type for FTP Site
+interface Site {
   id: string;
   name: string;
   host: string;
-  port: number;
-  user: string;
-  pass: string;
-  secure: boolean;
-  passive: boolean;
-  root: string;
-  url: string;
+  url?: string;
+  status?: 'online' | 'offline' | 'pending';
+  lastAccessed?: string;
 }
 
 export default function Dashboard() {
-  // Mock data to match the image
-  const mockSites: Site[] = [
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Site state with initial mock data
+  const [sites, setSites] = useState([
     {
       id: '1',
       name: 'Eastgateministries.com',
       host: '72.167.42.141',
-      type: 'ftp',
       url: 'http://eastgateministries.com',
-      user: 'eastgate_ftp',
-      pass: '',
-      port: 21,
-      secure: false,
-      passive: true,
-      root: 'httpdocs/',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      status: 'online' as const,
+      lastAccessed: '2025-06-01 14:30',
     }
-  ];
+  ]);
   
-  const { sites = mockSites, addSite, updateSite } = useSitesStore() || {};
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ id: '', name: '', host: '', user: '', pass: '', port: 21, root: '', url: '', secure: false, passive: true });
-  const [testingConnection, setTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'untested' | 'success' | 'error'>('untested');
-  const [connectionMessage, setConnectionMessage] = useState('');
-  const navigate = useNavigate();
-
-  const testConnection = async () => {
-    if (!form.host) {
-      setConnectionStatus('error');
-      setConnectionMessage('Host is required');
-      return;
-    }
-
-    setTestingConnection(true);
-    setConnectionStatus('untested');
-    setConnectionMessage('');
-
-    try {
-      const result = await ftpService.testConnection({
-        host: form.host,
-        port: form.port || 21,
-        user: form.user || 'anonymous',
-        pass: form.pass || '',
-        secure: form.secure,
-        passive: form.passive
-      });
-
-      if (result.success) {
-        setConnectionStatus('success');
-        setConnectionMessage('Connection successful!');
-      } else {
-        setConnectionStatus('error');
-        setConnectionMessage(result.error || 'Connection failed. Please check your credentials.');
-      }
-    } catch (error) {
-      setConnectionStatus('error');
-      setConnectionMessage(error instanceof Error ? error.message : 'Connection failed');
-    } finally {
-      setTestingConnection(false);
-    }
-  };
-
-  const submit = async () => {
-    if (!form.name || !form.host) return;
-    
-    try {
-      if (form.id) {
-        // Update existing site
-        await updateSite(form.id, {
-          name: form.name,
-          host: form.host,
-          user: form.user || 'anonymous',
-          pass: form.pass || undefined, // Only update password if provided
-          port: form.port || 21,
-          secure: form.secure,
-          passive: form.passive,
-          root: form.root || '/',
-          url: form.url || '',
-        });
-      } else {
-        // Add new site
-        await addSite({
-          name: form.name,
-          host: form.host,
-          user: form.user || 'anonymous',
-          pass: form.pass || '',
-          port: form.port || 21,
-          secure: form.secure,
-          passive: form.passive,
-          root: form.root || '/',
-          url: form.url || '',
-          type: 'ftp'
-        });
-      }
+  useEffect(() => {
+    // Here we would fetch the user's sites from Supabase
+    // This is where we would load the real data from the database
+    const loadUserSites = async () => {
+      if (!user) return;
       
-      setShowModal(false);
-      setForm({ id: '', name: '', host: '', user: '', pass: '', port: 21, root: '', url: '', secure: false, passive: true });
-      setConnectionStatus('untested');
-      setConnectionMessage('');
+      try {
+        // In a real implementation, this would fetch from Supabase
+        // const { data, error } = await supabase
+        //   .from('sites')
+        //   .select('*')
+        //   .eq('user_id', user.id);
+        
+        // if (error) throw error;
+        // setSites(data || []);
+        
+        // For now we're just using the mock data
+      } catch (error) {
+        console.error('Error loading sites:', error);
+        toast({
+          title: "Error loading sites",
+          description: "There was a problem loading your sites",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    loadUserSites();
+  }, [user]);
+  
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      const { error } = await signOut();
+      if (error) {
+        toast({
+          title: "Logout failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        console.error('Logout error:', error);
+      } else {
+        toast({
+          title: "Logged out",
+          description: "You have been successfully logged out",
+          variant: "default"
+        });
+        navigate('/');
+      }
     } catch (error) {
-      console.error('Error saving site:', error);
-      setConnectionStatus('error');
-      setConnectionMessage('Failed to save site configuration');
+      console.error('Unexpected error during logout:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+  
+  const [addSiteModalOpen, setAddSiteModalOpen] = useState(false);
 
-  const handleEditSite = (e: React.MouseEvent | null, siteId: string) => {
-    if (e) e.stopPropagation();
+  const handleAddSite = () => {
+    setAddSiteModalOpen(true);
+  };
+
+  const handleSiteAdded = () => {
+    // Refresh sites list after a new site is added
+    toast({
+      title: "Site added",
+      description: "Your new site has been added successfully",
+      variant: "success"
+    });
     
-    // Find the site by ID
-    const siteToEdit = sites.find(site => site.id === siteId);
-    
-    if (siteToEdit) {
-      // Populate form with site data
-      setForm({
-        id: siteId,
-        name: siteToEdit.name || '',
-        host: siteToEdit.host || '',
-        user: siteToEdit.user || '',  // Use stored username if available
-        pass: '', // We don't store password in state for security
-        port: siteToEdit.port || 21,
-        root: siteToEdit.root || '/',
-        url: siteToEdit.url || '',
-        secure: Boolean(siteToEdit.secure),
-        passive: siteToEdit.passive !== false
-      });
-    }
-    
-    // Reset connection status
-    setConnectionStatus('untested');
-    setConnectionMessage('');
-    
-    setShowModal(true);
+    // In a real implementation, we would fetch the updated sites list
+    // For now, we're just using the mock data
+  };
+  
+  const handleEditSite = (siteId: string) => {
+    // Open edit dialog/modal
+    toast({
+      title: "Feature coming soon",
+      description: "The site editing feature will be available soon",
+      variant: "default"
+    });
   };
 
   return (
-    <AppLayout>
-      {/* Page header with Add Site button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">My FTP Sites</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage your FTP connections and edit your websites</p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#29A8FF] text-white px-4 py-2 rounded-md flex items-center justify-center hover:bg-[#0076CC] transition-colors shadow-sm hover:shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#29A8FF] sm:w-auto w-full"
-        >
-          <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add New Site
-        </button>
-      </div>
-
-      {/* Trial notification banner */}
-      <div className="bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 rounded-lg p-4 mb-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              <svg className="h-6 w-6 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+    <div className="min-h-screen bg-gradient-to-b from-white to-sky-50">
+      <header className="border-b border-sky-100 sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md shadow-sm">
+        <Container>
+          <div className="flex h-16 items-center justify-between py-4">
+            <div className="flex items-center gap-2">
+              <Link to="/" className="flex items-center gap-2">
+                <div className="bg-gradient-to-r from-blue-500 to-sky-500 text-white font-bold rounded-md p-1.5 text-xl shadow-md">Ez</div>
+                <span className="text-2xl font-medium">Edit.co</span>
+              </Link>
             </div>
-            <div>
-              <h3 className="text-amber-800 font-medium">Free Trial Mode</h3>
-              <p className="text-amber-700 text-sm mt-1">You can browse and edit files, but saving changes requires a premium subscription. Your trial expires in 7 days.</p>
+            
+            <nav className="hidden md:flex items-center space-x-4 lg:space-x-6">
+              <Link to="/#features" className="text-sm font-medium text-slate-700 transition-colors hover:text-blue-600">
+                Features
+              </Link>
+              <Link to="/#pricing" className="text-sm font-medium text-slate-700 transition-colors hover:text-blue-600">
+                Pricing
+              </Link>
+              <Link to="/#docs" className="text-sm font-medium text-slate-700 transition-colors hover:text-blue-600">
+                Docs
+              </Link>
+            </nav>
+            
+            <div className="flex items-center gap-4">
+              <Link to="/dashboard">
+                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">Dashboard</Button>
+              </Link>
+              <Link to="/admin">
+                <Button variant="outline" size="sm" className="border-sky-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300">Admin</Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hover:bg-red-50 hover:text-red-600" 
+                onClick={handleLogout}
+                disabled={isLoading}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                {isLoading ? 'Logging out...' : 'Log out'}
+              </Button>
+              <ThemeToggle />
             </div>
           </div>
-          <div className="mt-4 md:mt-0">
-            <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors">
-              Upgrade to Pro
-            </button>
-          </div>
-        </div>
-      </div>
+        </Container>
+      </header>
 
-      {/* Site cards */}
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {sites.map((site: Site) => (
-          <SiteCard
-            key={site.id}
-            site={site}
-            onOpen={(id) => navigate(`/explorer/${id}`)}
-            onEdit={(id) => handleEditSite(null, id)}
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-sky-100 h-[calc(100vh-4rem)] p-4 space-y-2 bg-white/80">
+          <Link to="/dashboard" className="flex items-center gap-2 px-4 py-3 rounded-md bg-gradient-to-r from-blue-500 to-sky-500 text-white font-medium shadow-sm">
+            <LayoutDashboard className="h-5 w-5" />
+            <span>Dashboard</span>
+          </Link>
+          <Link to="/sites" className="flex items-center gap-2 px-4 py-3 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors">
+            <Home className="h-5 w-5" />
+            <span>My Sites</span>
+          </Link>
+          <Link to="/screenshot-demo" className="flex items-center gap-2 px-4 py-3 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors">
+            <Camera className="h-5 w-5" />
+            <span>Screenshot Tool</span>
+          </Link>
+          <Link to="/settings" className="flex items-center gap-2 px-4 py-3 rounded-md hover:bg-blue-50 hover:text-blue-600 transition-colors">
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </Link>
+        </aside>
+        
+        {/* Main content */}
+        <main className="flex-1 p-4 md:p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-sky-500 bg-clip-text text-transparent">My FTP Sites</h1>
+            <Button 
+              onClick={handleAddSite} 
+              className="bg-gradient-to-r from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600 text-white shadow-md"
+            >
+              <Plus className="h-4 w-4 mr-2" /> 
+              Add Site
+            </Button>
+          </div>
+          
+          <Card className="mb-6 border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800 shadow-md rounded-xl">
+            <CardContent className="p-4">
+              <p className="text-amber-800 dark:text-amber-300">
+                <span className="font-medium">Free Trial Mode:</span> You can browse and edit files, but saving changes requires a premium subscription.
+              </p>
+            </CardContent>
+          </Card>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sites.map(site => (
+              <SiteCard
+                key={site.id}
+                id={site.id}
+                name={site.name}
+                host={site.host}
+                status={site.status || 'pending'}
+                lastAccessed={site.lastAccessed}
+                onEdit={() => handleEditSite(site.id)}
+              />
+            ))}
+          </div>
+          {/* Add Site Modal */}
+          <AddSiteModal 
+            open={addSiteModalOpen} 
+            onClose={() => setAddSiteModalOpen(false)} 
+            onSiteAdded={handleSiteAdded}
           />
-        ))}
+        </main>
       </div>
-
-      {/* FTP Connection Modal */}
-      <FtpConnectionModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        initialData={form}
-        onTestConnection={async (data: FtpConnectionFormData) => {
-          setForm(data);
-          await testConnection();
-        }}
-        onSubmit={async (data: FtpConnectionFormData) => {
-          setForm(data);
-          await submit();
-        }}
-        connectionStatus={connectionStatus}
-        connectionMessage={connectionMessage}
-        isConnecting={testingConnection}
-        isEditing={Boolean(form.id)}
-      />
-    </AppLayout>
+    </div>
   );
 }

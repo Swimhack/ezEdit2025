@@ -6,7 +6,12 @@ import { resolve } from 'path'
 // For Netlify deployment - detect if we're in production
 const isProduction = process.env.NODE_ENV === 'production';
 
+// For troubleshooting missing files or blank screens
+console.log('Starting Vite config with mode:', process.env.NODE_ENV || 'development');
+
 export default defineConfig({
+  // Force enable logs for troubleshooting
+  logLevel: 'info',
   plugins: [react()],
   server: {
     port: 5173,
@@ -42,6 +47,20 @@ export default defineConfig({
     // Improve error reporting
     reportCompressedSize: false,
     minify: 'terser',
+    // Force rollup to include assets in build
+    assetsInlineLimit: 0,
+    // Exclude the incompatible app directory from the build
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      },
+      output: {
+        manualChunks: undefined,
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    },
     terserOptions: {
       compress: {
         drop_console: false,

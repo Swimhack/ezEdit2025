@@ -1,39 +1,46 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { LoginForm } from '../components/auth/LoginForm';
+import { RegisterForm } from '../components/auth/RegisterForm';
 import { ThemeToggle } from '../components/ui/theme-toggle';
-import { Container } from '../components/ui/container';
 import { Button } from '../components/ui/button';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from '../components/ui/toast';
 
-export default function Login() {
+export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signUp } = useAuth();
 
-  const handleLogin = async (values: { email: string; password: string }) => {
+  const handleSignup = async (values: { 
+    email: string; 
+    password: string; 
+    name: string;
+  }) => {
     setIsLoading(true);
     try {
-      const { error } = await signIn(values.email, values.password);
+      const { error } = await signUp(values.email, values.password, {
+        name: values.name,
+        signup_date: new Date().toISOString()
+      });
       
       if (error) {
         toast({
-          title: "Authentication failed",
+          title: "Registration failed",
           description: error.message,
           variant: "destructive"
         });
-        console.error('Login error:', error);
+        console.error('Signup error:', error);
       } else {
         toast({
-          title: "Login successful",
-          description: "Welcome back to EzEdit!",
-          variant: "default"
+          title: "Account created",
+          description: "Please check your email for verification instructions",
+          variant: "success",
+          duration: 8000
         });
         navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Unexpected error during login:', error);
+      console.error('Unexpected error during signup:', error);
       toast({
         title: "Something went wrong",
         description: "Please try again later",
@@ -80,15 +87,15 @@ export default function Login() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome back</h1>
-              <p className="text-slate-500">Sign in to your account</p>
+              <h1 className="text-2xl font-bold tracking-tight mb-2">Create an account</h1>
+              <p className="text-slate-500">Start your 7-day free trial</p>
             </div>
 
-            <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+            <RegisterForm onSubmit={handleSignup} isLoading={isLoading} />
             
             <div className="mt-6 text-center text-sm">
-              <span className="text-slate-500">Don't have an account? </span>
-              <Link to="/signup" className="text-sky-500 hover:text-sky-600 font-medium transition-colors">Sign up</Link>
+              <span className="text-slate-500">Already have an account? </span>
+              <Link to="/login" className="text-sky-500 hover:text-sky-600 font-medium transition-colors">Sign in</Link>
             </div>
           </div>
         </div>
