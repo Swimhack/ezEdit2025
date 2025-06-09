@@ -1,0 +1,54 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 210 11% 6%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 11% 6%;
+    --card: 0 0% 100%;
+    --card-foreground: 210 11% 6%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --primary: 215 100% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 210 11% 6%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --ring: 215 100% 56%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-[#1597FF] px-6 py-3 font-medium text-white shadow-md transition-all duration-300 hover:bg-[#1380E0] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#1597FF] focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-6 py-3 font-medium text-gray-700 shadow-sm transition-all duration-300 hover:bg-gray-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1597FF] focus:ring-offset-2;
+  }
+  
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg border border-gray-200 bg-transparent px-6 py-3 font-medium text-gray-700 transition-all duration-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#1597FF] focus:ring-offset-2;
+  }
+}
