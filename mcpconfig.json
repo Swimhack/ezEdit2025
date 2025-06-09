@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ag-ui": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-agui", "--port", "5050"]
+    }
+  }
+}
