@@ -7,6 +7,7 @@ import Signup from './pages/Signup';
 import PasswordReset from './pages/PasswordReset';
 import VerifyEmail from './pages/VerifyEmail';
 import ScreenshotDemo from './pages/ScreenshotDemo';
+// Landing page now consolidated into Home component
 import { Suspense, Component, type ReactNode, useEffect, useState } from 'react';
 import { Loader2, AlertTriangle, RefreshCw, Home as HomeIcon } from 'lucide-react';
 import { Button } from './components/ui/button';
@@ -135,7 +136,8 @@ export default function AppRouter() {
               <Suspense fallback={<Loading />}>
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/home" element={<Home />} />
+                  {/* Redirect /home to root for backward compatibility */}
+                  <Route path="/home" element={<Navigate to="/" replace />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/reset-password" element={<PasswordReset />} />
