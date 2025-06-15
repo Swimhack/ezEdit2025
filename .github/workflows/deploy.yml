@@ -11,8 +11,8 @@ jobs:
     name: Build & Deploy Front-end
     runs-on: ubuntu-latest
          - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+          with:
+              version: 8
       - name: Install deps
         run: ppnpm install --no-frozen-lockfile
       - name: Lint & Test
