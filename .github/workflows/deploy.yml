@@ -10,9 +10,7 @@ jobs:
   build-frontend:
     name: Build & Deploy Front-end
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
+         - uses: pnpm/action-setup@v2
         with:
           version: 8
       - name: Install deps
