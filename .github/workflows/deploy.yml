@@ -7,23 +7,23 @@ on:
     branches: ["**"]
 
 jobs:
-  build-frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      - name: Install deps
-        run: pnpm install --no-frozen-lockfile
-      - name: Lint & Test
-        run: |
-          pnpm run lint
-          pnpm run test
-      - name: Build Vite app
-        run: pnpm run build
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v2
-        with:
-          publish-dir: ./dist
-          production-branch: main
+    build-frontend:
+      runs-on: ubuntu-latest
+      steps:
+      -     uses: actions/checkout@v4
+      -     uses: pnpm/action-setup@v2
+            with:
+            version: 8
+      -     name: Install deps
+            run: pnpm install --no-frozen-lockfile
+          - name: Lint & Test
+            run: |
+                pnpm run lint
+                pnpm run test
+          - name: Build Vite app
+            run: pnpm run build
+      -   name: Deploy to Netlify
+            uses: nwtgck/actions-netlify@v2
+            with:
+                      publish-dir: ./dist
+                production-branch: main
