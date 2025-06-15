@@ -1,0 +1,15 @@
+name: Deploy to DigitalOcean App Platform
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to DigitalOcean App Platform
+        uses: digitalocean/app_action@v1.1.5
+        with:
+          app_name: ezedit-mvp
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}

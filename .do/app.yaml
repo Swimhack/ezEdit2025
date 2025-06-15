@@ -1,0 +1,23 @@
+name: ezedit-mvp
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: Swimhack/ezEdit2025
+    branch: main
+  run_command: php -S 0.0.0.0:8080 -t public
+  environment_slug: php
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  routes:
+  - path: /
+  envs:
+  - key: EZ_FTP_HOST
+    scope: RUN_TIME
+    type: SECRET
+  - key: EZ_FTP_USER
+    scope: RUN_TIME
+    type: SECRET
+  - key: EZ_FTP_PASS
+    scope: RUN_TIME
+    type: SECRET
