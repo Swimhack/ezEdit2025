@@ -1,0 +1,79 @@
+/* ===== EzEdit Design Tokens ===== */
+:root {
+  /* Colors */
+  --clr-primary:       #2563eb;
+  --clr-primary-light: #3b82f6;
+  --clr-accent:        #14b8a6;
+  --clr-bg:            #f3f4f6;
+  --clr-surface:       #ffffff;
+  --clr-text:          #111827;
+  --clr-text-sub:      #6b7280;
+
+  /* Spacing scale */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 1rem;
+  --sp-4: 1.5rem;
+  --sp-5: 2rem;
+}
+
+/* ===== Global ===== */
+* { box-sizing: border-box; margin: 0; }
+body { font-family: Inter, system-ui, sans-serif; background: var(--clr-bg); color: var(--clr-text); padding: var(--sp-4); }
+header { margin-bottom: var(--sp-4); }
+h1 { font-size: 2.25rem; margin-bottom: var(--sp-2); }
+
+/* ===== Editor Area ===== */
+textarea {
+  width: 100%;
+  min-height: 60vh;
+  padding: var(--sp-2);
+  border: 1px solid var(--clr-text-sub);
+  border-radius: 0.375rem;
+  font-family: monospace;
+  resize: vertical;
+}
+textarea:focus { outline: 2px solid var(--clr-primary); outline-offset: 2px; }
+
+/* ===== Button ===== */
+button {
+  background: var(--clr-primary);
+  color: var(--clr-surface);
+  padding: var(--sp-2) var(--sp-3);
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: var(--sp-2);
+}
+button:hover { background: var(--clr-primary-light); }
+
+/* ===== Status Pill ===== */
+#status {
+  margin-top: var(--sp-2);
+  font-weight: 500;
+}
+#status.ok { color: var(--clr-accent); }
+#status.err { color: crimson; }
+
+/* ===== Responsive ===== */
+@media (min-width: 768px) {
+  textarea { min-height: 70vh; }
+}
+
+/* ===== Layout shell ===== */
+.header, .footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--sp-3);
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-text-sub);
+}
+.logo { font-size: 1.5rem; font-weight: 700; }
+.logo span { color: var(--clr-primary); }
+nav a { margin-left: var(--sp-3); color: var(--clr-text); text-decoration: none; }
+nav a:hover { color: var(--clr-primary); }
+.footer { margin-top: var(--sp-4); font-size: 0.875rem; }
+.placeholder {
+  padding: var(--sp-4); background: var(--clr-bg); border-radius: .375rem;
+  border: 2px dashed var(--clr-text-sub); text-align: center; color: var(--clr-text-sub);
+}
