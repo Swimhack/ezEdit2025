@@ -1,12 +1,11 @@
-name: ezedit-mvp
+name: ezedit2025
 services:
 - name: web
   source_dir: /
   github:
     repo: Swimhack/ezEdit2025
     branch: main
-  run_command: php -S 0.0.0.0:8080 -t public
-  environment_slug: php
+  environment_slug: static-site
   instance_count: 1
   instance_size_slug: basic-xxs
   routes:
