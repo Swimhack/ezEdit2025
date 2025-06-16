@@ -1,22 +1,7 @@
 name: ezedit2025
-services:
-- name: web
-  source_dir: /
-  github:
-    repo: Swimhack/ezEdit2025
-    branch: main
-  environment_slug: static-site
-  instance_count: 1
-  instance_size_slug: basic-xxs
-  routes:
-  - path: /
-  envs:
-  - key: EZ_FTP_HOST
-    scope: RUN_TIME
-    type: SECRET
-  - key: EZ_FTP_USER
-    scope: RUN_TIME
-    type: SECRET
-  - key: EZ_FTP_PASS
-    scope: RUN_TIME
-    type: SECRET
+static_sites:
+  - name: web
+    github:
+      repo: Swimhack/ezEdit2025
+      branch: main
+    source_dir: /
