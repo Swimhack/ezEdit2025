@@ -1,0 +1,22 @@
+spec:
+  name: ezedit2025
+  region: nyc
+  static_sites:
+  - name: ezedit2025
+    build_command: ""
+    environment_slug: html
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: Swimhack/ezEdit2025
+    output_dir: public
+    source_dir: /
+    routes:
+    - path: /
+    cors:
+      allow_origins:
+      - regex: .*
+      allow_methods:
+      - GET
+      - OPTIONS
+      - HEAD

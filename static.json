@@ -1,0 +1,23 @@
+{
+  "root": "./",
+  "clean_urls": true,
+  "routes": {
+    "/": "index.html",
+    "/public/**": "/public/index.html"
+  },
+  "https_only": true,
+  "headers": {
+    "/**": {
+      "Cache-Control": "public, max-age=0, must-revalidate"
+    },
+    "/**.css": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/**.js": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/img/**": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "static",
+  "buildCommand": "",
+  "outputDirectory": "./",
+  "staticFileServing": true,
+  "routes": [
+    {
+      "route": "/",
+      "serve": "/index.html"
+    },
+    {
+      "route": "/*",
+      "serve": "/*"
+    }
+  ]
+}

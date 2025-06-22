@@ -1,7 +1,21 @@
 name: ezedit2025
 static_sites:
-  - name: web
-    github:
-      repo: Swimhack/ezEdit2025
-      branch: main
-    source_dir: /
+- name: ezedit2025
+  github:
+    repo: Swimhack/ezEdit2025
+    branch: main
+    deploy_on_push: true
+  source_dir: /
+  output_dir: /
+  build_command: ""
+  environment_slug: html
+  routes:
+  - path: /
+  envs: []
+  cors:
+    allow_origins:
+    - regex: .*
+    allow_methods:
+    - GET
+    - OPTIONS
+    - HEAD
