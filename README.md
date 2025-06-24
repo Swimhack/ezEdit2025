@@ -21,7 +21,7 @@ ezEdit is built as a fully static HTML, CSS, and JavaScript application with no 
 
 This project is configured for easy deployment to DigitalOcean App Platform as a static site:
 
-1. Connect your GitHub repository (Swimhack/ezEdit2025)
+1. Connect your GitHub repository (Swimhack/ezEdit-1)
 2. Select the repository and branch (main)
 3. Choose "Static Site" as the deployment type
 4. No build command is needed
@@ -54,4 +54,4 @@ No build process is required!
 
 ## License
 
-Copyright © 2025 Strickland Technology Marketing
+Copyright © 2025 Strickland Technology

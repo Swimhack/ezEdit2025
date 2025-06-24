@@ -1,0 +1,8 @@
+# Netlify redirects for SPA routing
+/*    /index.html   200
+
+# Admin access
+/admin/*  /admin/log-viewer.html  200
+
+# API fallbacks (PHP not supported on Netlify)
+/auth/auth-handler.php  /auth-fallback.html  200

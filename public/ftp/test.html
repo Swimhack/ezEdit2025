@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EzEdit FTP Connection Test</title>
+  <link rel="stylesheet" href="../css/design-tokens.css">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../css/ui-components.css">
+  <link rel="stylesheet" href="../css/toast.css">
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    .result-box {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+    }
+    .result-box pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+    .success {
+      background-color: #d1fae5;
+      border-color: #10b981;
+    }
+    .error {
+      background-color: #fee2e2;
+      border-color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>EzEdit FTP Connection Test</h1>
+    <p>Use this page to test FTP connections to verify the backend functionality.</p>
+    
+    <form id="test-form" class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <label for="host">FTP Host</label>
+          <input type="text" id="host" class="form-input" value="ftp.test.rebex.net" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="port">Port</label>
+          <input type="number" id="port" class="form-input" value="21" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" class="form-input" value="demo" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" class="form-input" value="password" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="passive" checked>
+            <span class="checkmark"></span>
+            Use Passive Mode
+          </label>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Test Connection</button>
+          <button type="button" id="test-handler" class="btn">Test FTP Handler</button>
+          <button type="button" id="test-disconnect" class="btn btn-danger">Test Disconnect</button>
+        </div>
+      </div>
+    </form>
+    
+    <div id="result" class="result-box" style="display: none;">
+      <h3>Result:</h3>
+      <pre id="result-content"></pre>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('test-form');
+      const resultBox = document.getElementById('result');
+      const resultContent = document.getElementById('result-content');
+      const testHandlerBtn = document.getElementById('test-handler');
+      const testDisconnectBtn = document.getElementById('test-disconnect');
+      
+      // Track connection ID for disconnect testing
+      let currentConnectionId = null;
+      
+      // Test direct connection
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const host = document.getElementById('host').value;
+        const port = document.getElementById('port').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const passive = document.getElementById('passive').checked;
+        
+        resultBox.style.display = 'block';
+        resultBox.className = 'result-box';
+        resultContent.textContent = 'Testing connection...';
+        
+        try {
+          const response = await fetch(`test-connection.php?host=${encodeURIComponent(host)}&port=${port}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&passive=${passive}`);
+          const data = await response.json();
+          
+          resultContent.textContent = JSON.stringify(data, null, 2);
+          resultBox.className = data.success ? 'result-box success' : 'result-box error';
+        } catch (error) {
+          resultContent.textContent = `Error: ${error.message}`;
+          resultBox.className = 'result-box error';
+        }
+      });
+      
+      // Test FTP handler
+      testHandlerBtn.addEventListener('click', async () => {
+        const host = document.getElementById('host').value;
+        const port = document.getElementById('port').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const passive = document.getElementById('passive').checked;
+        
+        resultBox.style.display = 'block';
+        resultBox.className = 'result-box';
+        resultContent.textContent = 'Testing FTP handler...';
+        
+        try {
+          // Step 1: Connect
+          let response = await fetch(`../ftp/ftp-handler.php?action=connect&site_id=1`);
+          let data = await response.json();
+          
+          if (!data.success) {
+            resultContent.textContent = `Connection failed: ${data.error}`;
+            resultBox.className = 'result-box error';
+            return;
+          }
+          
+          const connectionId = data.connection_id;
+          currentConnectionId = connectionId; // Store for disconnect testing
+          
+          // Step 2: List directory
+          response = await fetch(`../ftp/ftp-handler.php?action=list&connection_id=${connectionId}&path=/`);
+          data = await response.json();
+          
+          if (!data.success) {
+            resultContent.textContent = `List directory failed: ${data.error}`;
+            resultBox.className = 'result-box error';
+            return;
+          }
+          
+          // Step 3: Get a file
+          const firstFile = data.items.find(item => item.type === 'file');
+          if (firstFile) {
+            response = await fetch(`../ftp/ftp-handler.php?action=get&connection_id=${connectionId}&path=/${firstFile.name}`);
+            const fileData = await response.json();
+            
+            if (!fileData.success) {
+              resultContent.textContent = `Get file failed: ${fileData.error}`;
+              resultBox.className = 'result-box error';
+              return;
+            }
+            
+            // Success!
+            resultContent.textContent = `FTP handler test successful!\n\nConnection ID: ${connectionId}\n\nDirectory listing: ${JSON.stringify(data.items, null, 2)}\n\nFile content (${firstFile.name}):\n${fileData.content.substring(0, 200)}...`;
+            resultBox.className = 'result-box success';
+          } else {
+            resultContent.textContent = `FTP handler test partially successful. Connected and listed directory, but no files found to test download.`;
+            resultBox.className = 'result-box success';
+          }
+        } catch (error) {
+          resultContent.textContent = `Error: ${error.message}`;
+          resultBox.className = 'result-box error';
+        }
+      });
+      
+      // Test disconnect functionality
+      testDisconnectBtn.addEventListener('click', async () => {
+        if (!currentConnectionId) {
+          resultBox.style.display = 'block';
+          resultBox.className = 'result-box error';
+          resultContent.textContent = 'No active connection to disconnect. Please connect first.';
+          return;
+        }
+        
+        resultBox.style.display = 'block';
+        resultBox.className = 'result-box';
+        resultContent.textContent = 'Disconnecting...';
+        
+        try {
+          const response = await fetch(`../ftp/ftp-handler.php?action=disconnect&connection_id=${currentConnectionId}`);
+          const data = await response.json();
+          
+          resultContent.textContent = JSON.stringify(data, null, 2);
+          resultBox.className = data.success ? 'result-box success' : 'result-box error';
+          
+          if (data.success) {
+            currentConnectionId = null;
+          }
+        } catch (error) {
+          resultContent.textContent = `Error: ${error.message}`;
+          resultBox.className = 'result-box error';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

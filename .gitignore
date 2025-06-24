@@ -5,41 +5,37 @@
 .env.test.local
 .env.production.local
 
-# Dependencies
-node_modules
-.pnpm-store
-
-# Build output
-dist
-build
-.turbo
-.next
-.nuxt
-out
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
 # Editor directories and files
+.vscode/*
+!.vscode/extensions.json
 .idea
 .DS_Store
-.vscode
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.vercel
-.netlify
 
-# Testing
-coverage
+# Logs
+logs
+*.log
 
-# Cache
-.cache
-tsconfig.tsbuildinfo
+# Build and dependency directories (not needed for static site)
+node_modules/
+dist/
+build/
+
+# Package files (not needed for static site)
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.node-version
+
+# Test directories
+cypress/
+
+# Temporary files
+.tmp/
+.temp/
+Thumbs.db

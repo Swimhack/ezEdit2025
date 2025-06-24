@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - EzEdit</title>
+  <!-- Design tokens and core styles -->
+  <link rel="stylesheet" href="css/design-tokens.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/ui-components.css">
+  <link rel="stylesheet" href="css/toast.css">
+  <link rel="stylesheet" href="css/dark-mode.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+  <!-- Supabase Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body class="dashboard-page">
+  <!-- Standardized header component -->
+  <ez-header></ez-header>
+
+  <main>
+    <div class="container">
+      <!-- Checkout success notification -->
+      <div id="checkout-success-alert" class="alert alert-success mb-4" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <div>
+          <h4>Payment Successful!</h4>
+          <p>Thank you for your subscription. Your account has been upgraded.</p>
+        </div>
+        <button class="close-alert" aria-label="Close">&times;</button>
+      </div>
+      
+      <!-- Subscription status section -->
+      <div class="card mb-4" id="subscription-status-card">
+        <div class="card-header">
+          <h3 class="card-title">Subscription Status</h3>
+        </div>
+        <div class="card-body">
+          <div class="subscription-info">
+            <div class="subscription-status">
+              <span class="status-label">Current Plan:</span>
+              <span class="status-value" id="current-plan">Loading...</span>
+            </div>
+            <div class="subscription-actions" id="subscription-actions">
+              <!-- Actions will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dashboard-header mb-4">
+        <h2>My Sites</h2>
+        <button class="btn btn-primary" id="add-site-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Add Site
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Site cards will be dynamically generated here -->
+        <div class="card site-card">
+          <div class="site-card-header">
+            <h3>example.com</h3>
+            <span class="status status-success">Connected</span>
+          </div>
+          <p class="text-muted mb-3">Last edited: June 15, 2025</p>
+          <div class="site-card-actions">
+            <a href="/editor.html?site=example.com" class="btn">Open Editor</a>
+            <button class="btn-icon" aria-label="Site settings">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card site-card">
+          <div class="site-card-header">
+            <h3>legacy-site.net</h3>
+            <span class="status status-warning">Disconnected</span>
+          </div>
+          <p class="text-muted mb-3">Last edited: June 10, 2025</p>
+          <div class="site-card-actions">
+            <a href="/editor.html?site=legacy-site.net" class="btn">Open Editor</a>
+            <button class="btn-icon" aria-label="Site settings">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Add Site Card -->
+        <div class="card site-card add-site-card" id="add-site-card">
+          <div class="add-site-content">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            <p>Add a new site</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal" id="add-site-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Site</h2>
+        <button class="modal-close" id="close-modal">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="add-site-form">
+          <div class="form-group">
+            <label for="site-name">Site Name</label>
+            <input type="text" id="site-name" class="form-input" placeholder="My Awesome Site" required>
+          </div>
+          <div class="form-group">
+            <label for="ftp-host">FTP Host</label>
+            <input type="text" id="ftp-host" class="form-input" placeholder="ftp.example.com" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ftp-port">Port</label>
+              <input type="number" id="ftp-port" class="form-input" value="21">
+            </div>
+            <div class="form-group">
+              <label for="ftp-passive">Passive Mode</label>
+              <div class="toggle-wrapper">
+                <input type="checkbox" id="ftp-passive" checked>
+                <label for="ftp-passive" class="toggle"></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ftp-username">Username</label>
+            <input type="text" id="ftp-username" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="ftp-password">Password</label>
+            <input type="password" id="ftp-password" class="form-input" required>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-outline" id="test-connection">Test Connection</button>
+            <button type="submit" class="btn btn-primary">Add Site</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 EzEdit • <a href="/privacy.html">Privacy</a></p>
+    </div>
+  </footer>
+
+  <!-- Core Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/memory-service.js"></script>
+  <script src="js/supabase-service.js"></script>
+  <script src="js/php-auth-service.js"></script>
+  <script src="js/auth-service.js"></script>
+  <script src="js/subscription.js"></script>
+  <script src="js/dashboard.js" defer></script>
+  <!-- Standardized footer component -->
+  <ez-footer></ez-footer>
+
+  <!-- EzEdit UI Components -->
+  <script src="js/memory-service.js"></script>
+  <script src="js/supabase-service.js"></script>
+  <script src="js/php-auth-service.js"></script>
+  <script src="js/auth-service.js"></script>
+  <script src="js/ui-components.js"></script>
+  <script src="components/header.js"></script>
+  <script src="components/footer.js"></script>
+
+  <script>
+    // Initialize UI components
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize services
+      window.ezEdit = window.ezEdit || {};
+      window.ezEdit.memory = window.ezEdit.memory || new MemoryService();
+      window.ezEdit.supabase = window.ezEdit.supabase || new SupabaseService();
+      window.ezEdit.phpAuth = window.ezEdit.phpAuth || new PhpAuthService();
+      window.ezEdit.auth = window.ezEdit.auth || new AuthService();
+      window.ezEdit.subscription = window.ezEdit.subscription || new SubscriptionService();
+      
+      try {
+        // Initialize auth services
+        await Promise.all([
+          window.ezEdit.supabase.init(),
+          window.ezEdit.auth.init()
+        ]);
+        console.log('Authentication services initialized successfully');
+      } catch (err) {
+        console.error('Failed to initialize authentication services:', err);
+        window.ezEdit.ui.showToast('Authentication service error. Please try again later.', 'error');
+      }
+      
+      // Check if user is authenticated
+      if (!window.ezEdit.auth.isAuthenticated()) {
+        // Redirect to login page if not authenticated
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Get user data
+      const user = window.ezEdit.auth.getUser();
+      if (user) {
+        // Update user email display
+        const userEmailElements = document.querySelectorAll('.user-email');
+        userEmailElements.forEach(el => {
+          el.textContent = user.email;
+        });
+      }
+      
+      // Check for checkout success parameter in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const checkoutStatus = urlParams.get('checkout');
+      
+      if (checkoutStatus === 'success') {
+        // Show success message
+        const successAlert = document.getElementById('checkout-success-alert');
+        if (successAlert) {
+          successAlert.style.display = 'flex';
+          
+          // Add event listener to close button
+          const closeBtn = successAlert.querySelector('.close-alert');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              successAlert.style.display = 'none';
+              
+              // Remove checkout parameter from URL
+              const newUrl = window.location.pathname;
+              window.history.replaceState({}, document.title, newUrl);
+            });
+          }
+          
+          // Auto-hide after 10 seconds
+          setTimeout(() => {
+            successAlert.style.display = 'none';
+            
+            // Remove checkout parameter from URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+          }, 10000);
+        }
+      }
+      
+      // Load subscription status
+      loadSubscriptionStatus();
+      
+      
+      // Add site button functionality
+      const addSiteBtn = document.getElementById('add-site-btn');
+      if (addSiteBtn) {
+        addSiteBtn.addEventListener('click', () => {
+          // Show add site modal or redirect to add site page
+          window.location.href = 'add-site.html';
+        });
+      }
+      
+      // Load sites from Supabase
+      loadSites();
+    });
+    
+    // Function to load sites from Supabase
+    async function loadSites() {
+      try {
+        // Show loading state
+        const sitesContainer = document.querySelector('.grid');
+        sitesContainer.innerHTML = '<div class="loading-spinner">Loading sites...</div>';
+        
+        // Get sites from Supabase (still using Supabase for data storage)
+        const sites = await window.ezEdit.supabase.getSites();
+        
+        // Clear loading state
+        sitesContainer.innerHTML = '';
+        
+        // If no sites, show empty state
+        if (!sites || sites.length === 0) {
+          sitesContainer.innerHTML = `
+            <div class="empty-state">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              <h3>No sites yet</h3>
+              <p>Add your first site to get started</p>
+              <button class="btn mt-3" id="empty-add-site-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Add Site
+              </button>
+            </div>
+          `;
+          
+          // Add event listener to empty state add site button
+          const emptyAddSiteBtn = document.getElementById('empty-add-site-btn');
+          if (emptyAddSiteBtn) {
+            emptyAddSiteBtn.addEventListener('click', () => {
+              window.location.href = 'add-site.html';
+            });
+          }
+          
+          return;
+        }
+        
+        // Render sites
+        sites.forEach(site => {
+          const siteCard = createSiteCard(site);
+          sitesContainer.appendChild(siteCard);
+        });
+      } catch (error) {
+        console.error('Error loading sites:', error);
+        window.ezEdit.ui.showToast('Failed to load sites. Please try again.', 'error');
+      }
+    }
+    
+    // Function to create a site card element
+    function createSiteCard(site) {
+      const card = document.createElement('div');
+      card.className = 'card site-card';
+      card.dataset.siteId = site.id;
+      
+      const lastEdited = site.last_edited ? new Date(site.last_edited).toLocaleDateString() : 'Never';
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <h3 class="card-title">${site.name}</h3>
+          <span class="site-url">${site.url}</span>
+        </div>
+        <div class="card-body">
+          <div class="site-meta">
+            <div class="meta-item">
+              <span class="meta-label">Last edited</span>
+              <span class="meta-value">${lastEdited}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Status</span>
+              <span class="status-badge ${site.status === 'active' ? 'status-active' : 'status-pending'}">${site.status}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn-outline btn-sm site-settings-btn" data-site-id="${site.id}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Settings
+          </button>
+          <button class="btn btn-sm site-edit-btn" data-site-id="${site.id}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Edit
+          </button>
+        </div>
+      `;
+      
+      // Add event listeners
+      const editBtn = card.querySelector('.site-edit-btn');
+      editBtn.addEventListener('click', () => {
+        const siteId = editBtn.dataset.siteId;
+        window.location.href = `/editor.html?site=${siteId}`;
+      });
+      
+      const settingsBtn = card.querySelector('.site-settings-btn');
+      settingsBtn.addEventListener('click', () => {
+        const siteId = settingsBtn.dataset.siteId;
+        window.location.href = `/site-settings.html?site=${siteId}`;
+      });
+      
+      return card;
+    }
+    
+    // Function to load and display subscription status
+    async function loadSubscriptionStatus() {
+      try {
+        const subscriptionStatusElement = document.getElementById('current-plan');
+        const subscriptionActionsElement = document.getElementById('subscription-actions');
+        
+        if (!subscriptionStatusElement || !subscriptionActionsElement) {
+          console.error('Subscription status elements not found');
+          return;
+        }
+        
+        // Set loading state
+        subscriptionStatusElement.textContent = 'Loading...';
+        subscriptionActionsElement.innerHTML = '';
+        
+        // Get subscription status
+        const subscriptionData = await window.ezEdit.subscription.getSubscriptionStatus();
+        console.log('Subscription data:', subscriptionData);
+        
+        // Update UI based on subscription status
+        if (subscriptionData.active) {
+          // User has an active subscription
+          if (subscriptionData.plan === 'pro') {
+            subscriptionStatusElement.innerHTML = '<span class="badge badge-success">Pro Plan</span>';
+            subscriptionActionsElement.innerHTML = `
+              <p class="mb-2">Your Pro subscription is active. You have full access to all features.</p>
+              <p class="text-muted">Next billing date: ${new Date(subscriptionData.currentPeriodEnd).toLocaleDateString()}</p>
+              <button class="btn btn-outline-danger btn-sm mt-2" id="manage-subscription-btn">Manage Subscription</button>
+            `;
+            
+            // Add event listener to manage subscription button
+            const manageSubscriptionBtn = document.getElementById('manage-subscription-btn');
+            if (manageSubscriptionBtn) {
+              manageSubscriptionBtn.addEventListener('click', () => {
+                window.ezEdit.subscription.redirectToCustomerPortal();
+              });
+            }
+          } else if (subscriptionData.plan === 'one-time') {
+            subscriptionStatusElement.innerHTML = '<span class="badge badge-success">One-Time Site</span>';
+            subscriptionActionsElement.innerHTML = `
+              <p class="mb-2">Your One-Time Site license is active. You can publish one site.</p>
+              <button class="btn btn-primary btn-sm mt-2" id="upgrade-to-pro-btn">Upgrade to Pro</button>
+            `;
+            
+            // Add event listener to upgrade button
+            const upgradeBtn = document.getElementById('upgrade-to-pro-btn');
+            if (upgradeBtn) {
+              upgradeBtn.addEventListener('click', () => {
+                window.location.href = 'pricing.html';
+              });
+            }
+          }
+        } else {
+          // User has no active subscription (free trial)
+          subscriptionStatusElement.innerHTML = '<span class="badge badge-warning">Free Trial</span>';
+          subscriptionActionsElement.innerHTML = `
+            <p class="mb-2">You are currently on a 7-day free trial. <strong>View & preview only, no saves.</strong></p>
+            <p class="text-muted">Upgrade to save and publish your sites.</p>
+            <button class="btn btn-primary btn-sm mt-2" id="upgrade-plan-btn">Upgrade Now</button>
+          `;
+          
+          // Add event listener to upgrade button
+          const upgradeBtn = document.getElementById('upgrade-plan-btn');
+          if (upgradeBtn) {
+            upgradeBtn.addEventListener('click', () => {
+              window.location.href = 'pricing.html';
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading subscription status:', error);
+        document.getElementById('current-plan').textContent = 'Error loading subscription';
+        document.getElementById('subscription-actions').innerHTML = `
+          <p class="text-danger">Failed to load subscription status. Please try refreshing the page.</p>
+          <button class="btn btn-outline-primary btn-sm mt-2" onclick="window.location.reload()">Refresh</button>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

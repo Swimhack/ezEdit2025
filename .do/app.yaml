@@ -1,8 +1,8 @@
-name: ezedit2025
+name: ezedit
 static_sites:
-- name: ezedit2025
+- name: ezedit
   github:
-    repo: Swimhack/ezEdit2025
+    repo: Swimhack/ezEdit-1
     branch: main
     deploy_on_push: true
   source_dir: /

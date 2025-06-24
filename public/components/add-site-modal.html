@@ -1,0 +1,55 @@
+<!-- Add Site Modal Component -->
+<div class="modal" id="add-site-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Add New FTP Site</h3>
+      <button class="close-modal" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="add-site-form">
+        <div class="form-group">
+          <label for="site-name">Site Name</label>
+          <input type="text" id="site-name" name="site-name" required placeholder="My Website">
+        </div>
+        <div class="form-group">
+          <label for="site-host">FTP Host</label>
+          <input type="text" id="site-host" name="site-host" required placeholder="ftp.example.com">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="site-port">Port</label>
+            <input type="number" id="site-port" name="site-port" value="21" required>
+          </div>
+          <div class="form-group">
+            <label for="site-protocol">Protocol</label>
+            <select id="site-protocol" name="site-protocol">
+              <option value="ftp" selected>FTP</option>
+              <option value="ftps">FTPS</option>
+              <option value="sftp">SFTP</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="site-username">Username</label>
+          <input type="text" id="site-username" name="site-username" required placeholder="username">
+        </div>
+        <div class="form-group">
+          <label for="site-password">Password</label>
+          <input type="password" id="site-password" name="site-password" required placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label for="site-root-dir">Root Directory (Optional)</label>
+          <input type="text" id="site-root-dir" name="site-root-dir" placeholder="/public_html">
+        </div>
+        <div class="form-check">
+          <input type="checkbox" id="site-passive" name="site-passive" checked>
+          <label for="site-passive">Use Passive Mode</label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="test-connection-btn">Test Connection</button>
+      <button class="btn btn-primary" id="save-site-btn">Save Site</button>
+    </div>
+  </div>
+</div>

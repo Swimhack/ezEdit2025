@@ -1,0 +1,58 @@
+/**
+ * EzEdit Toast Notifications
+ * Provides consistent toast notifications across the application
+ */
+
+.ez-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  max-width: 320px;
+  box-shadow: var(--shadow-md);
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  color: var(--clr-text);
+}
+
+.ez-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-success {
+  background-color: var(--clr-success);
+}
+
+.toast-error {
+  background-color: var(--clr-error);
+}
+
+.toast-warning {
+  background-color: var(--clr-warning);
+  color: #1f2937;
+}
+
+.toast-info {
+  background-color: var(--clr-primary);
+}
+
+/* Dark mode adjustments */
+body.dark-mode .toast-warning {
+  color: #111827;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .ez-toast {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    max-width: none;
+    text-align: center;
+  }
+}

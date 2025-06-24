@@ -1,0 +1,254 @@
+/**
+ * EzEdit Design Tokens
+ * Core design variables for consistent styling across the application
+ */
+
+:root {
+  /* Colors - based on Windsurf design tokens */
+  --clr-primary:       #2563EB; /* logo blue */
+  --clr-primary-light: #3B82F6;
+  --clr-primary-dark:  #1D4ED8;
+  --clr-accent:        #14B8A6; /* success green */
+  --clr-accent-light:  #2DD4BF;
+  --clr-accent-dark:   #0D9488;
+  --clr-bg:            #F3F4F6;
+  --clr-surface:       #FFFFFF;
+  --clr-text:          #111827;
+  --clr-text-sub:      #6B7280;
+  --clr-border:        #E5E7EB;
+  --clr-error:         #EF4444;
+  --clr-warning:       #F59E0B;
+  --clr-success:       #10B981;
+  
+  /* Spacing */
+  --sp-1: 0.25rem;  /* 4px */
+  --sp-2: 0.5rem;   /* 8px */
+  --sp-3: 1rem;     /* 16px */
+  --sp-4: 1.5rem;   /* 24px */
+  --sp-5: 2rem;     /* 32px */
+  --sp-6: 2.5rem;   /* 40px */
+  --sp-7: 3rem;     /* 48px */
+  --sp-8: 4rem;     /* 64px */
+  
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-md: 1rem;      /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-2xl: 1.5rem;   /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem;  /* 36px */
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* Border Radius */
+  --radius-sm: 0.125rem; /* 2px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem;   /* 8px */
+  --radius-xl: 1rem;     /* 16px */
+  --radius-full: 9999px;
+  
+  /* Z-index layers */
+  --z-below: -1;
+  --z-normal: 1;
+  --z-above: 10;
+  --z-header: 100;
+  --z-modal: 1000;
+  --z-toast: 9999;
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--sp-3);
+}
+
+/* Button styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--clr-primary);
+  color: white;
+  font-weight: 500;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  min-width: 100px;
+  text-align: center;
+}
+
+.btn:hover {
+  background-color: var(--clr-primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--clr-primary);
+  color: var(--clr-primary);
+}
+
+.btn-outline:hover {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.btn-accent {
+  background-color: var(--clr-accent);
+}
+
+.btn-accent:hover {
+  background-color: var(--clr-accent-dark);
+}
+
+.btn-sm {
+  padding: var(--sp-1) var(--sp-2);
+  font-size: var(--font-size-sm);
+  min-width: 80px;
+}
+
+.btn-lg {
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--font-size-lg);
+  min-width: 120px;
+}
+
+/* Status indicators */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--clr-success);
+}
+
+.status-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--clr-warning);
+}
+
+.status-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--clr-error);
+}
+
+/* Footer styles */
+.footer {
+  background-color: var(--clr-surface);
+  border-top: 1px solid var(--clr-border);
+  padding: var(--sp-5) 0;
+  margin-top: var(--sp-8);
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+
+.footer-logo {
+  flex: 1;
+  min-width: 200px;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.footer-tagline {
+  font-size: var(--font-size-sm);
+  color: var(--clr-text-sub);
+  margin-top: var(--sp-2);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-5);
+  flex: 2;
+}
+
+.footer-links-column {
+  min-width: 120px;
+}
+
+.footer-links-column h4 {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  margin-bottom: var(--sp-3);
+}
+
+.footer-links-column a {
+  display: block;
+  color: var(--clr-text-sub);
+  text-decoration: none;
+  margin-bottom: var(--sp-2);
+  font-size: var(--font-size-sm);
+}
+
+.footer-links-column a:hover {
+  color: var(--clr-primary);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--clr-border);
+  padding-top: var(--sp-4);
+  text-align: center;
+  color: var(--clr-text-sub);
+  font-size: var(--font-size-sm);
+}
+
+/* Responsive utilities */
+@media (max-width: 639px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+}
+
+@media (min-width: 640px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+}

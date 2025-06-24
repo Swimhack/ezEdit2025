@@ -1,0 +1,51 @@
+name: Design Build
+on:
+  push:
+    branches: [design-build]
+jobs:
+  generate-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Transform tokens to Tailwind config
+        run: npx tailwind-tokenizer ui-kit/tokens.json > tailwind.config.mjs
+      - name: Compile screens with Cloud Code
+        run: npx @cloudcode/cli build --input screens --out src/pages
+      - name: PR to main
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: ui-autogen/${{ github.sha }}
+          title: "chore(ui): sync from Windsurf ${{ github.sha }}"
+
+  cypress:
+    runs-on: ubuntu-latest
+    needs: generate-ui
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - uses: cypress-io/github-action@v6
+        with:
+          record: true
+          
+  auto-merge:
+    needs: cypress
+    if: success() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: pascalgn/automerge-action@v0.16.3
+        with:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

@@ -1,0 +1,340 @@
+/**
+ * EzEdit Deploy Page Styles
+ * Styles for the DigitalOcean deployment interface
+ */
+
+/* Deploy Page Layout */
+.deploy-page {
+  padding: 2rem 0;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  color: var(--clr-primary);
+  margin-bottom: 0.5rem;
+}
+
+.page-header p {
+  color: var(--clr-text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Connection Status */
+.connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--clr-surface);
+  border-radius: 0.5rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.status-indicator::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+}
+
+.status-indicator.connected::before {
+  background-color: var(--clr-success);
+}
+
+.status-indicator.not-connected::before {
+  background-color: var(--clr-danger);
+}
+
+.status-indicator.connecting::before {
+  background-color: var(--clr-warning);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* Deployment Options */
+.deployment-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.option-card {
+  background-color: var(--clr-surface);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.option-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.option-header h2 {
+  color: var(--clr-text);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: var(--clr-text-tertiary);
+  color: var(--clr-surface);
+}
+
+.badge.recommended {
+  background-color: var(--clr-success);
+}
+
+.badge.advanced {
+  background-color: var(--clr-warning);
+}
+
+.feature-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 1.5rem 0;
+}
+
+.feature-list li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--clr-primary);
+  font-weight: bold;
+}
+
+.option-card .btn {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Deployment History */
+.deployment-history {
+  background-color: var(--clr-surface);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.deployment-history h2 {
+  color: var(--clr-text);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.history-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--clr-text-secondary);
+}
+
+.history-table {
+  overflow-x: auto;
+}
+
+.history-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--clr-border);
+}
+
+.history-table th {
+  font-weight: 600;
+  color: var(--clr-text-secondary);
+}
+
+.history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.history-table .status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.history-table .status-pill.active {
+  background-color: var(--clr-success-light);
+  color: var(--clr-success);
+}
+
+.history-table .status-pill.building {
+  background-color: var(--clr-warning-light);
+  color: var(--clr-warning);
+}
+
+.history-table .status-pill.error {
+  background-color: var(--clr-danger-light);
+  color: var(--clr-danger);
+}
+
+.history-table .action-btn {
+  background: none;
+  border: none;
+  color: var(--clr-primary);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.history-table .action-btn:hover {
+  background-color: var(--clr-primary-light);
+}
+
+.history-table .action-btn.danger {
+  color: var(--clr-danger);
+}
+
+.history-table .action-btn.danger:hover {
+  background-color: var(--clr-danger-light);
+}
+
+/* Modals */
+.modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.modal .help-text {
+  font-size: 0.875rem;
+  color: var(--clr-text-secondary);
+  margin-top: 0.5rem;
+}
+
+.modal .checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.modal .checkbox-group input[type="checkbox"] {
+  margin-right: 0.75rem;
+}
+
+.success-message {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.success-icon {
+  color: var(--clr-success);
+  margin-bottom: 1rem;
+}
+
+.deployment-info {
+  background-color: var(--clr-background);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.deployment-info p {
+  margin: 0.5rem 0;
+}
+
+.deployment-info .info-label {
+  font-weight: 600;
+  color: var(--clr-text-secondary);
+}
+
+.deployment-info .info-value {
+  color: var(--clr-text);
+}
+
+.deployment-info .info-link {
+  color: var(--clr-primary);
+  text-decoration: none;
+}
+
+.deployment-info .info-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .connection-status {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .connection-status .btn {
+    margin-top: 1rem;
+    width: 100%;
+  }
+  
+  .deployment-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Theme Adjustments */
+.dark-theme .option-card {
+  background-color: var(--clr-surface-dark);
+}
+
+.dark-theme .connection-status,
+.dark-theme .deployment-history {
+  background-color: var(--clr-surface-dark);
+}
+
+.dark-theme .history-table th,
+.dark-theme .history-table td {
+  border-color: var(--clr-border-dark);
+}
+
+.dark-theme .deployment-info {
+  background-color: var(--clr-background-dark);
+}

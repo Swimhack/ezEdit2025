@@ -1,0 +1,90 @@
+/**
+ * EzEdit Dark Mode Theme
+ * Provides consistent dark mode styling across the application
+ */
+
+body.dark-mode {
+  /* Colors */
+  --clr-primary:       #3b82f6;
+  --clr-primary-light: #60a5fa;
+  --clr-primary-dark:  #2563eb;
+  --clr-accent:        #2dd4bf;
+  --clr-bg:            #111827;
+  --clr-surface:       #1f2937;
+  --clr-text:          #f9fafb;
+  --clr-text-sub:      #9ca3af;
+  --clr-error:         #f87171;
+  --clr-warning:       #fbbf24;
+  --clr-success:       #34d399;
+  --clr-border:        #374151;
+}
+
+/* Dark mode specific overrides */
+body.dark-mode .header {
+  background-color: var(--clr-surface);
+  border-bottom: 1px solid var(--clr-border);
+}
+
+body.dark-mode .card {
+  background-color: var(--clr-surface);
+  border-color: var(--clr-border);
+}
+
+body.dark-mode .btn-outline {
+  border-color: var(--clr-primary);
+  color: var(--clr-primary);
+}
+
+body.dark-mode .btn-outline:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+body.dark-mode .form-control {
+  background-color: var(--clr-bg);
+  border-color: var(--clr-border);
+  color: var(--clr-text);
+}
+
+body.dark-mode .form-control:focus {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+body.dark-mode .btn-social {
+  background-color: var(--clr-bg);
+  border-color: var(--clr-border);
+}
+
+body.dark-mode .btn-social:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .component-code {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+body.dark-mode .pricing-card {
+  background-color: var(--clr-surface);
+  border-color: var(--clr-border);
+}
+
+body.dark-mode .footer {
+  background-color: var(--clr-surface);
+  border-top: 1px solid var(--clr-border);
+}
+
+body.dark-mode .auth-card {
+  background-color: var(--clr-surface);
+  border-color: var(--clr-border);
+}
+
+body.dark-mode .color-swatch-label {
+  background-color: rgba(31, 41, 55, 0.8);
+  color: var(--clr-text);
+}
+
+/* Monaco editor dark mode adjustments */
+body.dark-mode .monaco-editor {
+  --monaco-theme: 'vs-dark';
+}

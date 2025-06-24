@@ -1,0 +1,7 @@
+{
+  "projectName": "EzEdit",
+  "stack": "vanilla-html-css-js-php",
+  "primaryGoal": "MVP: textarea editor that saves via PHP FTP",
+  "milestones": ["Scaffold UI", "FTP save API", "Render deploy", "AI helper phase-2"],
+  "owner": "James (Technology Strategist)"
+}

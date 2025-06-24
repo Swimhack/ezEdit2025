@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - EzEdit</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="flex justify-between items-center">
+        <h1 class="logo">
+          <a href="/dashboard.html">
+            <span class="logo-icon">Ez</span> <span class="logo-text">Edit.co</span>
+          </a>
+        </h1>
+        <nav class="nav-main">
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/editor.html">Editor</a>
+          <a href="/settings.html" class="active">Settings</a>
+        </nav>
+        <div class="user-menu">
+          <span class="user-email text-sm text-muted">user@example.com</span>
+          <button class="theme-toggle" aria-label="Toggle dark mode">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="settings-layout">
+        <aside class="settings-sidebar">
+          <nav class="settings-nav">
+            <a href="#account" class="settings-nav-item active" data-tab="account">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Account
+            </a>
+            <a href="#sites" class="settings-nav-item" data-tab="sites">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              Sites
+            </a>
+            <a href="#subscription" class="settings-nav-item" data-tab="subscription">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+              Subscription
+            </a>
+            <a href="#preferences" class="settings-nav-item" data-tab="preferences">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              Preferences
+            </a>
+          </nav>
+        </aside>
+        
+        <div class="settings-content">
+          <!-- Account Tab -->
+          <div class="settings-tab active" id="account">
+            <h2>Account Settings</h2>
+            
+            <div class="card mb-4">
+              <h3>Profile Information</h3>
+              <form id="profile-form">
+                <div class="form-group">
+                  <label for="display-name">Display Name</label>
+                  <input type="text" id="display-name" class="form-input" value="John Doe">
+                </div>
+                <div class="form-group">
+                  <label for="email">Email Address</label>
+                  <input type="email" id="email" class="form-input" value="user@example.com">
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+              </form>
+            </div>
+            
+            <div class="card mb-4">
+              <h3>Change Password</h3>
+              <form id="password-form">
+                <div class="form-group">
+                  <label for="current-password">Current Password</label>
+                  <input type="password" id="current-password" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label for="new-password">New Password</label>
+                  <input type="password" id="new-password" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label for="confirm-password">Confirm New Password</label>
+                  <input type="password" id="confirm-password" class="form-input">
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Update Password</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Sites Tab -->
+          <div class="settings-tab" id="sites">
+            <h2>Site Settings</h2>
+            
+            <div class="card mb-4">
+              <h3>Manage Sites</h3>
+              <div class="site-list">
+                <div class="site-item">
+                  <div class="site-info">
+                    <h4>example.com</h4>
+                    <p class="text-muted">FTP: ftp.example.com:21</p>
+                  </div>
+                  <div class="site-actions">
+                    <button class="btn btn-sm btn-outline">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </div>
+                
+                <div class="site-item">
+                  <div class="site-info">
+                    <h4>legacy-site.net</h4>
+                    <p class="text-muted">FTP: ftp.legacy-site.net:21</p>
+                  </div>
+                  <div class="site-actions">
+                    <button class="btn btn-sm btn-outline">Edit</button>
+                    <button class="btn btn-sm btn-danger">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="card">
+              <h3>Default Site Settings</h3>
+              <form id="default-site-form">
+                <div class="form-group">
+                  <label for="default-site">Default Site</label>
+                  <select id="default-site" class="form-input">
+                    <option value="example.com">example.com</option>
+                    <option value="legacy-site.net">legacy-site.net</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="default-path">Default Path</label>
+                  <input type="text" id="default-path" class="form-input" value="/public_html/">
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save Defaults</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Subscription Tab -->
+          <div class="settings-tab" id="subscription">
+            <h2>Subscription</h2>
+            
+            <div class="card mb-4">
+              <div class="plan-status">
+                <div class="plan-badge free">
+                  <span>Free Trial</span>
+                </div>
+                <div class="plan-info">
+                  <h3>Free Trial Plan</h3>
+                  <p>Your trial ends in 5 days. Upgrade to continue saving and publishing.</p>
+                </div>
+                <button class="btn btn-accent" id="upgrade-plan-btn">Upgrade to Pro</button>
+              </div>
+            </div>
+            
+            <div class="card">
+              <h3>Pro Plan Features</h3>
+              <ul class="feature-list">
+                <li>Unlimited sites</li>
+                <li>Save & publish to FTP</li>
+                <li>AI-powered code assistance</li>
+                <li>Priority support</li>
+                <li>Advanced editor features</li>
+              </ul>
+              <div class="pricing">
+                <span class="price">$50</span>
+                <span class="period">/month</span>
+              </div>
+              <button class="btn btn-lg btn-accent" id="upgrade-btn-settings">Upgrade Now</button>
+            </div>
+          </div>
+          
+          <!-- Preferences Tab -->
+          <div class="settings-tab" id="preferences">
+            <h2>Preferences</h2>
+            
+            <div class="card mb-4">
+              <h3>Editor Preferences</h3>
+              <form id="editor-prefs-form">
+                <div class="form-group">
+                  <label for="theme">Editor Theme</label>
+                  <select id="theme" class="form-input">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="system">System Default</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="font-size">Font Size</label>
+                  <select id="font-size" class="form-input">
+                    <option value="12">12px</option>
+                    <option value="14" selected>14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="tab-size">Tab Size</label>
+                  <select id="tab-size" class="form-input">
+                    <option value="2" selected>2 spaces</option>
+                    <option value="4">4 spaces</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Auto Save</label>
+                  <div class="toggle-wrapper">
+                    <input type="checkbox" id="auto-save" checked>
+                    <label for="auto-save" class="toggle"></label>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save Preferences</button>
+                </div>
+              </form>
+            </div>
+            
+            <div class="card">
+              <h3>AI Assistant Preferences</h3>
+              <form id="ai-prefs-form">
+                <div class="form-group">
+                  <label for="ai-model">AI Model</label>
+                  <select id="ai-model" class="form-input">
+                    <option value="default" selected>Default (Recommended)</option>
+                    <option value="gpt-4">GPT-4 (Advanced)</option>
+                    <option value="claude">Claude (Alternative)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Auto-suggest Code Improvements</label>
+                  <div class="toggle-wrapper">
+                    <input type="checkbox" id="auto-suggest" checked>
+                    <label for="auto-suggest" class="toggle"></label>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save AI Preferences</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2025 EzEdit • <a href="/privacy.html">Privacy</a></p>
+    </div>
+  </footer>
+
+  <!-- Core Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/memory-service.js"></script>
+  <script src="js/supabase-service.js"></script>
+  <script src="js/settings.js" defer></script>
+</body>
+</html>
