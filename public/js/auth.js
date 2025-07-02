@@ -7,7 +7,6 @@
 window.ezEdit = window.ezEdit || {};
 window.ezEdit.memory = window.ezEdit.memory || new MemoryService();
 window.ezEdit.supabase = window.ezEdit.supabase || new SupabaseService();
-window.ezEdit.phpAuth = window.ezEdit.phpAuth || new PhpAuthService();
 window.ezEdit.auth = window.ezEdit.auth || new AuthService();
 
 // Initialize DOM elements only when needed

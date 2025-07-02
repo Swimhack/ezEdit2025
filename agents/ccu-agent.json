@@ -1,0 +1,17 @@
+{
+  "name": "ccu-agent",
+  "description": "Executes NLP-translated system commands through the terminal.",
+  "model": {
+    "provider": "ollama",
+    "base_url": "http://localhost:11434",
+    "model_name": "mistral"
+  },
+  "memory": "./memory/ccu-agent.md",
+  "tools": [
+    {
+      "name": "run-command",
+      "path": "./tools/run-command.js",
+      "description": "Execute shell commands locally via Node.js"
+    }
+  ]
+}

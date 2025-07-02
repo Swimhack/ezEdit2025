@@ -3,17 +3,14 @@
  * This endpoint creates a checkout session for subscription or one-time payments
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseClient } from '../../../../../packages/supabase-client/src';
 import Stripe from 'stripe';
 
 // Initialize Stripe with the secret key from environment variables
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+// Initialize shared Supabase client (service role)
+const supabase = createSupabaseClient({ role: 'service' });
 
 export default async function handler(req, res) {
   // Only allow POST requests

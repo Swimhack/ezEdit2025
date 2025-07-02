@@ -2,15 +2,17 @@ name: ezedit
 static_sites:
 - name: ezedit
   github:
-    repo: Swimhack/ezEdit-1
+    repo: Swimhack/ezEdit2025
     branch: main
     deploy_on_push: true
-  source_dir: /
-  output_dir: /
-  build_command: ""
+  source_dir: apps/web
+  output_dir: dist
+  build_command: "pnpm install && pnpm run build"
   environment_slug: html
   routes:
   - path: /
+    preserve_path_prefix: false
+    fallback: index.html
   envs: []
   cors:
     allow_origins:

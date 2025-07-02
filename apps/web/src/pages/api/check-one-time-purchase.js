@@ -3,13 +3,11 @@
  * This endpoint verifies if a user has purchased a one-time site
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseClient } from '../../../../../packages/supabase-client/src';
 
 // Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+// Use shared Supabase client with service role
+const supabase = createSupabaseClient({ role: 'service' });
 
 export default async function handler(req, res) {
   // Only allow GET requests

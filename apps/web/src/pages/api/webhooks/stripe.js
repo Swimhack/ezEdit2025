@@ -3,18 +3,15 @@
  * Processes Stripe events like subscription updates, payment success/failure, etc.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseClient } from '../../../../../../packages/supabase-client/src';
 import Stripe from 'stripe';
 import { buffer } from 'micro';
 
 // Initialize Stripe with the secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+// Initialize shared Supabase client (service role)
+const supabase = createSupabaseClient({ role: 'service' });
 
 // Disable body parser to get raw body for webhook signature verification
 export const config = {

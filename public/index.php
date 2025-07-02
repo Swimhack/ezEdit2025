@@ -543,8 +543,7 @@
 
   <!-- Core Scripts -->
   <script src="js/config.js"></script>
-  <script src="js/memory-service.js"></script>
-  <script src="js/supabase-service.js"></script>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Initialize services
@@ -601,5 +600,17 @@
       }
     });
   </script>
+    <script type="module">
+        import { getSession } from '/js/supabaseAuthService.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const session = await getSession();
+            if (session) {
+                window.location.href = '/system/dashboard.php';
+            } else {
+                window.location.href = '/auth/login.php';
+            }
+        });
+    </script>
 </body>
 </html>
