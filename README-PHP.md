@@ -114,3 +114,77 @@ To test the FTP connection functionality, you can use the demo FTP server:
 ## License
 
 Proprietary - All rights reserved
+
+latest logs ( acquired by lovable agent chat history) as of 7/9/2025 show (
+Lovable
+Worked for 56s
+Just now
+
+Let me examine the specific errors from the logs and console to understand what's happening with the file browsing issue.
+
+Let me examine the specific errors from the logs and console to understand what's happening with the file browsing issue.
+
+Supabase
+retrieved logs
+Let me also check for any database errors related to FTP operations:
+
+Let me also check for any database errors related to FTP operations:
+
+Supabase
+retrieved logs
+Now let me check the user's FTP sites to see if any are configured:
+
+Now let me check the user's FTP sites to see if any are configured:
+
+Supabase
+read from database
+Let me check the FTP store state to see what's happening with the active site:
+
+Let me check the FTP store state to see what's happening with the active site:
+
+Read
+src/store/ftpStore.ts
+Now let me check the specific error patterns from the console logs more closely. Looking at the console logs you provided, I can see several key error patterns:
+
+Primary Error Analysis
+1. "Failed to send a request to the Edge Function"
+
+This error appears consistently across multiple attempts
+The error originates from ftpService.ts in the makeRequest method
+Stack trace shows: Error: Failed to send a request to the Edge Function
+2. Edge Function Never Receives Requests
+
+The analytics query shows zero activity for the ftp-operations edge function
+This confirms the requests are failing at the transport layer before reaching the edge function
+3. Active Site Detection Issues
+
+Console shows: "🚀 Active site detected: StricklandAi.com ID: 7ae8cfc8-8d1e-43e2-a753-109634eac05b"
+But then shows: "❌ No active site available for file listing"
+This suggests a race condition or state management issue
+4. Session Management
+
+Multiple session checks are happening: "📝 Session check: { hasSession: true, hasAccessToken: true }"
+This indicates authentication is working correctly
+5. FTP Ping Failures
+
+"⚠️ FTP Ping: https://caf17cdc-1be4-4e21-af7e-fe24c63f8b7a.supabase.co/functions/v1/ftp-operations failed"
+Error: "TypeError: Failed to fetch"
+Root Cause Analysis
+The core issue is transport layer failure. The errors indicate:
+
+Network-level fetch failures - "Failed to fetch" suggests either:
+
+CORS issues
+Network connectivity problems
+Incorrect endpoint URLs
+Project URL mismatch - The ping URL shows caf17cdc-1be4-4e21-af7e-fe24c63f8b7a.supabase.co but this might not match the actual project configuration
+
+Race conditions - The active site is detected but then reported as unavailable, suggesting timing issues in state management
+
+Specific Error Messages Summary
+Primary: "Failed to send a request to the Edge Function"
+Secondary: "Failed to fetch" (network level)
+State: "No active site available for file listing"
+Transport: Zero edge function activity in logs
+The issue is fundamentally that no requests are reaching the edge function at all - they're failing at the browser/network level before even getting to Supabase's infrastructure.)
+

@@ -1123,3 +1123,230 @@ textarea:focus {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
+
+/* ===== FTP Browser Styles ===== */
+.ftp-browser {
+  margin-top: var(--sp-4);
+  border: 1px solid var(--clr-border);
+  border-radius: 0.5rem;
+  background: var(--clr-surface);
+  overflow: hidden;
+}
+
+.browser-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--clr-border);
+  background: var(--clr-bg);
+}
+
+.browser-header h4 {
+  margin: 0;
+  color: var(--clr-text);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.browser-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.current-path {
+  font-family: var(--font-mono);
+  background: rgba(37, 99, 235, 0.1);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--clr-primary);
+}
+
+.file-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--clr-border);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.file-item:hover {
+  background-color: rgba(37, 99, 235, 0.05);
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+}
+
+.file-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.file-name {
+  font-weight: 500;
+  flex: 1;
+  color: var(--clr-text);
+}
+
+.file-size {
+  font-size: 0.875rem;
+  color: var(--clr-text-sub);
+  font-family: var(--font-mono);
+  min-width: 80px;
+  text-align: right;
+}
+
+.loading, .error {
+  padding: var(--sp-4);
+  text-align: center;
+  color: var(--clr-text-sub);
+}
+
+.error {
+  color: var(--clr-error);
+}
+
+/* ===== Editor Container Styles ===== */
+.editor-container {
+  margin-top: var(--sp-4);
+  border: 1px solid var(--clr-border);
+  border-radius: 0.5rem;
+  background: var(--clr-surface);
+  overflow: hidden;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--clr-border);
+  background: var(--clr-bg);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.file-info svg {
+  color: var(--clr-text-sub);
+}
+
+.editor-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.monaco-editor {
+  height: 400px;
+  width: 100%;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* ===== Connection Status ===== */
+.connection-status {
+  margin-top: var(--sp-4);
+  padding: var(--sp-3);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.5rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--clr-success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ===== Button Styles ===== */
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+.btn-secondary {
+  background-color: var(--clr-text-sub);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+/* ===== Toast Notifications ===== */
+.ez-toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 0.5rem;
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all var(--transition-normal);
+  max-width: 300px;
+  z-index: 1000;
+}
+
+.ez-toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.ez-toast.toast-success {
+  border-left: 4px solid var(--clr-success);
+}
+
+.ez-toast.toast-error {
+  border-left: 4px solid var(--clr-error);
+}
+
+.ez-toast.toast-warning {
+  border-left: 4px solid var(--clr-warning);
+}

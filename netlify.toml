@@ -2,8 +2,23 @@
   publish = "public"
   command = "echo 'No build required - static deployment'"
 
+[context.production]
+  command = "echo 'Production build'"
+
+[context.deploy-preview]
+  command = "echo 'Deploy preview build'"
+
+[context.branch-deploy]
+  command = "echo 'Branch deploy build'"
+
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--version"  # Ensure npm is available
+  
+  # Required environment variables (set in Netlify UI)
+  # VITE_API_URL = ""
+  # VITE_SUPABASE_URL = ""
+  # VITE_SUPABASE_ANON_KEY = ""
 
 [[redirects]]
   from = "/auth/auth-handler.php"
@@ -11,15 +26,25 @@
   status = 200
 
 [[redirects]]
+  from = "/ftp/ftp-handler.php"
+  to = "/.netlify/functions/ftp-handler"
+  status = 200
+
+[[redirects]]
   from = "/admin/log-viewer.php"
   to = "/admin/log-viewer.html"
   status = 200
 
+# SPA fallback for client-side routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  conditions = {Role = ["admin"]}
+
+# Site configuration
+[site]
+  id = "56627d01-0e69-4724-8a66-33c6885c3abe"
+  name = "ezEdit AI Editor"
 
 # Headers for security
 [[headers]]

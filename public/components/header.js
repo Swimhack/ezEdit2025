@@ -6,7 +6,7 @@
 class EzEditHeader extends HTMLElement {
   constructor() {
     super();
-    this.authService = window.ezEdit && window.ezEdit.supabase;
+    this.authService = window.ezEdit && window.ezEdit.authService;
   }
 
   connectedCallback() {
@@ -50,23 +50,23 @@ class EzEditHeader extends HTMLElement {
       // Auth page navigation
       navLinks = `
         <nav class="nav-links">
-          <a href="index.html">Home</a>
-          <a href="index.html#features">Features</a>
-          <a href="index.html#pricing">Pricing</a>
-          <a href="docs/index.html">Docs</a>
+          <a href="index.php">Home</a>
+          <a href="index.php#features">Features</a>
+          <a href="index.php#pricing">Pricing</a>
+          <a href="docs/index.php">Docs</a>
         </nav>
       `;
     } else {
       // Public page navigation
       navLinks = `
         <nav class="nav-links">
-          <a href="index.html#features" class="${currentPath === '/' && location.hash === '#features' ? 'active' : ''}">Features</a>
-          <a href="index.html#pricing" class="${currentPath === '/' && location.hash === '#pricing' ? 'active' : ''}">Pricing</a>
-          <a href="docs/index.html" class="${currentPath.includes('docs') ? 'active' : ''}">Docs</a>
+          <a href="index.php#features" class="${currentPath === '/' && location.hash === '#features' ? 'active' : ''}">Features</a>
+          <a href="index.php#pricing" class="${currentPath === '/' && location.hash === '#pricing' ? 'active' : ''}">Pricing</a>
+          <a href="docs/index.php" class="${currentPath.includes('docs') ? 'active' : ''}">Docs</a>
         </nav>
         <div class="nav-auth">
-          <a href="login.html" class="btn-outline">Log in</a>
-          <a href="signup.html" class="btn">Sign up</a>
+          <a href="login.php" class="btn-outline">Log in</a>
+          <a href="signup.php" class="btn">Sign up</a>
         </div>
       `;
     }
@@ -76,7 +76,7 @@ class EzEditHeader extends HTMLElement {
         <div class="container">
           <div class="nav-container">
             <h1 class="logo">
-              <a href="${isAuth ? 'dashboard.php' : 'index.html'}">
+              <a href="${isAuth ? 'dashboard.php' : 'index.php'}">
                 <span class="logo-icon">Ez</span> <span class="logo-text">Edit.co</span>
               </a>
             </h1>

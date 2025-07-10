@@ -1,0 +1,2 @@
+Droplet IP: 142.93.15.16
+SSH Key Path: /home/james/.ssh/ezedit_deploy

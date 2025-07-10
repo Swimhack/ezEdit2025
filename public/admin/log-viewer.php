@@ -2,22 +2,28 @@
 /**
  * ezEdit Authentication Log Viewer
  * Admin utility for viewing detailed authentication logs
+ * SECURE VERSION - Requires proper admin authentication
  */
 
-// For local testing - skip auth check
-session_start();
-$isAdmin = true; // Always allow access for local testing
+// Load authentication system
+require_once __DIR__ . '/../../config/auth.php';
 
-// Uncomment below for production with proper admin auth
-/*
-$isAdmin = isset($_SESSION['admin']) || 
-           (isset($_GET['admin_key']) && $_GET['admin_key'] === 'ezedit_admin_2025');
-
-if (!$isAdmin) {
-    http_response_code(403);
-    die('Access denied. Admin authentication required.');
+// Require admin authentication
+try {
+    $adminUser = requireAdmin();
+    
+    // Log admin access for audit trail
+    error_log("Admin log viewer accessed by: " . $adminUser['email'] . " at " . date('Y-m-d H:i:s'));
+    
+} catch (Exception $e) {
+    http_response_code($e->getCode() ?: 403);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'timestamp' => date('c')
+    ]);
+    exit;
 }
-*/
 
 // Log directory
 $logDir = __DIR__ . '/../../logs';

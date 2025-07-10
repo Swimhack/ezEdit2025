@@ -26,25 +26,25 @@ class EzEditFooter extends HTMLElement {
             <div class="footer-links">
               <div class="footer-links-column">
                 <h4>Product</h4>
-                <a href="index.html#features">Features</a>
-                <a href="index.html#pricing">Pricing</a>
-                <a href="docs/index.html">Documentation</a>
+                <a href="index.php#features">Features</a>
+                <a href="index.php#pricing">Pricing</a>
+                <a href="docs/index.php">Documentation</a>
               </div>
               <div class="footer-links-column">
                 <h4>Resources</h4>
-                <a href="blog/index.html">Blog</a>
-                <a href="docs/tutorials.html">Tutorials</a>
-                <a href="docs/api.html">API</a>
+                <a href="blog/index.php">Blog</a>
+                <a href="docs/tutorials.php">Tutorials</a>
+                <a href="docs/api.php">API</a>
               </div>
               <div class="footer-links-column">
                 <h4>Company</h4>
-                <a href="about.html">About</a>
-                <a href="contact.html">Contact</a>
+                <a href="about.php">About</a>
+                <a href="contact.php">Contact</a>
               </div>
               <div class="footer-links-column">
                 <h4>Legal</h4>
-                <a href="privacy.html">Privacy</a>
-                <a href="terms.html">Terms</a>
+                <a href="privacy.php">Privacy</a>
+                <a href="terms.php">Terms</a>
               </div>
             </div>
           </div>

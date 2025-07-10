@@ -189,7 +189,7 @@ window.ezEdit.monacoEditor = (function() {
       showNotification('Loading file...', 'info');
       
       // Get file content from FTP service
-      const result = await ftpService.downloadFile(path);
+      const result = await ftpService.getFile(path);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to open file');
@@ -206,8 +206,8 @@ window.ezEdit.monacoEditor = (function() {
       currentFile = {
         path,
         name: fileName,
-        originalContent: result.content,
-        modifiedContent: result.content,
+        originalContent: result.data.content,
+        modifiedContent: result.data.content,
         language,
         isDirty: false
       };
@@ -274,7 +274,7 @@ window.ezEdit.monacoEditor = (function() {
       const content = modifiedEditor.getValue();
       
       // Save file using FTP service
-      const result = await ftpService.uploadFile(currentFile.path, content);
+      const result = await ftpService.saveFile(currentFile.path, content);
       
       if (!result.success) {
         throw new Error(result.error || 'Failed to save file');

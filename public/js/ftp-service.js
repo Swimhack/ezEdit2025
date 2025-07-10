@@ -17,29 +17,15 @@ window.ezEdit.ftpService = (function() {
     const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
     
     // Determine API base URL
-    const API_BASE_URL = (function() {
-        // Get base URL for API calls
-        function getBaseUrl() {
-            const pathSegments = window.location.pathname.split('/');
-            pathSegments.pop(); // Remove the current file name
-            return pathSegments.join('/');
-        }
-        
-        // In production, use absolute path
-        if (isProduction) {
-            return '/ftp/ftp-handler.php';
-        }
-        
-        // In development, use path relative to the current page
-        return `${getBaseUrl()}/ftp/ftp-handler.php`;
-    })();
+    const API_BASE_URL = '/api/ftp';
+    const AUTH_BASE_URL = '/auth';
     
     /**
      * Connect to FTP server
-     * @param {Object} credentials - FTP credentials (optional, will use site ID if not provided)
+     * @param {Object} credentials - FTP credentials
      * @returns {Promise<Object>} - Connection result
      */
-    async function connect(credentials = null) {
+    async function connect(credentials) {
         if (isConnected && connectionId) {
             return { success: true, connectionId, message: 'Already connected' };
         }
@@ -48,15 +34,18 @@ window.ezEdit.ftpService = (function() {
         lastError = null;
         
         try {
-            // If credentials not provided, use site ID
-            const params = credentials ? 
-                new URLSearchParams(credentials) : 
-                new URLSearchParams({ site_id: currentSiteId });
-            
-            params.append('action', 'connect');
-            
-            console.log(`Connecting to FTP server via ${API_BASE_URL}`);
-            const response = await fetch(`${API_BASE_URL}?${params.toString()}`);
+            // Get auth headers
+            const authHeaders = window.ezEdit.authService ? 
+                window.ezEdit.authService.getAuthHeaders() : {};
+                
+            const response = await fetch(`${API_BASE_URL}/connect`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders
+                },
+                body: JSON.stringify(credentials)
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -65,7 +54,7 @@ window.ezEdit.ftpService = (function() {
             const data = await response.json();
             
             if (data.success) {
-                connectionId = data.connection_id;
+                connectionId = data.data.connectionId;
                 isConnected = true;
                 connectionStatus = 'connected';
                 console.log('FTP connection established successfully');

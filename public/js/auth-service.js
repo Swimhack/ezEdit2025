@@ -1,17 +1,48 @@
 /**
- * EzEdit Authentication Service Factory
- * 
- * Provides a unified interface for authentication using Supabase.
- * Maintains session persistence and token management.
+ * EzEdit Authentication Service
+ * Handles JWT-based authentication for the API
  */
 
-class AuthService {
-  constructor(memoryService) {
-    this.memoryService = memoryService || (window.ezEdit && window.ezEdit.memory);
-    this.supabase = new SupabaseService(this.memoryService);
-    this.storageKey = 'ezEditAuth';
-    this.init();
-  }
+window.ezEdit = window.ezEdit || {};
+
+window.ezEdit.authService = (function() {
+    // Private variables
+    let authToken = null;
+    let currentUser = null;
+    let isAuthenticated = false;
+    
+    const AUTH_API_URL = '/auth';
+    const TOKEN_STORAGE_KEY = 'ezedit_auth_token';
+    const USER_STORAGE_KEY = 'ezedit_user_data';
+    
+    /**
+     * Initialize auth service by checking for existing token
+     */
+    function init() {
+        // Check for existing token in localStorage
+        const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+        const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+        
+        if (storedToken && storedUser) {
+            try {
+                authToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+                isAuthenticated = true;
+                
+                // Verify token is still valid
+                verifyToken().then(result => {
+                    if (!result.success) {
+                        logout();
+                    }
+                }).catch(() => {
+                    logout();
+                });
+            } catch (error) {
+                console.error('Error parsing stored user data:', error);
+                logout();
+            }
+        }
+    }
 
   async init() {
     try {

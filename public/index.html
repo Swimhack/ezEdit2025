@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EzEdit - Edit Legacy Websites with AI-Powered Simplicity</title>
+  <!-- Design tokens and core styles -->
+  <link rel="stylesheet" href="css/design-tokens.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/ui-components.css">
+  <link rel="stylesheet" href="css/toast.css">
+  <link rel="stylesheet" href="css/dark-mode.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="img/logo.svg">
+  <!-- Monaco Editor -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/editor/editor.main.min.css">
+</head>
+<body class="landing-page">
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="flex justify-between items-center">
+        <h1 class="logo">
+          <a href="/">
+            <span class="logo-icon">Ez</span> <span class="logo-text">Edit.co</span>
+          </a>
+        </h1>
+        <nav class="nav-main">
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="/login.php">Login</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content text-center">
+          <h1 class="hero-title">
+            Edit Legacy Websites with <span class="text-primary-gradient">AI-Powered</span> Simplicity
+          </h1>
+          <p class="hero-subtitle">
+            Connect to any website via FTP/SFTP and update your code using
+            natural language prompts. Secure, fast, and incredibly simple.
+          </p>
+          
+          <!-- FTP Connection Demo -->
+          <div class="demo-section card mt-8">
+            <h3 class="mb-4">Try EzEdit Now - Connect to Your FTP Server</h3>
+            
+            <div class="ftp-connection-form">
+              <form id="ftpForm" class="form-grid">
+                <div class="form-group">
+                  <label for="host" class="form-label">FTP Host</label>
+                  <input type="text" id="host" name="host" class="form-input" placeholder="ftp.yoursite.com" required>
+                </div>
+                <div class="form-group">
+                  <label for="username" class="form-label">Username</label>
+                  <input type="text" id="username" name="username" class="form-input" placeholder="your-username" required>
+                </div>
+                <div class="form-group">
+                  <label for="password" class="form-label">Password</label>
+                  <input type="password" id="password" name="password" class="form-input" placeholder="your-password" required>
+                </div>
+                <div class="form-group">
+                  <label for="port" class="form-label">Port</label>
+                  <input type="number" id="port" name="port" class="form-input" value="21" min="1" max="65535">
+                </div>
+                <div class="form-group form-actions">
+                  <button type="submit" class="btn btn-primary" id="connectBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H1m22 0H9m0 0l3-3m-3 3l3 3"></path></svg>
+                    Connect to FTP
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Connection Status -->
+            <div id="connectionStatus" class="connection-status" style="display: none;">
+              <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span id="statusText">Connecting...</span>
+              </div>
+            </div>
+
+            <!-- File Browser -->
+            <div id="ftpBrowser" class="ftp-browser" style="display: none;">
+              <div class="browser-header">
+                <h4>File Browser</h4>
+                <div class="browser-actions">
+                  <span id="currentPath" class="current-path">/</span>
+                  <button id="disconnectBtn" class="btn btn-secondary btn-sm">Disconnect</button>
+                </div>
+              </div>
+              <div class="file-list" id="fileList">
+                <!-- File list will be populated here -->
+              </div>
+            </div>
+
+            <!-- Code Editor -->
+            <div id="editorContainer" class="editor-container" style="display: none;">
+              <div class="editor-header">
+                <div class="file-info">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                  <span id="currentFile">No file selected</span>
+                </div>
+                <div class="editor-actions">
+                  <button id="saveBtn" class="btn btn-primary btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21v-8H7v8"></polyline><polyline points="7 3v5h8"></polyline></svg>
+                    Save
+                  </button>
+                  <button id="closeEditorBtn" class="btn btn-secondary btn-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Close
+                  </button>
+                </div>
+              </div>
+              <div id="editor" class="monaco-editor"></div>
+            </div>
+          </div>
+
+          <!-- Call to Action -->
+          <div class="cta-section mt-8">
+            <p class="text-muted mb-4">Ready to streamline your workflow?</p>
+            <div class="cta-buttons">
+              <a href="/signup.php" class="btn btn-primary btn-lg">
+                Start Free Trial
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </a>
+              <a href="/pricing.php" class="btn btn-secondary btn-lg">View Pricing</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+      <div class="container">
+        <h2 class="text-center mb-8">Why Choose EzEdit?</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            </div>
+            <h3>Direct FTP/SFTP Access</h3>
+            <p>Connect directly to your servers. No migration needed.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            </div>
+            <h3>AI-Powered Editing</h3>
+            <p>Natural language prompts to modify your code instantly.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            </div>
+            <h3>Professional Editor</h3>
+            <p>Monaco editor with syntax highlighting and intellisense.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h3 class="logo">
+            <span class="logo-icon">Ez</span> <span class="logo-text">Edit.co</span>
+          </h3>
+          <p>Edit legacy websites with AI-powered simplicity.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-section">
+            <h4>Product</h4>
+            <a href="#features">Features</a>
+            <a href="/pricing.php">Pricing</a>
+            <a href="/docs">Documentation</a>
+          </div>
+          <div class="footer-section">
+            <h4>Company</h4>
+            <a href="/about">About</a>
+            <a href="/contact">Contact</a>
+            <a href="/privacy">Privacy</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+  <script src="/js/auth-service-new.js"></script>
+  <script src="/js/ftp-service.js"></script>
+  <script src="/js/monaco-editor.js"></script>
+  <script src="/js/ui-components.js"></script>
+  <script>
+    // Initialize the application
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('EzEdit.co loaded successfully');
+      
+      // Initialize FTP form handling
+      const ftpForm = document.getElementById('ftpForm');
+      const connectBtn = document.getElementById('connectBtn');
+      const connectionStatus = document.getElementById('connectionStatus');
+      const ftpBrowser = document.getElementById('ftpBrowser');
+      const statusText = document.getElementById('statusText');
+      
+      if (ftpForm) {
+        ftpForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          // Show connection status
+          connectionStatus.style.display = 'block';
+          connectBtn.disabled = true;
+          connectBtn.innerHTML = 'Connecting...';
+          
+          // Get form data
+          const formData = new FormData(ftpForm);
+          const credentials = {
+            host: formData.get('host'),
+            username: formData.get('username'),
+            password: formData.get('password'),
+            port: parseInt(formData.get('port')) || 21
+          };
+          
+          try {
+            // Use real FTP service for connection
+            statusText.textContent = 'Connecting to FTP server...';
+            
+            // Get demo auth token first
+            const authResult = await window.ezEdit.authService.demoLogin();
+            if (!authResult.success) {
+              throw new Error('Demo authentication failed');
+            }
+            
+            // Attempt real FTP connection
+            const ftpResult = await window.ezEdit.ftpService.connect(credentials);
+            
+            if (ftpResult.success) {
+              statusText.textContent = 'Connected successfully!';
+              ftpBrowser.style.display = 'block';
+              ftpForm.style.display = 'none';
+              
+              // Load file list
+              await loadFileList('/');
+            } else {
+              throw new Error(ftpResult.error || 'Connection failed');
+            }
+            
+            console.log('FTP connection successful:', credentials.host);
+          } catch (error) {
+            statusText.textContent = 'Connection failed: ' + error.message;
+            connectBtn.disabled = false;
+            connectBtn.innerHTML = 'Connect to FTP';
+            console.error('FTP connection error:', error);
+          }
+        });
+      }
+      
+      // Disconnect handler
+      const disconnectBtn = document.getElementById('disconnectBtn');
+      if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', function() {
+          // Reset UI
+          connectionStatus.style.display = 'none';
+          ftpBrowser.style.display = 'none';
+          ftpForm.style.display = 'block';
+          connectBtn.disabled = false;
+          connectBtn.innerHTML = 'Connect to FTP';
+          
+          // Hide editor
+          const editorContainer = document.getElementById('editorContainer');
+          if (editorContainer) {
+            editorContainer.style.display = 'none';
+          }
+        });
+      }
+      
+      // Function to load and display file list
+      async function loadFileList(path = '/') {
+        try {
+          const fileList = document.getElementById('fileList');
+          const currentPath = document.getElementById('currentPath');
+          
+          if (!fileList || !currentPath) return;
+          
+          fileList.innerHTML = '<div class="loading">Loading files...</div>';
+          currentPath.textContent = path;
+          
+          // Get file list from FTP service
+          const result = await window.ezEdit.ftpService.listDirectory(path);
+          
+          if (result.success && result.data) {
+            fileList.innerHTML = '';
+            
+            // Add parent directory link if not at root
+            if (path !== '/') {
+              const parentPath = path.split('/').slice(0, -1).join('/') || '/';
+              const parentItem = createFileItem('..', 'directory', parentPath);
+              fileList.appendChild(parentItem);
+            }
+            
+            // Add files and directories
+            result.data.files.forEach(file => {
+              const fullPath = path.endsWith('/') ? path + file.name : path + '/' + file.name;
+              const fileItem = createFileItem(file.name, file.type, fullPath, file);
+              fileList.appendChild(fileItem);
+            });
+          } else {
+            fileList.innerHTML = '<div class="error">Failed to load files: ' + (result.error || 'Unknown error') + '</div>';
+          }
+        } catch (error) {
+          console.error('Error loading file list:', error);
+          const fileList = document.getElementById('fileList');
+          if (fileList) {
+            fileList.innerHTML = '<div class="error">Error loading files: ' + error.message + '</div>';
+          }
+        }
+      }
+      
+      // Function to create file list item
+      function createFileItem(name, type, fullPath, fileInfo = {}) {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        
+        const isDirectory = type === 'directory';
+        const icon = isDirectory ? '📁' : '📄';
+        
+        item.innerHTML = `
+          <div class="file-info">
+            <span class="file-icon">${icon}</span>
+            <span class="file-name">${name}</span>
+            ${fileInfo.size ? `<span class="file-size">${formatFileSize(fileInfo.size)}</span>` : ''}
+          </div>
+        `;
+        
+        item.addEventListener('click', async () => {
+          if (isDirectory) {
+            // Navigate to directory
+            await loadFileList(fullPath);
+          } else {
+            // Open file in editor
+            await openFileInEditor(fullPath);
+          }
+        });
+        
+        return item;
+      }
+      
+      // Function to open file in Monaco editor
+      async function openFileInEditor(filePath) {
+        try {
+          const editorContainer = document.getElementById('editorContainer');
+          const currentFileSpan = document.getElementById('currentFile');
+          
+          if (!editorContainer || !currentFileSpan) return;
+          
+          // Show editor
+          editorContainer.style.display = 'block';
+          currentFileSpan.textContent = filePath;
+          
+          // Load file content
+          const result = await window.ezEdit.ftpService.getFile(filePath);
+          
+          if (result.success && result.data) {
+            // Initialize Monaco editor if not already done
+            if (!window.ezEditMonaco) {
+              await initializeMonacoEditor();
+            }
+            
+            // Set file content
+            if (window.ezEditMonaco) {
+              window.ezEditMonaco.setValue(result.data.content || '');
+              window.ezEditMonaco.currentFilePath = filePath;
+            }
+          } else {
+            window.ezEdit.ui.showToast('Failed to load file: ' + (result.error || 'Unknown error'), 'error');
+          }
+        } catch (error) {
+          console.error('Error opening file:', error);
+          window.ezEdit.ui.showToast('Error opening file: ' + error.message, 'error');
+        }
+      }
+      
+      // Function to initialize Monaco editor
+      async function initializeMonacoEditor() {
+        return new Promise((resolve) => {
+          require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+          require(['vs/editor/editor.main'], function () {
+            const editorElement = document.getElementById('editor');
+            if (editorElement) {
+              window.ezEditMonaco = monaco.editor.create(editorElement, {
+                value: '',
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false }
+              });
+              
+              // Save button handler
+              const saveBtn = document.getElementById('saveBtn');
+              if (saveBtn) {
+                saveBtn.addEventListener('click', async () => {
+                  if (window.ezEditMonaco && window.ezEditMonaco.currentFilePath) {
+                    const content = window.ezEditMonaco.getValue();
+                    const result = await window.ezEdit.ftpService.saveFile(window.ezEditMonaco.currentFilePath, content);
+                    
+                    if (result.success) {
+                      window.ezEdit.ui.showToast('File saved successfully', 'success');
+                    } else {
+                      window.ezEdit.ui.showToast('Failed to save file: ' + (result.error || 'Unknown error'), 'error');
+                    }
+                  }
+                });
+              }
+              
+              // Close editor handler
+              const closeEditorBtn = document.getElementById('closeEditorBtn');
+              if (closeEditorBtn) {
+                closeEditorBtn.addEventListener('click', () => {
+                  editorContainer.style.display = 'none';
+                  window.ezEditMonaco.currentFilePath = null;
+                });
+              }
+            }
+            resolve();
+          });
+        });
+      }
+      
+      // Utility function to format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+    });
+  </script>
+</body>
+</html>
