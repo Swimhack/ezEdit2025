@@ -725,7 +725,7 @@
                 
                 // Create checkout session
                 const priceId = pricing[plan][billing].priceId;
-                const response = await fetch('/api/create-checkout-session', {
+                const response = await fetch('/api/create-checkout-session.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

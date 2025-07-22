@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout Demo - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .checkout-container {
+            background: white;
+            color: #1f2937;
+            border-radius: 16px;
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            text-align: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .checkout-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        
+        .checkout-subtitle {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .plan-details {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            text-align: left;
+        }
+        
+        .plan-features li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4b5563;
+        }
+        
+        .feature-check {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        
+        .demo-notice {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            color: #92400e;
+            font-size: 0.9rem;
+        }
+        
+        .demo-notice strong {
+            color: #d97706;
+        }
+        
+        .checkout-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .spinner {
+            display: none;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .success-animation {
+            display: none;
+            font-size: 3rem;
+            color: #16a34a;
+            margin-bottom: 1rem;
+            animation: bounce 0.6s ease-in-out;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0,-30px,0); }
+            70% { transform: translate3d(0,-15px,0); }
+            90% { transform: translate3d(0,-4px,0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="logo">
+            <div class="logo-icon">Ez</div>
+            EzEdit.co
+        </div>
+        
+        <div class="success-animation" id="success-animation">✓</div>
+        
+        <h1 class="checkout-title" id="checkout-title">Complete Your Purchase</h1>
+        <p class="checkout-subtitle" id="checkout-subtitle">You're one step away from unlocking full EzEdit.co features</p>
+        
+        <div class="plan-details" id="plan-details">
+            <div class="plan-name" id="plan-name">Pro Monthly</div>
+            <div class="plan-price" id="plan-price">$50/month</div>
+            <ul class="plan-features">
+                <li><span class="feature-check">✓</span> Unlimited FTP sites</li>
+                <li><span class="feature-check">✓</span> Full save & publish access</li>
+                <li><span class="feature-check">✓</span> Unlimited AI assistance</li>
+                <li><span class="feature-check">✓</span> Team collaboration</li>
+                <li><span class="feature-check">✓</span> Priority support</li>
+            </ul>
+        </div>
+        
+        <div class="demo-notice">
+            <strong>Demo Mode:</strong> This is a demo checkout page. In production, this would integrate with Stripe for real payment processing.
+        </div>
+        
+        <div class="checkout-actions">
+            <button class="btn btn-secondary" onclick="goBack()">
+                ← Back to Pricing
+            </button>
+            <button class="btn btn-primary" onclick="simulatePayment()" id="pay-btn">
+                <span class="spinner" id="spinner"></span>
+                <span id="pay-text">Complete Payment</span>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const plan = urlParams.get('plan') || 'pro_monthly';
+        
+        // Plan configurations
+        const plans = {
+            'pro_monthly': {
+                name: 'Pro Monthly',
+                price: '$50/month',
+                features: [
+                    'Unlimited FTP sites',
+                    'Full save & publish access',
+                    'Unlimited AI assistance',
+                    'Team collaboration (5 members)',
+                    'Priority support'
+                ]
+            },
+            'pro_yearly': {
+                name: 'Pro Yearly',
+                price: '$40/month (billed yearly)',
+                originalPrice: '$50/month',
+                features: [
+                    'Unlimited FTP sites',
+                    'Full save & publish access', 
+                    'Unlimited AI assistance',
+                    'Team collaboration (5 members)',
+                    'Priority support',
+                    '20% yearly discount'
+                ]
+            },
+            'lifetime': {
+                name: 'Lifetime License',
+                price: '$497 one-time',
+                features: [
+                    'Single domain license',
+                    'All Pro features',
+                    'Lifetime updates',
+                    'Priority support',
+                    'No recurring fees'
+                ]
+            }
+        };
+        
+        // Update page content based on selected plan
+        function updatePlanDisplay() {
+            const selectedPlan = plans[plan] || plans['pro_monthly'];
+            
+            document.getElementById('plan-name').textContent = selectedPlan.name;
+            document.getElementById('plan-price').innerHTML = selectedPlan.originalPrice 
+                ? `<span style="text-decoration: line-through; color: #9ca3af; font-size: 0.8em;">${selectedPlan.originalPrice}</span><br>${selectedPlan.price}`
+                : selectedPlan.price;
+            
+            // Update features list
+            const featuresList = document.querySelector('.plan-features');
+            featuresList.innerHTML = selectedPlan.features.map(feature => 
+                `<li><span class="feature-check">✓</span> ${feature}</li>`
+            ).join('');
+        }
+        
+        // Simulate payment process
+        async function simulatePayment() {
+            const payBtn = document.getElementById('pay-btn');
+            const spinner = document.getElementById('spinner');
+            const payText = document.getElementById('pay-text');
+            
+            // Show loading state
+            payBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            payText.textContent = 'Processing...';
+            
+            // Simulate payment processing
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Show success state
+            showSuccessState();
+        }
+        
+        // Show success animation and redirect
+        function showSuccessState() {
+            const successAnimation = document.getElementById('success-animation');
+            const title = document.getElementById('checkout-title');
+            const subtitle = document.getElementById('checkout-subtitle');
+            const planDetails = document.getElementById('plan-details');
+            
+            successAnimation.style.display = 'block';
+            title.textContent = 'Payment Successful!';
+            subtitle.textContent = 'Welcome to EzEdit.co Pro! Redirecting to your dashboard...';
+            planDetails.style.display = 'none';
+            
+            // Redirect after animation
+            setTimeout(() => {
+                window.location.href = '/billing.html?success=true';
+            }, 3000);
+        }
+        
+        // Go back to pricing
+        function goBack() {
+            window.location.href = '/pricing.html';
+        }
+        
+        // Initialize page
+        updatePlanDisplay();
+    </script>
+</body>
+</html>

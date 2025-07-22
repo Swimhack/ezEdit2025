@@ -1,0 +1,83 @@
+# EzEdit.co Production URL Rewriting & Security
+# Handles routing for auth and API endpoints
+
+RewriteEngine On
+
+# Security Headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' *.supabase.co *.stripe.com *.googleapis.com *.anthropic.com"
+
+# CORS Headers for API endpoints
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+
+# Handle preflight OPTIONS requests
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^(.*)$ $1 [R=200,L]
+
+# Auth endpoints routing
+RewriteRule ^auth/login/?$ auth/auth-handler.php?action=login [L,QSA]
+RewriteRule ^auth/register/?$ auth/auth-handler.php?action=register [L,QSA]
+RewriteRule ^auth/demo-login/?$ auth/auth-handler.php?action=demo-login [L,QSA]
+RewriteRule ^auth/verify/?$ auth/auth-handler.php?action=verify [L,QSA]
+RewriteRule ^auth/logout/?$ auth/auth-handler.php?action=logout [L,QSA]
+
+# API endpoints routing
+RewriteRule ^api/create-checkout-session/?$ api/create-checkout-session.php [L,QSA]
+RewriteRule ^api/ftp/test/?$ api/ftp/test.php [L,QSA]
+RewriteRule ^api/ftp/(.*)$ ftp/ftp-handler.php?action=$1 [L,QSA]
+
+# Static file handling
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# SPA routing for React-style navigation
+RewriteRule ^(dashboard|editor|billing|settings)/?$ index.html [L]
+
+# Redirect old PHP extensions to HTML
+RewriteRule ^(.*)\.php$ $1.html [R=301,L]
+
+# Prevent access to sensitive files
+<Files "*.env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.json">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "*.md">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# Browser caching
+<IfModule mod_expires.c>
+    ExpiresActive on
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>

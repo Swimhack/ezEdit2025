@@ -796,7 +796,7 @@
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 
-                const response = await fetch('/api/stripe/create-checkout-session', {
+                const response = await fetch('/api/create-checkout-session.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -831,7 +831,7 @@
             try {
                 const { data: { session } } = await supabase.auth.getSession();
                 
-                const response = await fetch('/api/stripe/create-checkout-session', {
+                const response = await fetch('/api/create-checkout-session.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

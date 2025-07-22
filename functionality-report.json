@@ -1,0 +1,148 @@
+{
+  "timestamp": "2025-07-22T23:49:37.223Z",
+  "pages": {
+    "Landing Page": {
+      "file": "public/index.html",
+      "exists": true,
+      "size": "19.9KB",
+      "integrations": [
+        "Monaco Editor"
+      ],
+      "requirements": [
+        "FTP demo integration",
+        "Monaco Editor loading",
+        "Navigation links",
+        "Responsive design"
+      ],
+      "status": "Ready"
+    },
+    "Signup Page": {
+      "file": "signup.html",
+      "exists": true,
+      "size": "22.9KB",
+      "integrations": [
+        "Supabase"
+      ],
+      "requirements": [
+        "Supabase authentication",
+        "Form validation",
+        "Password strength checking",
+        "Plan selection storage"
+      ],
+      "status": "Ready"
+    },
+    "Login Page": {
+      "file": "login-real.html",
+      "exists": true,
+      "size": "15.1KB",
+      "integrations": [
+        "Supabase"
+      ],
+      "requirements": [
+        "Supabase authentication",
+        "Remember me functionality",
+        "Error handling",
+        "Auto-redirect"
+      ],
+      "status": "Ready"
+    },
+    "Pricing Page": {
+      "file": "pricing.html",
+      "exists": true,
+      "size": "27.3KB",
+      "integrations": [
+        "Supabase",
+        "Stripe",
+        "API Calls"
+      ],
+      "requirements": [
+        "Plan selection",
+        "Stripe checkout integration",
+        "Monthly/yearly toggle",
+        "FAQ functionality"
+      ],
+      "status": "Ready"
+    },
+    "Dashboard": {
+      "file": "dashboard-real.html",
+      "exists": true,
+      "size": "25.7KB",
+      "integrations": [
+        "Supabase",
+        "API Calls"
+      ],
+      "requirements": [
+        "Site management",
+        "FTP connection testing",
+        "Supabase integration",
+        "Modal dialogs"
+      ],
+      "status": "Ready"
+    },
+    "Code Editor": {
+      "file": "editor-real.html",
+      "exists": true,
+      "size": "37.2KB",
+      "integrations": [
+        "Supabase",
+        "Monaco Editor",
+        "API Calls"
+      ],
+      "requirements": [
+        "Monaco Editor",
+        "File operations",
+        "AI assistant",
+        "Syntax highlighting"
+      ],
+      "status": "Ready"
+    },
+    "Billing Page": {
+      "file": "billing.html",
+      "exists": true,
+      "size": "32KB",
+      "integrations": [
+        "Supabase",
+        "Stripe",
+        "API Calls"
+      ],
+      "requirements": [
+        "Subscription display",
+        "Usage statistics",
+        "Stripe portal integration",
+        "Plan management"
+      ],
+      "status": "Ready"
+    }
+  },
+  "apis": {
+    "public/auth/auth-handler.php": {
+      "exists": true,
+      "size": "6.9KB",
+      "status": "Ready"
+    },
+    "public/api/create-checkout-session.php": {
+      "exists": true,
+      "size": "3.7KB",
+      "status": "Ready"
+    },
+    "public/api/ftp/test.php": {
+      "exists": true,
+      "size": "3.5KB",
+      "status": "Ready"
+    },
+    "public/ftp/ftp-handler.php": {
+      "exists": true,
+      "size": "31.2KB",
+      "status": "Ready"
+    },
+    "public/.htaccess": {
+      "exists": true,
+      "size": "2.9KB",
+      "status": "Ready"
+    }
+  },
+  "overall": {
+    "ready": true,
+    "issues": []
+  }
+}

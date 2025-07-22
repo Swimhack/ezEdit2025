@@ -1,0 +1,28 @@
+<?php
+/**
+ * Auth Demo Login Endpoint
+ * Handles POST /auth/demo-login requests
+ */
+
+// Enable CORS
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Content-Type: application/json');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit();
+}
+
+// Process the demo login request
+$_REQUEST['action'] = 'demo-login';
+require_once 'auth-handler.php';
+?>
