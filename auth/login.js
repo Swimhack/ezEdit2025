@@ -37,13 +37,11 @@ router.post('/login', async (req, res) => {
         
         res.json({
             success: true,
-            data: {
-                token: result.token,
-                user: {
-                    id: result.user.id,
-                    email: result.user.email,
-                    role: result.user.role
-                }
+            token: result.token,
+            user: {
+                id: result.user.id,
+                email: result.user.email,
+                role: result.user.role
             }
         });
         
@@ -117,13 +115,11 @@ router.post('/demo-login', async (req, res) => {
         
         res.json({
             success: true,
-            data: {
-                token,
-                user: {
-                    id: 'demo-user-123',
-                    email: 'demo@ezedit.co',
-                    role: 'user'
-                }
+            token,
+            user: {
+                id: 'demo-user-123',
+                email: 'demo@ezedit.co',
+                role: 'user'
             }
         });
         
@@ -132,6 +128,50 @@ router.post('/demo-login', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Demo login failed'
+        });
+    }
+});
+
+/**
+ * Registration endpoint
+ * POST /auth/register
+ */
+router.post('/register', async (req, res) => {
+    try {
+        const { email, password, metadata } = req.body;
+        
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email and password are required'
+            });
+        }
+        
+        const authManager = auth.getAuth();
+        const result = await authManager.registerUser(email, password, metadata);
+        
+        if (!result || result.error) {
+            return res.status(400).json({
+                success: false,
+                error: result.error || 'Registration failed'
+            });
+        }
+        
+        res.json({
+            success: true,
+            token: result.token,
+            user: {
+                id: result.user.id,
+                email: result.user.email,
+                role: result.user.role
+            }
+        });
+        
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Registration failed'
         });
     }
 });

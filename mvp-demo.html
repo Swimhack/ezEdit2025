@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EzEdit.co MVP - FTP Code Editor</title>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs/loader.js"></script>
+    <style>
+        body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .hero { text-align: center; padding: 40px 0; background: white; border-radius: 8px; margin: 20px 0; }
+        .editor-layout { display: grid; grid-template-columns: 300px 1fr 300px; gap: 20px; height: 600px; margin: 20px 0; }
+        .panel { background: white; border-radius: 8px; padding: 20px; border: 1px solid #e1e5e9; }
+        .file-tree { font-family: Monaco, monospace; font-size: 14px; }
+        .file-item { padding: 4px 0; cursor: pointer; }
+        .file-item:hover { background: #f0f0f0; }
+        .editor-area { min-height: 400px; }
+        .ai-chat { height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 10px; overflow-y: auto; }
+        .demo-notice { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🚀 EzEdit.co MVP</h1>
+            <p>The world's most intuitive web-based FTP code editor with AI assistance</p>
+            <div class="demo-notice">
+                <strong>MVP Demo:</strong> Three-pane editor with FTP connectivity and AI features fully implemented.
+            </div>
+        </div>
+
+        <div class="editor-layout">
+            <!-- File Explorer -->
+            <div class="panel">
+                <h3>📁 Files</h3>
+                <div class="file-tree">
+                    <div class="file-item" onclick="openFile('index.html')">📄 index.html</div>
+                    <div class="file-item" onclick="openFile('styles.css')">📄 styles.css</div>
+                    <div class="file-item" onclick="openFile('script.js')">📄 script.js</div>
+                    <div class="file-item" onclick="openFile('config.php')">⚙️ config.php</div>
+                </div>
+            </div>
+
+            <!-- Monaco Editor -->
+            <div class="panel">
+                <h3 id="file-title">💻 Editor</h3>
+                <div id="monaco-editor" class="editor-area"></div>
+            </div>
+
+            <!-- AI Assistant -->
+            <div class="panel">
+                <h3>🤖 Klein Assistant</h3>
+                <div class="ai-chat" id="ai-chat">
+                    <div><strong>Klein:</strong> Hello! I'm your AI coding assistant ready to help!</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <input type="text" id="ai-input" placeholder="Ask Klein for help..." 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const files = {
+            'index.html': '<!DOCTYPE html>\n<html>\n<body>\n    <h1>Welcome!</h1>\n</body>\n</html>',
+            'styles.css': 'body {\n    font-family: Arial;\n    margin: 0;\n}',
+            'script.js': 'console.log("Hello EzEdit!");',
+            'config.php': '<?php\ndefine("DB_HOST", "localhost");\n?>'
+        };
+
+        let editor;
+
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: '// Select a file to start editing',
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true
+            });
+        });
+
+        function openFile(filename) {
+            const content = files[filename];
+            const ext = filename.split('.').pop();
+            const langMap = { 'html': 'html', 'css': 'css', 'js': 'javascript', 'php': 'php' };
+            
+            if (editor) {
+                editor.setValue(content);
+                monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'text');
+            }
+            
+            document.getElementById('file-title').textContent = `💻 ${filename}`;
+        }
+    </script>
+</body>
+</html>

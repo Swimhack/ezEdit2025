@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="js/config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #ffffff;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+        
+        .editor-container {
+            height: 100vh;
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main assistant";
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 60px 1fr;
+        }
+        
+        .editor-header {
+            grid-area: header;
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-decoration: none;
+            color: #ffffff;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .current-file {
+            color: #d4d4d4;
+            font-weight: 500;
+            background: #1e1e1e;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            background: #16a34a;
+            color: white;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #404040;
+            color: #d4d4d4;
+        }
+        
+        .btn-secondary:hover {
+            background: #525252;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .sidebar {
+            grid-area: sidebar;
+            background: #252526;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-title {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 0.95rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-icon:hover {
+            background: #404040;
+        }
+        
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+        
+        .file-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: #d4d4d4;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .file-item:hover {
+            background: #2a2d2e;
+        }
+        
+        .file-item.active {
+            background: #37373d;
+            color: #ffffff;
+        }
+        
+        .file-item.loading {
+            opacity: 0.6;
+        }
+        
+        .file-icon {
+            font-size: 0.8rem;
+        }
+        
+        .main-editor {
+            grid-area: main;
+            background: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-tabs {
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            overflow-x: auto;
+            min-height: 40px;
+        }
+        
+        .editor-tab {
+            padding: 0.75rem 1rem;
+            border-right: 1px solid #404040;
+            color: #d4d4d4;
+            background: #2d2d2d;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .editor-tab:hover {
+            background: #37373d;
+        }
+        
+        .editor-tab.active {
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+        
+        .editor-tab.modified::after {
+            content: '●';
+            color: #fbbf24;
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            font-size: 0.7rem;
+        }
+        
+        .tab-close {
+            margin-left: 0.5rem;
+            padding: 0.25rem;
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+        
+        .tab-close:hover {
+            opacity: 1;
+            background: #525252;
+        }
+        
+        .monaco-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 30, 30, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .ai-assistant {
+            grid-area: assistant;
+            background: #252526;
+            border-left: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ai-header {
+            padding: 1rem;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .ai-title {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ai-status {
+            background: #16a34a;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .ai-chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .ai-message {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .ai-message.user {
+            align-items: flex-end;
+        }
+        
+        .ai-message.assistant {
+            align-items: flex-start;
+        }
+        
+        .message-content {
+            background: #37373d;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .ai-message.user .message-content {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .message-meta {
+            font-size: 0.75rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ai-input-container {
+            padding: 1rem;
+            border-top: 1px solid #404040;
+        }
+        
+        .ai-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+        
+        .ai-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 0.9rem;
+            outline: none;
+            resize: none;
+            min-height: 20px;
+            max-height: 100px;
+        }
+        
+        .ai-input::placeholder {
+            color: #888;
+        }
+        
+        .ai-send-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .ai-send-btn:hover {
+            background: #2563eb;
+        }
+        
+        .ai-send-btn:disabled {
+            background: #525252;
+            cursor: not-allowed;
+        }
+        
+        .spinner {
+            border: 2px solid #404040;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .editor-container {
+                grid-template-columns: 240px 1fr 280px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-areas: 
+                    "header header"
+                    "main assistant";
+                grid-template-columns: 1fr 300px;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Header -->
+        <header class="editor-header">
+            <div class="header-left">
+                <a href="/dashboard-real.html" class="logo">
+                    <div class="logo-icon">Ez</div>
+                    EzEdit.co
+                </a>
+                <div class="current-file" id="current-file">
+                    📄 Select a file to edit
+                </div>
+                <div class="connection-status" id="connection-status">
+                    <div class="status-dot"></div>
+                    <span>Connected</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" id="save-btn" disabled>
+                    💾 Save
+                </button>
+                <a href="/dashboard-real.html" class="btn btn-secondary">
+                    ← Dashboard
+                </a>
+            </div>
+        </header>
+        
+        <!-- File Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">📁 Files</div>
+                <div class="file-actions">
+                    <button class="btn-icon" title="Refresh" onclick="loadFileTree()">🔄</button>
+                </div>
+            </div>
+            <div class="file-tree" id="file-tree">
+                <div style="padding: 1rem; color: #888; text-align: center;">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 0.5rem;">Loading files...</div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Editor -->
+        <main class="main-editor">
+            <div class="editor-tabs" id="editor-tabs">
+                <!-- Tabs will be added dynamically -->
+            </div>
+            <div class="monaco-container" id="monaco-container">
+                <div id="monaco-editor"></div>
+                <div class="loading-overlay" id="loading-overlay" style="display: none;">
+                    <div style="text-align: center;">
+                        <div class="spinner"></div>
+                        <div style="margin-top: 0.5rem; color: #d4d4d4;">Loading file...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- AI Assistant -->
+        <aside class="ai-assistant">
+            <div class="ai-header">
+                <div class="ai-title">
+                    🤖 Klein Assistant
+                    <div class="ai-status" id="ai-status">Online</div>
+                </div>
+            </div>
+            <div class="ai-chat" id="ai-chat">
+                <div class="ai-message assistant">
+                    <div class="message-content">
+                        👋 Hello! I'm Klein, your AI coding assistant. I can help you:
+                        <br><br>
+                        • Explain code and functions<br>
+                        • Fix bugs and errors<br>
+                        • Write new features<br>
+                        • Optimize performance<br>
+                        • Answer questions
+                        <br><br>
+                        I can see your current file and provide contextual help!
+                    </div>
+                    <div class="message-meta">Klein • Just now</div>
+                </div>
+            </div>
+            <div class="ai-input-container">
+                <div class="ai-input-wrapper">
+                    <textarea 
+                        class="ai-input" 
+                        id="ai-input" 
+                        placeholder="Ask Klein for help..."
+                        rows="1"
+                    ></textarea>
+                    <button class="ai-send-btn" id="ai-send-btn">
+                        ✈
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://sctsykgcfkhadowygcrj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Global variables
+        let editor;
+        let currentSite = null;
+        let openTabs = [];
+        let currentFile = null;
+        let fileContents = {};
+        let isConnected = false;
+        
+        // Check authentication and load site
+        async function init() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                window.location.href = '/login-real.html';
+                return;
+            }
+            
+            // Get site from session storage
+            const siteData = sessionStorage.getItem('current_site');
+            if (!siteData) {
+                window.location.href = '/dashboard-real.html';
+                return;
+            }
+            
+            currentSite = JSON.parse(siteData);
+            
+            // Initialize Monaco Editor
+            initMonacoEditor();
+            
+            // Connect to FTP and load files
+            await connectToFTP();
+        }
+        
+        // Initialize Monaco Editor
+        function initMonacoEditor() {
+            require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs' }});
+            require(['vs/editor/editor.main'], function() {
+                editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: '// Welcome to EzEdit.co!\n// Select a file from the sidebar to start editing\n\n// Your FTP site is connected and ready',
+                    language: 'javascript',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    minimap: { enabled: true },
+                    wordWrap: 'on',
+                    lineNumbers: 'on',
+                    renderWhitespace: 'selection'
+                });
+                
+                // Listen for changes
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        updateSaveButton(true);
+                        markTabAsModified(currentFile);
+                    }
+                });
+            });
+        }
+        
+        // Connect to FTP server
+        async function connectToFTP() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/ftp/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        host: currentSite.host,
+                        username: currentSite.username,
+                        password: currentSite.password,
+                        port: currentSite.port || 21
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    isConnected = true;
+                    updateConnectionStatus(true);
+                    await loadFileTree();
+                } else {
+                    updateConnectionStatus(false, result.error);
+                    addAIMessage('assistant', `❌ Failed to connect to FTP server: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('FTP connection error:', error);
+                updateConnectionStatus(false, error.message);
+                addAIMessage('assistant', '❌ Unable to connect to the backend server. Please check your connection.');
+            }
+        }
+        
+        // Update connection status
+        function updateConnectionStatus(connected, error = null) {
+            const statusEl = document.getElementById('connection-status');
+            if (connected) {
+                statusEl.innerHTML = '<div class="status-dot"></div><span>Connected</span>';
+                statusEl.style.background = '#16a34a';
+            } else {
+                statusEl.innerHTML = '<div class="status-dot"></div><span>Disconnected</span>';
+                statusEl.style.background = '#dc2626';
+                if (error) {
+                    statusEl.title = error;
+                }
+            }
+        }
+        
+        // Load file tree from FTP
+        async function loadFileTree(path = '/') {
+            const fileTree = document.getElementById('file-tree');
+            fileTree.innerHTML = '<div style="padding: 1rem; color: #888; text-align: center;"><div class="spinner"></div><div style="margin-top: 0.5rem;">Loading files...</div></div>';
+            
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/ftp/list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        host: currentSite.host,
+                        path: path
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    renderFileTree(result.files);
+                } else {
+                    fileTree.innerHTML = `<div style="padding: 1rem; color: #dc2626;">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                console.error('File tree loading error:', error);
+                fileTree.innerHTML = '<div style="padding: 1rem; color: #dc2626;">Failed to load files</div>';
+            }
+        }
+        
+        // Render file tree
+        function renderFileTree(files) {
+            const fileTree = document.getElementById('file-tree');
+            
+            if (!files || files.length === 0) {
+                fileTree.innerHTML = '<div style="padding: 1rem; color: #888; text-align: center;">No files found</div>';
+                return;
+            }
+            
+            const sortedFiles = files.sort((a, b) => {
+                // Directories first, then files
+                if (a.type === 'directory' && b.type !== 'directory') return -1;
+                if (a.type !== 'directory' && b.type === 'directory') return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            fileTree.innerHTML = sortedFiles.map(file => {
+                const icon = file.type === 'directory' ? '📁' : getFileIcon(file.name);
+                return `
+                    <div class="file-item" data-path="${file.path}" data-type="${file.type}">
+                        <span class="file-icon">${icon}</span>
+                        ${file.name}
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click handlers
+            fileTree.addEventListener('click', handleFileClick);
+        }
+        
+        // Handle file/directory clicks
+        async function handleFileClick(e) {
+            const fileItem = e.target.closest('.file-item');
+            if (!fileItem) return;
+            
+            const path = fileItem.dataset.path;
+            const type = fileItem.dataset.type;
+            
+            if (type === 'directory') {
+                await loadFileTree(path);
+            } else {
+                await openFile(path);
+            }
+        }
+        
+        // Open file in editor
+        async function openFile(filePath) {
+            if (fileContents[filePath] === undefined) {
+                await loadFileContent(filePath);
+            }
+            
+            // Update file tree selection
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-path="${filePath}"]`)?.classList.add('active');
+            
+            // Add to tabs if not already open
+            if (!openTabs.includes(filePath)) {
+                openTabs.push(filePath);
+                updateTabs();
+            }
+            
+            // Switch to file
+            currentFile = filePath;
+            const content = fileContents[filePath] || '';
+            const language = getLanguageFromFilename(filePath);
+            
+            if (editor) {
+                editor.setValue(content);
+                monaco.editor.setModelLanguage(editor.getModel(), language);
+            }
+            
+            // Update UI
+            const fileName = filePath.split('/').pop();
+            document.getElementById('current-file').textContent = `📄 ${fileName}`;
+            updateSaveButton(false);
+            updateTabs();
+            
+            // Notify AI assistant
+            addAIMessage('assistant', `I can see you opened ${fileName}. This is a ${language.toUpperCase()} file. Need help understanding the code or making changes?`);
+        }
+        
+        // Load file content from FTP
+        async function loadFileContent(filePath) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex';
+            
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/ftp/get', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        host: currentSite.host,
+                        path: filePath
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    fileContents[filePath] = result.content;
+                } else {
+                    fileContents[filePath] = `// Error loading file: ${result.error}`;
+                    addAIMessage('assistant', `❌ Failed to load ${filePath}: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('File loading error:', error);
+                fileContents[filePath] = `// Error: ${error.message}`;
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+        
+        // Save file to FTP
+        async function saveFile() {
+            if (!currentFile || !editor) return;
+            
+            const content = editor.getValue();
+            const saveBtn = document.getElementById('save-btn');
+            const originalText = saveBtn.textContent;
+            
+            saveBtn.textContent = '💾 Saving...';
+            saveBtn.disabled = true;
+            
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/ftp/put', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        host: currentSite.host,
+                        path: currentFile,
+                        content: content
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    fileContents[currentFile] = content;
+                    updateSaveButton(false);
+                    unmarkTabAsModified(currentFile);
+                    addAIMessage('assistant', `✅ Saved ${currentFile.split('/').pop()} successfully! Your changes are now live on the server.`);
+                } else {
+                    addAIMessage('assistant', `❌ Failed to save ${currentFile}: ${result.error}`);
+                    alert('Save failed: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                addAIMessage('assistant', `❌ Save error: ${error.message}`);
+                alert('Save failed: ' + error.message);
+            } finally {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+        
+        // Get file icon based on extension
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const iconMap = {
+                'html': '🌐', 'htm': '🌐',
+                'css': '🎨', 'scss': '🎨', 'sass': '🎨',
+                'js': '⚡', 'jsx': '⚡', 'ts': '⚡', 'tsx': '⚡',
+                'php': '⚙️',
+                'sql': '🗃️',
+                'json': '📋',
+                'xml': '📄',
+                'md': '📝',
+                'txt': '📄',
+                'png': '🖼️', 'jpg': '🖼️', 'jpeg': '🖼️', 'gif': '🖼️',
+                'pdf': '📕'
+            };
+            return iconMap[ext] || '📄';
+        }
+        
+        // Get programming language for Monaco
+        function getLanguageFromFilename(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const langMap = {
+                'html': 'html', 'htm': 'html',
+                'css': 'css', 'scss': 'scss', 'sass': 'scss',
+                'js': 'javascript', 'jsx': 'javascript',
+                'ts': 'typescript', 'tsx': 'typescript',
+                'php': 'php',
+                'sql': 'sql',
+                'json': 'json',
+                'xml': 'xml',
+                'md': 'markdown',
+                'py': 'python',
+                'rb': 'ruby',
+                'go': 'go'
+            };
+            return langMap[ext] || 'text';
+        }
+        
+        // Update tabs
+        function updateTabs() {
+            const tabsContainer = document.getElementById('editor-tabs');
+            tabsContainer.innerHTML = openTabs.map(filePath => {
+                const fileName = filePath.split('/').pop();
+                const isActive = filePath === currentFile;
+                const icon = getFileIcon(fileName);
+                return `
+                    <button class="editor-tab ${isActive ? 'active' : ''}" data-file="${filePath}">
+                        ${icon} ${fileName}
+                        <span class="tab-close" onclick="closeTab('${filePath}', event)">×</span>
+                    </button>
+                `;
+            }).join('');
+            
+            // Add tab click handlers
+            tabsContainer.addEventListener('click', function(e) {
+                const tab = e.target.closest('.editor-tab');
+                if (tab && !e.target.classList.contains('tab-close')) {
+                    openFile(tab.dataset.file);
+                }
+            });
+        }
+        
+        // Close tab
+        function closeTab(filePath, event) {
+            event?.stopPropagation();
+            openTabs = openTabs.filter(f => f !== filePath);
+            
+            if (filePath === currentFile && openTabs.length > 0) {
+                openFile(openTabs[openTabs.length - 1]);
+            } else if (openTabs.length === 0) {
+                currentFile = null;
+                document.getElementById('current-file').textContent = '📄 Select a file to edit';
+                if (editor) {
+                    editor.setValue('// Select a file from the sidebar to start editing');
+                }
+            }
+            
+            updateTabs();
+        }
+        
+        // Mark/unmark tab as modified
+        function markTabAsModified(filePath) {
+            const tab = document.querySelector(`[data-file="${filePath}"]`);
+            if (tab) tab.classList.add('modified');
+        }
+        
+        function unmarkTabAsModified(filePath) {
+            const tab = document.querySelector(`[data-file="${filePath}"]`);
+            if (tab) tab.classList.remove('modified');
+        }
+        
+        // Update save button
+        function updateSaveButton(hasChanges) {
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = !hasChanges;
+            saveBtn.textContent = hasChanges ? '💾 Save*' : '💾 Save';
+        }
+        
+        // AI Assistant functionality
+        function addAIMessage(sender, content) {
+            const chatContainer = document.getElementById('ai-chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const senderName = sender === 'assistant' ? 'Klein' : 'You';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-meta">${senderName} • ${time}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Send message to AI
+        async function sendAIMessage() {
+            const input = document.getElementById('ai-input');
+            const sendBtn = document.getElementById('ai-send-btn');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addAIMessage('user', message);
+            input.value = '';
+            
+            sendBtn.disabled = true;
+            document.getElementById('ai-status').textContent = 'Thinking...';
+            document.getElementById('ai-status').style.background = '#fbbf24';
+            
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const context = {
+                    currentFile: currentFile,
+                    fileContent: currentFile ? editor?.getValue() : null,
+                    language: currentFile ? getLanguageFromFilename(currentFile) : null
+                };
+                
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        context: context
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    addAIMessage('assistant', result.response);
+                } else {
+                    addAIMessage('assistant', '❌ Sorry, I encountered an error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('AI chat error:', error);
+                addAIMessage('assistant', '❌ Unable to connect to AI service. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                document.getElementById('ai-status').textContent = 'Online';
+                document.getElementById('ai-status').style.background = '#16a34a';
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('save-btn').addEventListener('click', saveFile);
+        document.getElementById('ai-send-btn').addEventListener('click', sendAIMessage);
+        
+        document.getElementById('ai-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAIMessage();
+            }
+        });
+        
+        // Auto-resize textarea
+        document.getElementById('ai-input').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+        });
+        
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>

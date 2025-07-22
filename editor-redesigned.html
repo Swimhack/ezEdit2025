@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs/loader.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #ffffff;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+        
+        .editor-container {
+            height: 100vh;
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main assistant";
+            grid-template-columns: 280px 1fr 320px;
+            grid-template-rows: 60px 1fr;
+        }
+        
+        .editor-header {
+            grid-area: header;
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-decoration: none;
+            color: #ffffff;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .current-file {
+            color: #d4d4d4;
+            font-weight: 500;
+            background: #1e1e1e;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #404040;
+            color: #d4d4d4;
+        }
+        
+        .btn-secondary:hover {
+            background: #525252;
+        }
+        
+        .sidebar {
+            grid-area: sidebar;
+            background: #252526;
+            border-right: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .sidebar-title {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 0.95rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #d4d4d4;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-icon:hover {
+            background: #404040;
+        }
+        
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+        
+        .file-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: #d4d4d4;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .file-item:hover {
+            background: #2a2d2e;
+        }
+        
+        .file-item.active {
+            background: #37373d;
+            color: #ffffff;
+        }
+        
+        .file-icon {
+            font-size: 0.8rem;
+        }
+        
+        .main-editor {
+            grid-area: main;
+            background: #1e1e1e;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-tabs {
+            background: #2d2d2d;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            overflow-x: auto;
+            min-height: 40px;
+        }
+        
+        .editor-tab {
+            padding: 0.75rem 1rem;
+            border-right: 1px solid #404040;
+            color: #d4d4d4;
+            background: #2d2d2d;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .editor-tab:hover {
+            background: #37373d;
+        }
+        
+        .editor-tab.active {
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+        
+        .tab-close {
+            margin-left: 0.5rem;
+            padding: 0.25rem;
+            border-radius: 2px;
+            opacity: 0.6;
+        }
+        
+        .tab-close:hover {
+            opacity: 1;
+            background: #525252;
+        }
+        
+        .monaco-container {
+            flex: 1;
+        }
+        
+        .ai-assistant {
+            grid-area: assistant;
+            background: #252526;
+            border-left: 1px solid #404040;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ai-header {
+            padding: 1rem;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .ai-title {
+            font-weight: 600;
+            color: #ffffff;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ai-status {
+            background: #16a34a;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .ai-chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .ai-message {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .ai-message.user {
+            align-items: flex-end;
+        }
+        
+        .ai-message.assistant {
+            align-items: flex-start;
+        }
+        
+        .message-content {
+            background: #37373d;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        
+        .ai-message.user .message-content {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .message-meta {
+            font-size: 0.75rem;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .ai-input-container {
+            padding: 1rem;
+            border-top: 1px solid #404040;
+        }
+        
+        .ai-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            background: #1e1e1e;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 0.5rem;
+        }
+        
+        .ai-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 0.9rem;
+            outline: none;
+            resize: none;
+            min-height: 20px;
+            max-height: 100px;
+        }
+        
+        .ai-input::placeholder {
+            color: #888;
+        }
+        
+        .ai-send-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .ai-send-btn:hover {
+            background: #2563eb;
+        }
+        
+        .ai-send-btn:disabled {
+            background: #525252;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 1024px) {
+            .editor-container {
+                grid-template-columns: 240px 1fr 280px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .editor-container {
+                grid-template-areas: 
+                    "header header"
+                    "main assistant";
+                grid-template-columns: 1fr 300px;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <!-- Header -->
+        <header class="editor-header">
+            <div class="header-left">
+                <a href="/dashboard" class="logo">
+                    <div class="logo-icon">Ez</div>
+                    EzEdit.co
+                </a>
+                <div class="current-file" id="current-file">
+                    📄 Select a file to edit
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" id="save-btn" disabled>
+                    💾 Save
+                </button>
+                <a href="/dashboard" class="btn btn-secondary">
+                    ← Dashboard
+                </a>
+            </div>
+        </header>
+        
+        <!-- File Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">📁 Files</div>
+                <div class="file-actions">
+                    <button class="btn-icon" title="New File">📄</button>
+                    <button class="btn-icon" title="New Folder">📁</button>
+                    <button class="btn-icon" title="Refresh">🔄</button>
+                </div>
+            </div>
+            <div class="file-tree" id="file-tree">
+                <div class="file-item" data-file="index.html">
+                    <span class="file-icon">🌐</span>
+                    index.html
+                </div>
+                <div class="file-item" data-file="styles.css">
+                    <span class="file-icon">🎨</span>
+                    styles.css
+                </div>
+                <div class="file-item" data-file="script.js">
+                    <span class="file-icon">⚡</span>
+                    script.js
+                </div>
+                <div class="file-item" data-file="config.php">
+                    <span class="file-icon">⚙️</span>
+                    config.php
+                </div>
+                <div class="file-item" data-file="database.sql">
+                    <span class="file-icon">🗃️</span>
+                    database.sql
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Editor -->
+        <main class="main-editor">
+            <div class="editor-tabs" id="editor-tabs">
+                <!-- Tabs will be added dynamically -->
+            </div>
+            <div class="monaco-container" id="monaco-editor"></div>
+        </main>
+        
+        <!-- AI Assistant -->
+        <aside class="ai-assistant">
+            <div class="ai-header">
+                <div class="ai-title">
+                    🤖 Klein Assistant
+                    <div class="ai-status">Online</div>
+                </div>
+            </div>
+            <div class="ai-chat" id="ai-chat">
+                <div class="ai-message assistant">
+                    <div class="message-content">
+                        👋 Hello! I'm Klein, your AI coding assistant. I can help you:
+                        <br><br>
+                        • Explain code and functions<br>
+                        • Fix bugs and errors<br>
+                        • Write new features<br>
+                        • Optimize performance<br>
+                        • Answer questions
+                        <br><br>
+                        Select a file to get started!
+                    </div>
+                    <div class="message-meta">Klein • Just now</div>
+                </div>
+            </div>
+            <div class="ai-input-container">
+                <div class="ai-input-wrapper">
+                    <textarea 
+                        class="ai-input" 
+                        id="ai-input" 
+                        placeholder="Ask Klein for help..."
+                        rows="1"
+                    ></textarea>
+                    <button class="ai-send-btn" id="ai-send-btn">
+                        ✈
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        // Sample file contents
+        const fileContents = {
+            'index.html': `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to My Website</h1>
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+    
+    <main>
+        <section id="home">
+            <h2>Homepage Content</h2>
+            <p>This is the main content area of the website.</p>
+        </section>
+    </main>
+    
+    <script src="script.js"></script>
+</body>
+</html>`,
+            'styles.css': `/* Website Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: #f4f4f4;
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem 0;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+header h1 {
+    display: inline-block;
+    margin-left: 2rem;
+}
+
+nav {
+    float: right;
+    margin-right: 2rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+nav a:hover {
+    background: #34495e;
+}
+
+main {
+    margin-top: 80px;
+    padding: 2rem;
+}
+
+section {
+    background: white;
+    margin: 2rem 0;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}`,
+            'script.js': `// Website JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Website loaded successfully!');
+    
+    // Smooth scrolling for navigation links
+    const navLinks = document.querySelectorAll('nav a[href^="#"]');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const targetId = this.getAttribute('href');
+            const targetSection = document.querySelector(targetId);
+            
+            if (targetSection) {
+                targetSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Add active class to current navigation item
+    function updateActiveNav() {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('nav a');
+        
+        let current = '';
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            
+            if (scrollY >= (sectionTop - 200)) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateActiveNav);
+});`,
+            'config.php': `<?php
+/**
+ * Website Configuration
+ * Contains all configuration settings for the application
+ */
+
+// Database Configuration
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'my_website_db');
+define('DB_USER', 'db_user');
+define('DB_PASS', 'secure_password');
+define('DB_CHARSET', 'utf8mb4');
+
+// Site Configuration
+define('SITE_NAME', 'My Website');
+define('SITE_URL', 'https://mywebsite.com');
+define('SITE_EMAIL', 'admin@mywebsite.com');
+
+// Security Settings
+define('SECRET_KEY', 'your-secret-key-here');
+define('ENCRYPTION_METHOD', 'AES-256-CBC');
+
+// Error Reporting
+if (defined('ENVIRONMENT') && ENVIRONMENT === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
+
+// Timezone
+date_default_timezone_set('UTC');
+
+// Database Connection
+try {
+    $pdo = new PDO(
+        "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET,
+        DB_USER,
+        DB_PASS,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+} catch(PDOException $e) {
+    error_log("Database connection failed: " . $e->getMessage());
+    die("Database connection failed");
+}
+?>`,
+            'database.sql': `-- Website Database Schema
+-- Created for My Website project
+
+CREATE DATABASE IF NOT EXISTS my_website_db;
+USE my_website_db;
+
+-- Users table
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Posts table (for blog/content)
+CREATE TABLE posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) UNIQUE NOT NULL,
+    content TEXT,
+    excerpt TEXT,
+    author_id INT,
+    status ENUM('draft', 'published', 'archived') DEFAULT 'draft',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Categories table
+CREATE TABLE categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    slug VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    parent_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+
+-- Post categories relationship
+CREATE TABLE post_categories (
+    post_id INT,
+    category_id INT,
+    PRIMARY KEY (post_id, category_id),
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+-- Insert sample data
+INSERT INTO users (username, email, password_hash, first_name, last_name) VALUES
+('admin', 'admin@mywebsite.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'User'),
+('john_doe', 'john@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John', 'Doe');
+
+INSERT INTO categories (name, slug, description) VALUES
+('General', 'general', 'General content and updates'),
+('Technology', 'technology', 'Technology related posts'),
+('Lifestyle', 'lifestyle', 'Lifestyle and personal posts');
+
+INSERT INTO posts (title, slug, content, excerpt, author_id, status) VALUES
+('Welcome to My Website', 'welcome-to-my-website', 'This is the welcome post content...', 'Welcome to our new website!', 1, 'published'),
+('Getting Started Guide', 'getting-started-guide', 'Here is how to get started...', 'A comprehensive guide to get you started.', 1, 'published');`
+        };
+        
+        let editor;
+        let openTabs = [];
+        let currentFile = null;
+        
+        // Initialize Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: '// Welcome to EzEdit.co!\n// Select a file from the sidebar to start editing\n\nconsole.log("Ready to code with AI assistance!");',
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 14,
+                minimap: { enabled: true },
+                wordWrap: 'on',
+                lineNumbers: 'on',
+                renderWhitespace: 'selection'
+            });
+            
+            // Listen for changes
+            editor.onDidChangeModelContent(() => {
+                if (currentFile) {
+                    updateSaveButton(true);
+                }
+            });
+        });
+        
+        // File tree functionality
+        document.getElementById('file-tree').addEventListener('click', function(e) {
+            const fileItem = e.target.closest('.file-item');
+            if (fileItem) {
+                const filename = fileItem.dataset.file;
+                openFile(filename);
+            }
+        });
+        
+        function openFile(filename) {
+            // Update file tree selection
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-file="${filename}"]`).classList.add('active');
+            
+            // Add to tabs if not already open
+            if (!openTabs.includes(filename)) {
+                openTabs.push(filename);
+                updateTabs();
+            }
+            
+            // Switch to file
+            currentFile = filename;
+            const content = fileContents[filename] || `// File: ${filename}\n// Content would be loaded from FTP server`;
+            const language = getLanguageFromFilename(filename);
+            
+            if (editor) {
+                editor.setValue(content);
+                monaco.editor.setModelLanguage(editor.getModel(), language);
+            }
+            
+            // Update UI
+            document.getElementById('current-file').textContent = `📄 ${filename}`;
+            updateSaveButton(false);
+            
+            // Notify AI assistant
+            addAIMessage('assistant', `I can see you opened ${filename}. This is a ${language.toUpperCase()} file. Need help understanding the code or making changes?`);
+        }
+        
+        function getLanguageFromFilename(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const langMap = {
+                'html': 'html',
+                'css': 'css', 
+                'js': 'javascript',
+                'php': 'php',
+                'sql': 'sql',
+                'json': 'json',
+                'xml': 'xml',
+                'py': 'python',
+                'rb': 'ruby'
+            };
+            return langMap[ext] || 'text';
+        }
+        
+        function updateTabs() {
+            const tabsContainer = document.getElementById('editor-tabs');
+            tabsContainer.innerHTML = openTabs.map(filename => `
+                <button class="editor-tab ${filename === currentFile ? 'active' : ''}" data-file="${filename}">
+                    ${getFileIcon(filename)} ${filename}
+                    <span class="tab-close" onclick="closeTab('${filename}', event)">×</span>
+                </button>
+            `).join('');
+            
+            // Add tab click handlers
+            tabsContainer.addEventListener('click', function(e) {
+                const tab = e.target.closest('.editor-tab');
+                if (tab && !e.target.classList.contains('tab-close')) {
+                    openFile(tab.dataset.file);
+                }
+            });
+        }
+        
+        function closeTab(filename, event) {
+            event.stopPropagation();
+            openTabs = openTabs.filter(f => f !== filename);
+            
+            if (filename === currentFile && openTabs.length > 0) {
+                openFile(openTabs[openTabs.length - 1]);
+            } else if (openTabs.length === 0) {
+                currentFile = null;
+                document.getElementById('current-file').textContent = '📄 Select a file to edit';
+                if (editor) {
+                    editor.setValue('// Select a file from the sidebar to start editing');
+                }
+            }
+            
+            updateTabs();
+        }
+        
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const iconMap = {
+                'html': '🌐',
+                'css': '🎨', 
+                'js': '⚡',
+                'php': '⚙️',
+                'sql': '🗃️',
+                'json': '📋',
+                'xml': '📄'
+            };
+            return iconMap[ext] || '📄';
+        }
+        
+        function updateSaveButton(hasChanges) {
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = !hasChanges;
+            saveBtn.textContent = hasChanges ? '💾 Save*' : '💾 Save';
+        }
+        
+        // Save functionality
+        document.getElementById('save-btn').addEventListener('click', function() {
+            if (currentFile && editor) {
+                // In a real app, this would save to the FTP server
+                console.log('Saving', currentFile);
+                updateSaveButton(false);
+                addAIMessage('assistant', `✅ Saved ${currentFile} successfully! Your changes are now live on the server.`);
+            }
+        });
+        
+        // AI Assistant functionality
+        function addAIMessage(sender, content) {
+            const chatContainer = document.getElementById('ai-chat');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `ai-message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const senderName = sender === 'assistant' ? 'Klein' : 'You';
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-meta">${senderName} • ${time}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // AI input handling
+        const aiInput = document.getElementById('ai-input');
+        const aiSendBtn = document.getElementById('ai-send-btn');
+        
+        function sendAIMessage() {
+            const message = aiInput.value.trim();
+            if (message) {
+                addAIMessage('user', message);
+                aiInput.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const responses = [
+                        "I can help with that! Could you show me the specific code you're working with?",
+                        "That's a great question! Let me analyze your current file and provide some suggestions.",
+                        "I notice you're working on " + (currentFile || "a file") + ". What specific issue are you facing?",
+                        "I can help optimize that code. Would you like me to suggest improvements?",
+                        "Let me take a look at your code structure and provide some recommendations."
+                    ];
+                    const response = responses[Math.floor(Math.random() * responses.length)];
+                    addAIMessage('assistant', response);
+                }, 1000);
+            }
+        }
+        
+        aiSendBtn.addEventListener('click', sendAIMessage);
+        
+        aiInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAIMessage();
+            }
+        });
+        
+        // Auto-resize textarea
+        aiInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+        
+        // Check authentication
+        if (localStorage.getItem('ezedit_logged_in') !== 'true') {
+            window.location.href = '/login.html';
+        }
+        
+        // Auto-open a sample file
+        setTimeout(() => {
+            openFile('index.html');
+        }, 1000);
+    </script>
+</body>
+</html>

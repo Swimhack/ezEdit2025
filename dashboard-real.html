@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="js/config.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: #1f2937;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-info {
+            background: #f3f4f6;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        .logout-btn {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        .logout-btn:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 73px);
+        }
+        
+        .sidebar {
+            background: white;
+            width: 280px;
+            border-right: 1px solid #e5e7eb;
+            padding: 2rem 0;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+        }
+        
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 2rem;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        
+        .sidebar-nav a:hover {
+            background: #f9fafb;
+            color: #1f2937;
+        }
+        
+        .sidebar-nav a.active {
+            background: #f9fafb;
+            color: #3b82f6;
+            border-right-color: #3b82f6;
+        }
+        
+        .sidebar-nav .icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .add-site-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+            margin-left: auto;
+        }
+        
+        .add-site-btn:hover {
+            background: #2563eb;
+        }
+        
+        .trial-notice {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #92400e;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        
+        .trial-notice strong {
+            color: #78350f;
+        }
+        
+        .sites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .site-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .site-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .site-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .site-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .site-host {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .site-url {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        
+        .site-url:hover {
+            text-decoration: underline;
+        }
+        
+        .site-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-connected {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .status-disconnected {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .site-menu {
+            position: relative;
+        }
+        
+        .site-menu-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+        
+        .site-menu-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .site-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 1rem 0;
+            }
+            
+            .sidebar-nav {
+                display: flex;
+                gap: 1rem;
+                overflow-x: auto;
+                padding: 0 1rem;
+            }
+            
+            .sidebar-nav li {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+            
+            .sidebar-nav a {
+                padding: 0.75rem 1rem;
+                border-right: none;
+                border-bottom: 3px solid transparent;
+                border-radius: 6px;
+                white-space: nowrap;
+            }
+            
+            .sidebar-nav a.active {
+                border-right: none;
+                border-bottom-color: #3b82f6;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .sites-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">Ez</div>
+                EzEdit.co
+            </a>
+            
+            <div class="user-menu">
+                <div class="user-info" id="user-info">Loading...</div>
+                <button class="logout-btn" onclick="logout()">
+                    ↗ Log out
+                </button>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="main-layout">
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Dashboard</h2>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="#" class="active"><span class="icon">⊞</span> Dashboard</a></li>
+                    <li><a href="#"><span class="icon">🌐</span> My Sites</a></li>
+                    <li><a href="#"><span class="icon">⚙️</span> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">My FTP Sites</h1>
+                </div>
+                <button class="add-site-btn" onclick="showAddSiteModal()">
+                    ✚ Add Site
+                </button>
+            </div>
+            
+            <div class="trial-notice">
+                <strong>Free Trial Mode:</strong> You can browse and edit files, but saving changes requires a premium subscription.
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+            </div>
+            
+            <div class="sites-grid" id="sites-grid" style="display: none;">
+                <!-- Sites will be loaded here -->
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add Site Modal -->
+    <div class="modal" id="add-site-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New FTP Site</h2>
+                <button class="modal-close" onclick="hideAddSiteModal()">×</button>
+            </div>
+            <form id="add-site-form">
+                <div class="form-group">
+                    <label class="form-label" for="site-name">Site Name</label>
+                    <input type="text" id="site-name" class="form-input" placeholder="My Website" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ftp-host">FTP Host</label>
+                    <input type="text" id="ftp-host" class="form-input" placeholder="ftp.yourhost.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ftp-user">Username</label>
+                    <input type="text" id="ftp-user" class="form-input" placeholder="username" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ftp-pass">Password</label>
+                    <input type="password" id="ftp-pass" class="form-input" placeholder="password" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="ftp-port">Port (optional)</label>
+                    <input type="number" id="ftp-port" class="form-input" placeholder="21" value="21">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="site-url">Website URL (optional)</label>
+                    <input type="url" id="site-url" class="form-input" placeholder="https://yoursite.com">
+                </div>
+                <div class="site-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideAddSiteModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Site</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://sctsykgcfkhadowygcrj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        let currentUser = null;
+        let sites = [];
+        
+        // Check authentication on load
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                window.location.href = '/login-real.html';
+                return false;
+            }
+            currentUser = session.user;
+            document.getElementById('user-info').textContent = session.user.email;
+            return true;
+        }
+        
+        // Load sites from Supabase
+        async function loadSites() {
+            try {
+                const { data, error } = await supabase
+                    .from('ftp_sites')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    console.error('Error loading sites:', error);
+                    // If table doesn't exist, create it
+                    if (error.code === 'PGRST116') {
+                        await createSitesTable();
+                        return loadSites(); // Retry
+                    }
+                    sites = [];
+                } else {
+                    sites = data || [];
+                }
+                
+                renderSites();
+            } catch (err) {
+                console.error('Error in loadSites:', err);
+                sites = [];
+                renderSites();
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('sites-grid').style.display = 'grid';
+            }
+        }
+        
+        // Create sites table if it doesn't exist
+        async function createSitesTable() {
+            // This would typically be done through database migrations
+            // For now, we'll handle empty state gracefully
+            console.log('Sites table needs to be created by admin');
+        }
+        
+        // Render sites
+        function renderSites() {
+            const sitesGrid = document.getElementById('sites-grid');
+            
+            if (sites.length === 0) {
+                sitesGrid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-icon">🌐</div>
+                        <h3>No FTP sites yet</h3>
+                        <p>Add your first FTP site to start editing files with AI assistance.</p>
+                        <button class="btn btn-primary" onclick="showAddSiteModal()">Add Your First Site</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            sitesGrid.innerHTML = sites.map(site => `
+                <div class="site-card">
+                    <div class="site-header">
+                        <div>
+                            <div class="site-title">${escapeHtml(site.name)}</div>
+                            <div class="site-host">Host: ${escapeHtml(site.host)}</div>
+                            ${site.url ? `<a href="${escapeHtml(site.url)}" class="site-url" target="_blank">↗ ${escapeHtml(site.url)}</a>` : ''}
+                        </div>
+                        <div>
+                            <div class="site-status status-disconnected">Disconnected</div>
+                        </div>
+                    </div>
+                    
+                    <div class="site-actions">
+                        <button class="btn btn-primary" onclick="connectToSite('${site.id}')">
+                            💻 Connect & Edit
+                        </button>
+                        <button class="btn btn-secondary" onclick="testConnection('${site.id}')">
+                            🔗 Test Connection
+                        </button>
+                        <button class="btn btn-secondary" onclick="deleteSite('${site.id}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Show add site modal
+        function showAddSiteModal() {
+            document.getElementById('add-site-modal').style.display = 'block';
+        }
+        
+        // Hide add site modal
+        function hideAddSiteModal() {
+            document.getElementById('add-site-modal').style.display = 'none';
+            document.getElementById('add-site-form').reset();
+        }
+        
+        // Add new site
+        document.getElementById('add-site-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const siteData = {
+                user_id: currentUser.id,
+                name: document.getElementById('site-name').value,
+                host: document.getElementById('ftp-host').value,
+                username: document.getElementById('ftp-user').value,
+                password: document.getElementById('ftp-pass').value, // In production, this should be encrypted
+                port: parseInt(document.getElementById('ftp-port').value) || 21,
+                url: document.getElementById('site-url').value || null,
+                created_at: new Date().toISOString()
+            };
+            
+            try {
+                const { data, error } = await supabase
+                    .from('ftp_sites')
+                    .insert([siteData])
+                    .select();
+                
+                if (error) {
+                    alert('Error adding site: ' + error.message);
+                    return;
+                }
+                
+                sites.unshift(data[0]);
+                renderSites();
+                hideAddSiteModal();
+                alert('Site added successfully!');
+            } catch (err) {
+                console.error('Error adding site:', err);
+                alert('Error adding site. Please try again.');
+            }
+        });
+        
+        // Test FTP connection
+        async function testConnection(siteId) {
+            const site = sites.find(s => s.id === siteId);
+            if (!site) return;
+            
+            try {
+                const response = await fetch('/api/ftp/test', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                    },
+                    body: JSON.stringify({
+                        host: site.host,
+                        username: site.username,
+                        password: site.password,
+                        port: site.port
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Connection successful!');
+                } else {
+                    alert('❌ Connection failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Connection test error:', err);
+                alert('❌ Connection test failed: ' + err.message);
+            }
+        }
+        
+        // Connect to site and open editor
+        async function connectToSite(siteId) {
+            const site = sites.find(s => s.id === siteId);
+            if (!site) return;
+            
+            // Store site info for editor
+            sessionStorage.setItem('current_site', JSON.stringify(site));
+            window.location.href = `/editor-real.html?site=${siteId}`;
+        }
+        
+        // Delete site
+        async function deleteSite(siteId) {
+            if (!confirm('Are you sure you want to delete this site? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('ftp_sites')
+                    .delete()
+                    .eq('id', siteId)
+                    .eq('user_id', currentUser.id);
+                
+                if (error) {
+                    alert('Error deleting site: ' + error.message);
+                    return;
+                }
+                
+                sites = sites.filter(s => s.id !== siteId);
+                renderSites();
+                alert('Site deleted successfully.');
+            } catch (err) {
+                console.error('Error deleting site:', err);
+                alert('Error deleting site. Please try again.');
+            }
+        }
+        
+        // Logout
+        async function logout() {
+            await supabase.auth.signOut();
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+        
+        // Initialize
+        async function init() {
+            if (await checkAuth()) {
+                await loadSites();
+            }
+        }
+        
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || !session) {
+                window.location.href = '/login-real.html';
+            }
+        });
+        
+        // Start the app
+        init();
+    </script>
+</body>
+</html>

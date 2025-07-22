@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: #1f2937;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .dashboard-badge {
+            background: #f3f4f6;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .admin-badge {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .logout-btn {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .logout-btn:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 73px);
+        }
+        
+        .sidebar {
+            background: white;
+            width: 280px;
+            border-right: 1px solid #e5e7eb;
+            padding: 2rem 0;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+        }
+        
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 2rem;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        
+        .sidebar-nav a:hover {
+            background: #f9fafb;
+            color: #1f2937;
+        }
+        
+        .sidebar-nav a.active {
+            background: #f9fafb;
+            color: #3b82f6;
+            border-right-color: #3b82f6;
+        }
+        
+        .sidebar-nav .icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .add-site-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+            margin-left: auto;
+        }
+        
+        .add-site-btn:hover {
+            background: #2563eb;
+        }
+        
+        .trial-notice {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            color: #92400e;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        
+        .trial-notice strong {
+            color: #78350f;
+        }
+        
+        .sites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .site-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .site-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .site-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .site-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+        
+        .site-host {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .site-url {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        
+        .site-url:hover {
+            text-decoration: underline;
+        }
+        
+        .site-menu {
+            position: relative;
+        }
+        
+        .site-menu-btn {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 4px;
+        }
+        
+        .site-menu-btn:hover {
+            background: #f3f4f6;
+        }
+        
+        .site-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+            border: none;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        
+        .empty-state p {
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 1rem 0;
+            }
+            
+            .sidebar-nav {
+                display: flex;
+                gap: 1rem;
+                overflow-x: auto;
+                padding: 0 1rem;
+            }
+            
+            .sidebar-nav li {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+            
+            .sidebar-nav a {
+                padding: 0.75rem 1rem;
+                border-right: none;
+                border-bottom: 3px solid transparent;
+                border-radius: 6px;
+                white-space: nowrap;
+            }
+            
+            .sidebar-nav a.active {
+                border-right: none;
+                border-bottom-color: #3b82f6;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .sites-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">Ez</div>
+                EzEdit.co
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="/#features">Features</a></li>
+                <li><a href="/#pricing">Pricing</a></li>
+                <li><a href="#docs">Docs</a></li>
+                <li><a href="#" title="Dashboard">⊞</a></li>
+            </ul>
+            
+            <div class="user-menu">
+                <div class="dashboard-badge">
+                    ⊞ Dashboard
+                </div>
+                <div class="admin-badge">🔶 Admin</div>
+                <a href="#" class="logout-btn" onclick="logout()">
+                    ↗ Log out
+                </a>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="main-layout">
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Dashboard</h2>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="#" class="active"><span class="icon">⊞</span> Dashboard</a></li>
+                    <li><a href="#"><span class="icon">🌐</span> My Sites</a></li>
+                    <li><a href="#"><span class="icon">⚙️</span> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">My FTP Sites</h1>
+                </div>
+                <button class="add-site-btn" onclick="addNewSite()">
+                    ✚ Add Site
+                </button>
+            </div>
+            
+            <div class="trial-notice">
+                <strong>Free Trial Mode:</strong> You can browse and edit files, but saving changes requires a premium subscription.
+            </div>
+            
+            <div class="sites-grid" id="sites-grid">
+                <!-- Sites will be loaded here -->
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Sample sites data
+        const sampleSites = [
+            {
+                id: 1,
+                name: "Eastgate Ministries",
+                host: "72.167.42.141",
+                url: "http://eastgateministrie...",
+                connected: true
+            },
+            {
+                id: 2,
+                name: "Portfolio Site",
+                host: "198.71.233.42",
+                url: "https://myportfolio.com",
+                connected: false
+            },
+            {
+                id: 3,
+                name: "Client Project",
+                host: "162.144.74.15",
+                url: "https://clientsite.net",
+                connected: true
+            }
+        ];
+        
+        // Check authentication
+        if (localStorage.getItem('ezedit_logged_in') !== 'true') {
+            window.location.href = '/login.html';
+        }
+        
+        // Load sites
+        function loadSites() {
+            const sitesGrid = document.getElementById('sites-grid');
+            const sites = JSON.parse(localStorage.getItem('ezedit_sites') || JSON.stringify(sampleSites));
+            
+            if (sites.length === 0) {
+                sitesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🌐</div>
+                        <h3>No FTP sites yet</h3>
+                        <p>Add your first FTP site to start editing files with AI assistance.</p>
+                        <button class="btn btn-primary" onclick="addNewSite()">Add Your First Site</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            sitesGrid.innerHTML = sites.map(site => `
+                <div class="site-card">
+                    <div class="site-header">
+                        <div>
+                            <div class="site-title">${site.name}</div>
+                            <div class="site-host">Host: ${site.host}</div>
+                            <a href="${site.url}" class="site-url" target="_blank">↗ ${site.url}</a>
+                        </div>
+                        <div class="site-menu">
+                            <button class="site-menu-btn" onclick="showSiteMenu(${site.id})">⋮</button>
+                        </div>
+                    </div>
+                    
+                    <div class="site-actions">
+                        <a href="/editor?site=${site.id}" class="btn btn-primary">
+                            💻 Edit Files
+                        </a>
+                        <button class="btn btn-secondary" onclick="configureSite(${site.id})">
+                            ⚙️ Settings
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addNewSite() {
+            const name = prompt('Enter site name:');
+            const host = prompt('Enter FTP host:');
+            const url = prompt('Enter website URL:');
+            
+            if (name && host && url) {
+                const sites = JSON.parse(localStorage.getItem('ezedit_sites') || JSON.stringify(sampleSites));
+                const newSite = {
+                    id: Date.now(),
+                    name: name,
+                    host: host,
+                    url: url,
+                    connected: false
+                };
+                
+                sites.push(newSite);
+                localStorage.setItem('ezedit_sites', JSON.stringify(sites));
+                loadSites();
+            }
+        }
+        
+        function configureSite(siteId) {
+            alert('Site configuration coming soon! This will allow you to manage FTP credentials, connection settings, and more.');
+        }
+        
+        function showSiteMenu(siteId) {
+            if (confirm('Remove this site from your dashboard?')) {
+                const sites = JSON.parse(localStorage.getItem('ezedit_sites') || JSON.stringify(sampleSites));
+                const updatedSites = sites.filter(site => site.id !== siteId);
+                localStorage.setItem('ezedit_sites', JSON.stringify(updatedSites));
+                loadSites();
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('ezedit_logged_in');
+            localStorage.removeItem('ezedit_user_email');
+            window.location.href = '/';
+        }
+        
+        // Initialize
+        loadSites();
+    </script>
+</body>
+</html>

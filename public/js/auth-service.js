@@ -1,56 +1,45 @@
 /**
  * EzEdit Authentication Service
- * Handles JWT-based authentication for the API
+ * Handles authentication using Supabase and fallback PHP backend
  */
 
-window.ezEdit = window.ezEdit || {};
-
-window.ezEdit.authService = (function() {
-    // Private variables
-    let authToken = null;
-    let currentUser = null;
-    let isAuthenticated = false;
-    
-    const AUTH_API_URL = '/auth';
-    const TOKEN_STORAGE_KEY = 'ezedit_auth_token';
-    const USER_STORAGE_KEY = 'ezedit_user_data';
-    
-    /**
-     * Initialize auth service by checking for existing token
-     */
-    function init() {
-        // Check for existing token in localStorage
-        const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-        const storedUser = localStorage.getItem(USER_STORAGE_KEY);
-        
-        if (storedToken && storedUser) {
-            try {
-                authToken = storedToken;
-                currentUser = JSON.parse(storedUser);
-                isAuthenticated = true;
-                
-                // Verify token is still valid
-                verifyToken().then(result => {
-                    if (!result.success) {
-                        logout();
-                    }
-                }).catch(() => {
-                    logout();
-                });
-            } catch (error) {
-                console.error('Error parsing stored user data:', error);
-                logout();
-            }
-        }
-    }
+class AuthService {
+  constructor() {
+    this.supabase = null;
+    this.phpAuth = null;
+    this.activeAuthService = null;
+    this.storageKey = 'ezEditAuthData';
+    this.sessionId = null;
+    this.initialized = false;
+  }
 
   async init() {
     try {
-      const supabaseInit = await this.supabase.init();
-      this.activeAuthService = supabaseInit.success ? 'supabase' : null;
-      console.log(`Using ${this.activeAuthService || 'no'} auth service`);
+      // Initialize Supabase service
+      if (window.ezEdit && window.ezEdit.supabase) {
+        this.supabase = window.ezEdit.supabase;
+        const supabaseInit = await this.supabase.init();
+        this.activeAuthService = supabaseInit.success ? 'supabase' : null;
+      }
+
+      // Fallback to PHP auth service if Supabase isn't available
+      if (!this.activeAuthService && window.ezEdit && window.ezEdit.phpAuth) {
+        this.phpAuth = window.ezEdit.phpAuth;
+        await this.phpAuth.init();
+        this.activeAuthService = 'php';
+      }
+
+      // If neither service is available, create a basic JWT service
+      if (!this.activeAuthService) {
+        this.activeAuthService = 'jwt';
+        this.initJWTService();
+      }
+
+      this.initialized = true;
+      console.log(`AuthService initialized with: ${this.activeAuthService}`);
+      
       return {
-        success: !!this.activeAuthService,
+        success: true,
         activeAuthService: this.activeAuthService
       };
     } catch (error) {
@@ -59,17 +48,39 @@ window.ezEdit.authService = (function() {
     }
   }
 
+  initJWTService() {
+    // Basic JWT authentication fallback
+    this.jwtService = {
+      token: localStorage.getItem('ezedit_auth_token'),
+      user: JSON.parse(localStorage.getItem('ezedit_user_data') || 'null')
+    };
+  }
+
   getActiveService() {
-    return this.supabase;
+    if (this.activeAuthService === 'supabase') return this.supabase;
+    if (this.activeAuthService === 'php') return this.phpAuth;
+    return this.jwtService;
   }
 
   async signIn(email, password) {
     try {
-      const result = await this.supabase.signInWithPassword(email, password);
-      this.logAuthAttempt('signin', email, result.success, 'supabase', result.error);
+      let result;
+
+      if (this.activeAuthService === 'supabase' && this.supabase) {
+        result = await this.supabase.signInWithPassword(email, password);
+      } else if (this.activeAuthService === 'php' && this.phpAuth) {
+        result = await this.phpAuth.signInWithPassword(email, password);
+      } else {
+        // Fallback JWT authentication
+        result = await this.jwtSignIn(email, password);
+      }
+
+      this.logAuthAttempt('signin', email, result.success, this.activeAuthService, result.error);
+      
       if (result.success) {
         this._storeAuthData(result);
       }
+      
       return result;
     } catch (error) {
       console.error('Auth sign in error:', error);
@@ -80,13 +91,63 @@ window.ezEdit.authService = (function() {
     }
   }
 
+  async jwtSignIn(email, password) {
+    try {
+      const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed');
+      }
+
+      if (data.success && data.token) {
+        localStorage.setItem('ezedit_auth_token', data.token);
+        localStorage.setItem('ezedit_user_data', JSON.stringify(data.user));
+        this.jwtService.token = data.token;
+        this.jwtService.user = data.user;
+        
+        return {
+          success: true,
+          user: data.user,
+          session: { access_token: data.token }
+        };
+      } else {
+        throw new Error(data.error || 'Invalid response from server');
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      };
+    }
+  }
+
   async signUp(userData) {
     try {
-      const result = await this.supabase.signUp(userData);
-      this.logAuthAttempt('signup', userData.email, result.success, 'supabase', result.error);
+      let result;
+
+      if (this.activeAuthService === 'supabase' && this.supabase) {
+        result = await this.supabase.signUp(userData);
+      } else if (this.activeAuthService === 'php' && this.phpAuth) {
+        result = await this.phpAuth.signUp(userData);
+      } else {
+        // Fallback JWT signup
+        result = await this.jwtSignUp(userData);
+      }
+
+      this.logAuthAttempt('signup', userData.email, result.success, this.activeAuthService, result.error);
+      
       if (result.success && result.session) {
         this._storeAuthData(result);
       }
+      
       return result;
     } catch (error) {
       console.error('Auth sign up error:', error);
@@ -97,14 +158,48 @@ window.ezEdit.authService = (function() {
     }
   }
 
+  async jwtSignUp(userData) {
+    try {
+      const response = await fetch('/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      if (data.success) {
+        return {
+          success: true,
+          user: data.user,
+          session: data.token ? { access_token: data.token } : null
+        };
+      } else {
+        throw new Error(data.error || 'Invalid response from server');
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Network error'
+      };
+    }
+  }
+
   async signInWithProvider(provider, options = {}) {
     try {
-      const result = await this.supabase.signInWithProvider(provider, options);
-      this.logAuthAttempt('oauth', null, result.success, provider, result.error);
-      if (!result.error) {
-        this.activeAuthService = 'supabase';
+      if (this.activeAuthService === 'supabase' && this.supabase) {
+        const result = await this.supabase.signInWithProvider(provider, options);
+        this.logAuthAttempt('oauth', null, result.success, provider, result.error);
+        return result;
+      } else {
+        throw new Error('Social login only available with Supabase');
       }
-      return result;
     } catch (error) {
       console.error(`Auth sign in with ${provider} error:`, error);
       return {
@@ -116,14 +211,28 @@ window.ezEdit.authService = (function() {
 
   async signOut() {
     try {
-      const result = await this.supabase.signOut();
+      let result = { success: true };
+
+      if (this.activeAuthService === 'supabase' && this.supabase) {
+        result = await this.supabase.signOut();
+      } else if (this.activeAuthService === 'php' && this.phpAuth) {
+        result = await this.phpAuth.signOut();
+      } else {
+        // JWT signout
+        localStorage.removeItem('ezedit_auth_token');
+        localStorage.removeItem('ezedit_user_data');
+        this.jwtService.token = null;
+        this.jwtService.user = null;
+      }
+
       localStorage.removeItem(this.storageKey);
-      this.activeAuthService = null;
-      this.logAuthAttempt('signout', null, result.success, 'supabase', result.error);
+      this.logAuthAttempt('signout', null, result.success, this.activeAuthService, result.error);
       return result;
     } catch (error) {
       console.error('Auth sign out error:', error);
       localStorage.removeItem(this.storageKey);
+      localStorage.removeItem('ezedit_auth_token');
+      localStorage.removeItem('ezedit_user_data');
       this.logAuthAttempt('signout', null, false, null, error.message);
       return {
         success: false,
@@ -133,20 +242,56 @@ window.ezEdit.authService = (function() {
   }
 
   isAuthenticated() {
-    return this.supabase.isAuthenticated();
+    if (this.activeAuthService === 'supabase' && this.supabase) {
+      return this.supabase.isAuthenticated();
+    } else if (this.activeAuthService === 'php' && this.phpAuth) {
+      return this.phpAuth.checkAuth();
+    } else {
+      // JWT check
+      const token = localStorage.getItem('ezedit_auth_token');
+      return !!token;
+    }
   }
 
   getSession() {
-    return this.supabase.getSession();
+    if (this.activeAuthService === 'supabase' && this.supabase) {
+      return this.supabase.getSession();
+    } else if (this.activeAuthService === 'php' && this.phpAuth) {
+      return this.phpAuth.getSession();
+    } else {
+      // JWT session
+      const token = localStorage.getItem('ezedit_auth_token');
+      return token ? { access_token: token } : null;
+    }
   }
 
   getUser() {
-    return this.supabase.getUser();
+    if (this.activeAuthService === 'supabase' && this.supabase) {
+      return this.supabase.getUser();
+    } else if (this.activeAuthService === 'php' && this.phpAuth) {
+      return this.phpAuth.getCurrentUser();
+    } else {
+      // JWT user
+      const userData = localStorage.getItem('ezedit_user_data');
+      return userData ? JSON.parse(userData) : null;
+    }
+  }
+
+  getCurrentUser() {
+    return this.getUser();
+  }
+
+  checkAuth() {
+    return this.isAuthenticated();
   }
 
   getToken() {
     const session = this.getSession();
-    return session ? session.access_token : null;
+    if (session && session.access_token) {
+      return session.access_token;
+    }
+    // Fallback to direct token storage
+    return localStorage.getItem('ezedit_auth_token');
   }
 
   _storeAuthData(authData) {
@@ -178,12 +323,18 @@ window.ezEdit.authService = (function() {
       url: window.location.href,
       sessionId: this.generateSessionId()
     };
-    const authLogs = JSON.parse(localStorage.getItem('ezEditAuthLogs') || '[]');
-    authLogs.unshift(logEntry);
-    if (authLogs.length > 50) {
-      authLogs.splice(50);
+    
+    try {
+      const authLogs = JSON.parse(localStorage.getItem('ezEditAuthLogs') || '[]');
+      authLogs.unshift(logEntry);
+      if (authLogs.length > 50) {
+        authLogs.splice(50);
+      }
+      localStorage.setItem('ezEditAuthLogs', JSON.stringify(authLogs));
+    } catch (error) {
+      console.warn('Failed to store auth log:', error);
     }
-    localStorage.setItem('ezEditAuthLogs', JSON.stringify(authLogs));
+    
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       console.log('🔐 Auth Log:', logEntry);
     }
@@ -196,3 +347,6 @@ window.ezEdit.authService = (function() {
     return this.sessionId;
   }
 }
+
+// Make AuthService available globally
+window.AuthService = AuthService;

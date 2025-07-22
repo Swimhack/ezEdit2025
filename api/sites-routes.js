@@ -242,4 +242,85 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/sites/:id/backup - Create and download a backup of the site
+ */
+router.post('/:id/backup', async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const siteId = req.params.id;
+
+        // Get site details
+        const { data: site, error: siteError } = await supabase
+            .from('sites')
+            .select('*')
+            .eq('id', siteId)
+            .eq('user_id', userId)
+            .single();
+
+        if (siteError || !site) {
+            return res.status(404).json({
+                success: false,
+                error: 'Site not found'
+            });
+        }
+
+        // Import FTP library
+        const Client = require('basic-ftp');
+        const archiver = require('archiver');
+        const path = require('path');
+        const fs = require('fs');
+        const os = require('os');
+
+        const client = new Client();
+        
+        try {
+            // Connect to FTP
+            await client.access({
+                host: site.host,
+                port: site.port,
+                user: site.username,
+                password: site.password, // Will be decrypted by database
+                secure: false
+            });
+
+            // Create temporary directory for backup
+            const tempDir = path.join(os.tmpdir(), `backup-${siteId}-${Date.now()}`);
+            fs.mkdirSync(tempDir, { recursive: true });
+
+            // Download files to temp directory
+            await client.downloadToDir(tempDir, site.root_path || '/');
+            
+            // Create zip archive
+            const archive = archiver('zip', { zlib: { level: 9 } });
+            
+            res.setHeader('Content-Type', 'application/zip');
+            res.setHeader('Content-Disposition', `attachment; filename="backup-${site.name}-${new Date().toISOString().split('T')[0]}.zip"`);
+            
+            archive.pipe(res);
+            archive.directory(tempDir, false);
+            await archive.finalize();
+
+            // Cleanup temp directory
+            fs.rmSync(tempDir, { recursive: true, force: true });
+
+        } catch (ftpError) {
+            console.error('FTP backup error:', ftpError);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to create backup: ' + ftpError.message
+            });
+        } finally {
+            client.close();
+        }
+
+    } catch (error) {
+        console.error('Backup error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+});
+
 module.exports = router;

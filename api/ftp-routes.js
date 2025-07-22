@@ -406,4 +406,195 @@ router.get('/status', requireAuth, async (req, res) => {
     }
 });
 
+/**
+ * Test FTP connection
+ * POST /api/ftp/test-connection
+ */
+router.post('/test-connection', requireAuth, async (req, res) => {
+    try {
+        const { host, port = 21, username, password, passive_mode = true } = req.body;
+        
+        if (!host || !username || !password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Host, username, and password are required'
+            });
+        }
+
+        // Import FTP library for testing
+        const Client = require('basic-ftp');
+        const client = new Client();
+        
+        try {
+            // Set timeout for connection test
+            client.ftp.timeout = 10000; // 10 seconds
+            
+            // Attempt to connect
+            await client.access({
+                host,
+                port: parseInt(port),
+                user: username,
+                password,
+                secure: false
+            });
+
+            // Test basic operations
+            const currentDir = await client.pwd();
+            
+            res.json({
+                success: true,
+                data: {
+                    message: 'Connection successful',
+                    host,
+                    port: parseInt(port),
+                    currentDirectory: currentDir,
+                    connectionTime: new Date().toISOString()
+                }
+            });
+            
+        } catch (ftpError) {
+            console.error('FTP connection test failed:', ftpError);
+            res.status(400).json({
+                success: false,
+                error: 'Connection failed: ' + ftpError.message
+            });
+        } finally {
+            try {
+                client.close();
+            } catch (closeError) {
+                // Ignore close errors
+            }
+        }
+        
+    } catch (error) {
+        console.error('FTP test error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error: ' + error.message
+        });
+    }
+});
+
+/**
+ * Upload file
+ * POST /api/ftp/upload
+ */
+router.post('/upload', requireAuth, async (req, res) => {
+    try {
+        const multer = require('multer');
+        const upload = multer({ 
+            storage: multer.memoryStorage(),
+            limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+        });
+
+        // Handle multipart form data
+        upload.single('file')(req, res, async (err) => {
+            if (err) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'File upload error: ' + err.message
+                });
+            }
+
+            const { connectionId, path } = req.body;
+            const file = req.file;
+
+            if (!connectionId || !path || !file) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Connection ID, path, and file are required'
+                });
+            }
+
+            try {
+                // Get FTP connection
+                const connection = await ftpPool.getConnection(connectionId, req.user.user_id || req.user.id);
+                const ftpClient = connection.client;
+
+                // Upload file buffer
+                await ftpClient.uploadFrom(file.buffer, path);
+
+                res.json({
+                    success: true,
+                    data: {
+                        path,
+                        filename: file.originalname,
+                        size: file.size,
+                        message: 'File uploaded successfully'
+                    }
+                });
+
+            } catch (ftpError) {
+                console.error('FTP upload error:', ftpError);
+                res.status(500).json({
+                    success: false,
+                    error: 'Failed to upload file: ' + ftpError.message
+                });
+            }
+        });
+
+    } catch (error) {
+        console.error('Upload error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error: ' + error.message
+        });
+    }
+});
+
+/**
+ * Download file
+ * POST /api/ftp/download
+ */
+router.post('/download', requireAuth, async (req, res) => {
+    try {
+        const { connectionId, path } = req.body;
+
+        if (!connectionId || !path) {
+            return res.status(400).json({
+                success: false,
+                error: 'Connection ID and path are required'
+            });
+        }
+
+        // Get FTP connection
+        const connection = await ftpPool.getConnection(connectionId, req.user.user_id || req.user.id);
+        const ftpClient = connection.client;
+
+        // Create a stream to capture file data
+        const chunks = [];
+        const writeStream = {
+            write: (chunk) => chunks.push(chunk),
+            end: () => {},
+            on: () => {},
+            once: () => {},
+            emit: () => {}
+        };
+
+        // Download file to memory
+        await ftpClient.downloadTo(writeStream, path);
+
+        // Combine chunks into buffer
+        const fileBuffer = Buffer.concat(chunks);
+
+        // Get filename from path
+        const filename = path.split('/').pop();
+
+        // Set appropriate headers
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', fileBuffer.length);
+
+        // Send file buffer
+        res.send(fileBuffer);
+
+    } catch (error) {
+        console.error('Download error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to download file: ' + error.message
+        });
+    }
+});
+
 module.exports = router;
