@@ -1023,16 +1023,37 @@
                     },
                     body: JSON.stringify({
                         message: message,
-                        context: context
+                        context: context,
+                        userId: session.user.id
                     })
                 });
                 
                 const result = await response.json();
                 
                 if (result.success) {
-                    addAIMessage('assistant', result.response);
+                    // Show model used and remaining queries
+                    const modelIcon = result.model === 'claude' ? '🧠' : '⚡';
+                    const modelName = result.model === 'claude' ? 'Claude' : 'Qwen';
+                    let responseText = result.response;
+                    
+                    // Add usage info for trial users
+                    if (result.queriesRemaining !== undefined && result.queriesRemaining < 50) {
+                        responseText += `\n\n*${modelIcon} Powered by ${modelName} • ${result.queriesRemaining} queries remaining today*`;
+                    }
+                    
+                    addAIMessage('assistant', responseText);
+                    
+                    // Update AI status with model info
+                    document.getElementById('ai-status').textContent = `${modelIcon} ${modelName}`;
                 } else {
-                    addAIMessage('assistant', '❌ Sorry, I encountered an error: ' + result.error);
+                    // Handle specific error cases
+                    if (result.error?.includes('limit reached')) {
+                        addAIMessage('assistant', `❌ ${result.error}\n\n[Upgrade to Pro](/pricing.html) for unlimited AI assistance!`);
+                    } else if (result.upgradeUrl) {
+                        addAIMessage('assistant', `❌ ${result.error}\n\n<a href="${result.upgradeUrl}" style="color: #3b82f6;">Upgrade Now →</a>`);
+                    } else {
+                        addAIMessage('assistant', '❌ Sorry, I encountered an error: ' + result.error);
+                    }
                 }
             } catch (error) {
                 console.error('AI chat error:', error);
