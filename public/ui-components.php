@@ -262,7 +262,7 @@
           <div class="footer-links-column">
             <h4>Product</h4>
             <a href="/#features">Features</a>
-            <a href="/#pricing">Pricing</a>
+            <a href="/pricing.html">Pricing</a>
             <a href="/docs/index.html">Documentation</a>
           </div>
           <div class="footer-links-column">

@@ -507,7 +507,7 @@
           <h4 class="footer-title">Product</h4>
           <ul class="footer-links">
             <li><a href="#features">Features</a></li>
-            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="/pricing.html">Pricing</a></li>
             <li><a href="docs/index.html">Documentation</a></li>
             <li><a href="test-google-auth.html">Google Auth Test</a></li>
             <li><a href="test-supabase.html">Supabase Test</a></li>

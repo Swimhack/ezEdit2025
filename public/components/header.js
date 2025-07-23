@@ -52,7 +52,7 @@ class EzEditHeader extends HTMLElement {
         <nav class="nav-links">
           <a href="index.php">Home</a>
           <a href="index.php#features">Features</a>
-          <a href="index.php#pricing">Pricing</a>
+          <a href="/pricing.html">Pricing</a>
           <a href="docs/index.php">Docs</a>
         </nav>
       `;
@@ -61,7 +61,7 @@ class EzEditHeader extends HTMLElement {
       navLinks = `
         <nav class="nav-links">
           <a href="index.php#features" class="${currentPath === '/' && location.hash === '#features' ? 'active' : ''}">Features</a>
-          <a href="index.php#pricing" class="${currentPath === '/' && location.hash === '#pricing' ? 'active' : ''}">Pricing</a>
+          <a href="/pricing.html" class="${currentPath === '/pricing.html' ? 'active' : ''}">Pricing</a>
           <a href="docs/index.php" class="${currentPath.includes('docs') ? 'active' : ''}">Docs</a>
         </nav>
         <div class="nav-auth">

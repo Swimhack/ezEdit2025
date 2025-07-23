@@ -28,7 +28,7 @@
         <nav class="nav-auth-links">
           <a href="/">Home</a>
           <a href="/#features">Features</a>
-          <a href="/#pricing">Pricing</a>
+          <a href="/pricing.html">Pricing</a>
           <a href="/docs/index.html">Docs</a>
         </nav>
       </div>
@@ -95,7 +95,7 @@
         <p>&copy; 2025 EzEdit.co • <a href="/privacy.html">Privacy</a> • <a href="/terms.html">Terms</a></p>
         <div class="footer-links">
           <a href="/">Home</a>
-          <a href="/#pricing">Pricing</a>
+          <a href="/pricing.html">Pricing</a>
           <a href="/docs/index.html">Documentation</a>
           <a href="/contact.html">Contact</a>
         </div>
