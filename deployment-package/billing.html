@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing & Subscription - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 0;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: #1f2937;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-info {
+            background: #f3f4f6;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+        
+        .back-btn, .logout-btn {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        
+        .back-btn:hover, .logout-btn:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .main-layout {
+            display: flex;
+            min-height: calc(100vh - 73px);
+        }
+        
+        .sidebar {
+            background: white;
+            width: 280px;
+            border-right: 1px solid #e5e7eb;
+            padding: 2rem 0;
+        }
+        
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-nav {
+            list-style: none;
+        }
+        
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 2rem;
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        
+        .sidebar-nav a:hover {
+            background: #f9fafb;
+            color: #1f2937;
+        }
+        
+        .sidebar-nav a.active {
+            background: #f9fafb;
+            color: #3b82f6;
+            border-right-color: #3b82f6;
+        }
+        
+        .sidebar-nav .icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+        
+        .page-header {
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .page-description {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .billing-cards {
+            display: grid;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .billing-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 2rem;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .status-trial {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-canceled {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .status-past-due {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .subscription-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .detail-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-outline:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .btn-danger {
+            background: white;
+            color: #dc2626;
+            border: 2px solid #fecaca;
+        }
+        
+        .btn-danger:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .upgrade-card {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+        }
+        
+        .upgrade-card .card-title {
+            color: white;
+        }
+        
+        .upgrade-card .detail-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .upgrade-card .detail-value {
+            color: white;
+        }
+        
+        .upgrade-card .btn-outline {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .upgrade-card .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+        }
+        
+        .trial-warning {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+        }
+        
+        .warning-icon {
+            color: #d97706;
+            font-size: 1.2rem;
+            margin-top: 0.1rem;
+        }
+        
+        .warning-content h3 {
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .warning-content p {
+            color: #92400e;
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .usage-section {
+            margin-top: 3rem;
+        }
+        
+        .usage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .usage-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .usage-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .usage-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 1rem 0;
+            }
+            
+            .sidebar-nav {
+                display: flex;
+                gap: 1rem;
+                overflow-x: auto;
+                padding: 0 1rem;
+            }
+            
+            .sidebar-nav li {
+                margin-bottom: 0;
+                flex-shrink: 0;
+            }
+            
+            .sidebar-nav a {
+                padding: 0.75rem 1rem;
+                border-right: none;
+                border-bottom: 3px solid transparent;
+                border-radius: 6px;
+                white-space: nowrap;
+            }
+            
+            .sidebar-nav a.active {
+                border-right: none;
+                border-bottom-color: #3b82f6;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .subscription-details {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .card-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">Ez</div>
+                EzEdit.co
+            </a>
+            
+            <div class="user-menu">
+                <div class="user-info" id="user-info">Loading...</div>
+                <a href="/dashboard-real.html" class="back-btn">← Dashboard</a>
+                <button class="logout-btn" onclick="logout()">
+                    ↗ Log out
+                </button>
+            </div>
+        </nav>
+    </header>
+    
+    <div class="main-layout">
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Account</h2>
+            <nav>
+                <ul class="sidebar-nav">
+                    <li><a href="#" class="active"><span class="icon">💳</span> Billing</a></li>
+                    <li><a href="/dashboard-real.html"><span class="icon">🌐</span> My Sites</a></li>
+                    <li><a href="#"><span class="icon">⚙️</span> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="main-content">
+            <div class="page-header">
+                <h1 class="page-title">Billing & Subscription</h1>
+                <p class="page-description">Manage your subscription, billing, and usage</p>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                Loading subscription details...
+            </div>
+            
+            <div id="billing-content" style="display: none;">
+                <!-- Trial Warning (if applicable) -->
+                <div class="trial-warning" id="trial-warning" style="display: none;">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <h3>Free Trial Ending Soon</h3>
+                        <p id="trial-message">Your free trial ends in 3 days. Upgrade now to continue saving files and using AI features.</p>
+                        <button class="btn btn-primary" onclick="upgradeToPro()">Upgrade Now</button>
+                    </div>
+                </div>
+                
+                <!-- Current Subscription Card -->
+                <div class="billing-cards">
+                    <div class="billing-card" id="subscription-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Current Subscription</h2>
+                            <div class="status-badge" id="subscription-status">Active</div>
+                        </div>
+                        
+                        <div class="subscription-details" id="subscription-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Plan</div>
+                                <div class="detail-value" id="current-plan">Pro Monthly</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Price</div>
+                                <div class="detail-value" id="current-price">$50/month</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Next Billing</div>
+                                <div class="detail-value" id="next-billing">Dec 22, 2024</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value" id="billing-status">Current</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-actions" id="subscription-actions">
+                            <button class="btn btn-primary" onclick="openCustomerPortal()">Manage Subscription</button>
+                            <button class="btn btn-outline" onclick="changePlan()">Change Plan</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Upgrade Card (for trial users) -->
+                    <div class="billing-card upgrade-card" id="upgrade-card" style="display: none;">
+                        <div class="card-header">
+                            <h2 class="card-title">Upgrade to Pro</h2>
+                        </div>
+                        
+                        <div class="subscription-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Features</div>
+                                <div class="detail-value">Unlimited sites & saves</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">AI Assistance</div>
+                                <div class="detail-value">Unlimited queries</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Team Collaboration</div>
+                                <div class="detail-value">5 team members</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Support</div>
+                                <div class="detail-value">Priority support</div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-actions">
+                            <button class="btn btn-outline" onclick="upgradeToPro()">Upgrade to Pro - $50/month</button>
+                            <button class="btn btn-outline" onclick="buyLifetime()">Buy Lifetime - $497</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Usage Statistics -->
+                <div class="usage-section">
+                    <h2>Usage This Month</h2>
+                    <div class="usage-grid">
+                        <div class="usage-card">
+                            <div class="usage-number" id="sites-count">-</div>
+                            <div class="usage-label">Connected Sites</div>
+                        </div>
+                        <div class="usage-card">
+                            <div class="usage-number" id="files-edited">-</div>
+                            <div class="usage-label">Files Edited</div>
+                        </div>
+                        <div class="usage-card">
+                            <div class="usage-number" id="ai-queries">-</div>
+                            <div class="usage-label">AI Queries</div>
+                        </div>
+                        <div class="usage-card">
+                            <div class="usage-number" id="storage-used">-</div>
+                            <div class="usage-label">Storage Used</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // Initialize Stripe and Supabase
+        const stripe = Stripe('pk_live_51R9RpGAuYycpID5hykEKz1PLYpMC5f2xVcejaqipi31fCuAH4Yuwkxaz8oaTW1gxaZKFueKPfxBnj8zmsdhWICM7006c7mCTz2');
+        const supabaseUrl = 'https://sctsykgcfkhadowygcrj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        let currentUser = null;
+        let subscriptionData = null;
+        
+        // Check authentication on load
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                window.location.href = '/login-real.html';
+                return false;
+            }
+            currentUser = session.user;
+            document.getElementById('user-info').textContent = session.user.email;
+            return true;
+        }
+        
+        // Load subscription data
+        async function loadSubscriptionData() {
+            try {
+                const { data: profile, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+                
+                if (error) {
+                    console.error('Error loading subscription:', error);
+                    return;
+                }
+                
+                subscriptionData = profile;
+                renderSubscriptionInfo();
+                loadUsageStats();
+                
+            } catch (err) {
+                console.error('Subscription loading error:', err);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('billing-content').style.display = 'block';
+            }
+        }
+        
+        // Render subscription information
+        function renderSubscriptionInfo() {
+            if (!subscriptionData) return;
+            
+            const status = subscriptionData.subscription_status || 'trial';
+            const plan = subscriptionData.subscription_plan || 'trial';
+            const billing = subscriptionData.subscription_billing || 'monthly';
+            
+            // Update status badge
+            const statusBadge = document.getElementById('subscription-status');
+            statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            statusBadge.className = `status-badge status-${status}`;
+            
+            // Update subscription details
+            if (status === 'trial') {
+                showTrialInterface();
+            } else if (status === 'active' || status === 'past_due') {
+                showActiveSubscription();
+            } else if (status === 'lifetime') {
+                showLifetimeSubscription();
+            } else {
+                showCanceledSubscription();
+            }
+            
+            // Show trial warning if applicable
+            if (status === 'trial' && subscriptionData.trial_ends_at) {
+                showTrialWarning();
+            }
+        }
+        
+        // Show trial interface
+        function showTrialInterface() {
+            document.getElementById('current-plan').textContent = 'Free Trial';
+            document.getElementById('current-price').textContent = '$0';
+            document.getElementById('next-billing').textContent = subscriptionData.trial_ends_at ? 
+                formatDate(subscriptionData.trial_ends_at) : 'N/A';
+            document.getElementById('billing-status').textContent = 'Trial Active';
+            
+            // Show upgrade card
+            document.getElementById('upgrade-card').style.display = 'block';
+            
+            // Update actions
+            document.getElementById('subscription-actions').innerHTML = `
+                <button class="btn btn-primary" onclick="upgradeToPro()">Upgrade to Pro</button>
+                <button class="btn btn-outline" onclick="buyLifetime()">Buy Lifetime</button>
+            `;
+        }
+        
+        // Show active subscription
+        function showActiveSubscription() {
+            const planName = subscriptionData.subscription_plan === 'pro' ? 'Pro' : 'Premium';
+            const billingText = subscriptionData.subscription_billing === 'yearly' ? 'Yearly' : 'Monthly';
+            const price = subscriptionData.subscription_billing === 'yearly' ? '$40/month (billed yearly)' : '$50/month';
+            
+            document.getElementById('current-plan').textContent = `${planName} ${billingText}`;
+            document.getElementById('current-price').textContent = price;
+            document.getElementById('next-billing').textContent = subscriptionData.current_period_end ? 
+                formatDate(subscriptionData.current_period_end) : 'N/A';
+            document.getElementById('billing-status').textContent = subscriptionData.subscription_status === 'past_due' ? 'Payment Due' : 'Current';
+            
+            // Standard actions
+            document.getElementById('subscription-actions').innerHTML = `
+                <button class="btn btn-primary" onclick="openCustomerPortal()">Manage Subscription</button>
+                <button class="btn btn-outline" onclick="changePlan()">Change Plan</button>
+                <button class="btn btn-danger" onclick="cancelSubscription()">Cancel</button>
+            `;
+        }
+        
+        // Show lifetime subscription
+        function showLifetimeSubscription() {
+            document.getElementById('current-plan').textContent = 'Lifetime';
+            document.getElementById('current-price').textContent = '$497 (one-time)';
+            document.getElementById('next-billing').textContent = 'Never';
+            document.getElementById('billing-status').textContent = 'Lifetime Access';
+            
+            document.getElementById('subscription-actions').innerHTML = `
+                <button class="btn btn-outline" onclick="openCustomerPortal()">View Receipt</button>
+            `;
+        }
+        
+        // Show canceled subscription
+        function showCanceledSubscription() {
+            document.getElementById('current-plan').textContent = 'Canceled';
+            document.getElementById('current-price').textContent = '$0';
+            document.getElementById('next-billing').textContent = 'N/A';
+            document.getElementById('billing-status').textContent = 'Canceled';
+            
+            document.getElementById('subscription-actions').innerHTML = `
+                <button class="btn btn-primary" onclick="upgradeToPro()">Resubscribe</button>
+            `;
+        }
+        
+        // Show trial warning
+        function showTrialWarning() {
+            const trialEndDate = new Date(subscriptionData.trial_ends_at);
+            const now = new Date();
+            const daysLeft = Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysLeft > 0) {
+                document.getElementById('trial-message').textContent = 
+                    `Your free trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}. Upgrade now to continue saving files and using AI features.`;
+                document.getElementById('trial-warning').style.display = 'flex';
+            }
+        }
+        
+        // Load usage statistics
+        async function loadUsageStats() {
+            try {
+                // Load site count
+                const { data: sites, error: sitesError } = await supabase
+                    .from('ftp_sites')
+                    .select('id')
+                    .eq('user_id', currentUser.id);
+                
+                if (!sitesError) {
+                    document.getElementById('sites-count').textContent = sites.length;
+                }
+                
+                // For now, show placeholder data for other metrics
+                // In production, these would come from usage tracking tables
+                document.getElementById('files-edited').textContent = '24';
+                document.getElementById('ai-queries').textContent = '156';
+                document.getElementById('storage-used').textContent = '2.1MB';
+                
+            } catch (error) {
+                console.error('Usage stats error:', error);
+            }
+        }
+        
+        // Upgrade to Pro
+        async function upgradeToPro() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/create-checkout-session.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        priceId: 'price_1QXbhKAuYycpID5hJUv8QE1H',
+                        userId: currentUser.id,
+                        userEmail: currentUser.email,
+                        plan: 'pro',
+                        billing: 'monthly'
+                    })
+                });
+                
+                const { sessionId, error } = await response.json();
+                
+                if (error) throw new Error(error);
+                
+                const { error: stripeError } = await stripe.redirectToCheckout({
+                    sessionId: sessionId
+                });
+                
+                if (stripeError) throw new Error(stripeError.message);
+                
+            } catch (error) {
+                alert('Error starting checkout: ' + error.message);
+            }
+        }
+        
+        // Buy lifetime
+        async function buyLifetime() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/create-checkout-session.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        priceId: 'price_1QXbhKAuYycpID5hJUv8QE1H_lifetime',
+                        userId: currentUser.id,
+                        userEmail: currentUser.email,
+                        plan: 'lifetime',
+                        billing: 'one-time'
+                    })
+                });
+                
+                const { sessionId, error } = await response.json();
+                
+                if (error) throw new Error(error);
+                
+                const { error: stripeError } = await stripe.redirectToCheckout({
+                    sessionId: sessionId
+                });
+                
+                if (stripeError) throw new Error(stripeError.message);
+                
+            } catch (error) {
+                alert('Error starting checkout: ' + error.message);
+            }
+        }
+        
+        // Open Stripe Customer Portal
+        async function openCustomerPortal() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                const response = await fetch('/api/stripe/create-portal-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.id
+                    })
+                });
+                
+                const { url, error } = await response.json();
+                
+                if (error) throw new Error(error);
+                
+                window.location.href = url;
+                
+            } catch (error) {
+                alert('Error opening billing portal: ' + error.message);
+            }
+        }
+        
+        // Change plan
+        function changePlan() {
+            window.location.href = '/pricing.html';
+        }
+        
+        // Cancel subscription
+        function cancelSubscription() {
+            if (confirm('Are you sure you want to cancel your subscription? You will lose access to Pro features at the end of your billing period.')) {
+                openCustomerPortal();
+            }
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        // Logout
+        async function logout() {
+            await supabase.auth.signOut();
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+        
+        // Initialize
+        async function init() {
+            if (await checkAuth()) {
+                await loadSubscriptionData();
+            }
+        }
+        
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || !session) {
+                window.location.href = '/login-real.html';
+            }
+        });
+        
+        // Start the app
+        init();
+    </script>
+</body>
+</html>

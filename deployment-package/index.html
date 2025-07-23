@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EzEdit.co - Edit Legacy Websites with AI-Powered Simplicity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .header {
+            padding: 1rem 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: #1f2937;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: #6b7280;
+        }
+        
+        .btn-ghost:hover {
+            color: #3b82f6;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .hero {
+            padding: 6rem 0;
+            text-align: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+        
+        .hero .highlight {
+            color: #3b82f6;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            color: #6b7280;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-section {
+            margin: 3rem 0;
+        }
+        
+        .email-signup {
+            display: flex;
+            max-width: 500px;
+            margin: 0 auto 2rem auto;
+            gap: 0.5rem;
+            background: white;
+            padding: 0.5rem;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .email-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .email-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .btn-invite {
+            background: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+        
+        .btn-invite:hover {
+            background: #2563eb;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 10px;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #d1d5db;
+            color: #4b5563;
+        }
+        
+        .features {
+            padding: 5rem 0;
+            background: white;
+        }
+        
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+        
+        .features h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: left;
+        }
+        
+        .feature-icon {
+            background: #3b82f6;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+        
+        .feature-card p {
+            color: #6b7280;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-container {
+                padding: 0 1rem;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .email-signup {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">Ez</div>
+                EzEdit.co
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="/pricing.html">Pricing</a></li>
+                <li><a href="#docs">Docs</a></li>
+                <li><a href="/dashboard-real.html" title="Dashboard">⊞</a></li>
+            </ul>
+            
+            <div class="auth-buttons">
+                <a href="/login-real.html" class="btn btn-ghost">Log in</a>
+                <a href="/signup.html" class="btn btn-primary">Sign up</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="hero">
+            <div class="hero-container">
+                <h1>Edit Legacy Websites with <span class="highlight">AI-Powered</span> Simplicity</h1>
+                <p>Connect to any website via FTP/SFTP and update your code using natural language prompts. Secure, fast, and incredibly simple.</p>
+                
+                <div class="cta-section">
+                    <div class="email-signup">
+                        <input type="email" class="email-input" placeholder="Enter your email">
+                        <button class="btn-invite">
+                            Get Invite
+                            <span>✈</span>
+                        </button>
+                    </div>
+                    
+                    <div class="cta-buttons">
+                        <a href="/signup.html" class="btn btn-primary btn-large">Get Started for Free</a>
+                        <a href="/editor-real.html" class="btn btn-secondary btn-large">Watch Demo</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="features" id="features">
+            <div class="features-container">
+                <h2>Why Choose EzEdit?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔌</div>
+                        <h3>Universal FTP/SFTP Support</h3>
+                        <p>Connect to any website hosting service. Works with shared hosting, VPS, dedicated servers, and cloud platforms.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI-Powered Code Assistant</h3>
+                        <p>Klein, our AI assistant, helps explain code, fix bugs, suggest improvements, and write new features using natural language.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Familiar IDE Experience</h3>
+                        <p>Three-pane layout like classic IDEs. File browser, Monaco editor with syntax highlighting, and integrated AI assistant.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Enterprise Security</h3>
+                        <p>Encrypted connections, secure credential storage, and enterprise-grade security practices protect your code and data.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Instant Deployment</h3>
+                        <p>Changes are reflected immediately on your live website. No build processes, no deployment pipelines - just edit and save.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">💰</div>
+                        <h3>Affordable Pricing</h3>
+                        <p>Start free, upgrade to Pro for $50/month, or get lifetime access for $500. Perfect for freelancers and agencies.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <script>
+        // Email signup functionality
+        document.querySelector('.btn-invite').addEventListener('click', function() {
+            const email = document.querySelector('.email-input').value;
+            if (email && email.includes('@')) {
+                alert('Thanks! We\'ll send you early access when available.');
+                document.querySelector('.email-input').value = '';
+            } else {
+                alert('Please enter a valid email address.');
+            }
+        });
+        
+        // Demo redirect
+        document.querySelectorAll('a[href="/demo"]').forEach(link => {
+            link.href = 'javascript:void(0)';
+            link.addEventListener('click', function() {
+                // Redirect to the current MVP editor
+                window.location.href = '/editor-real.html';
+            });
+        });
+    </script>
+</body>
+</html>

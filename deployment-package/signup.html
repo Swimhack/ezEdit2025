@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - EzEdit.co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1f2937;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            padding: 1rem 0;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            font-weight: 700;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: #1f2937;
+        }
+        
+        .logo-icon {
+            background: #3b82f6;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #6b7280;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: #3b82f6;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: #6b7280;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .signup-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .signup-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .signup-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .signup-header p {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+        
+        .selected-plan {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .plan-name {
+            font-weight: 600;
+            color: #0369a1;
+            margin-bottom: 0.25rem;
+        }
+        
+        .plan-price {
+            color: #0284c7;
+            font-size: 0.9rem;
+        }
+        
+        .signup-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+        
+        .form-input {
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: #ffffff;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.25rem;
+        }
+        
+        .password-strength {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .strength-weak {
+            color: #dc2626;
+        }
+        
+        .strength-medium {
+            color: #fbbf24;
+        }
+        
+        .strength-strong {
+            color: #16a34a;
+        }
+        
+        .terms-checkbox {
+            display: flex;
+            align-items: start;
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+        
+        .terms-checkbox input[type="checkbox"] {
+            width: 1.1rem;
+            height: 1.1rem;
+            accent-color: #3b82f6;
+            margin-top: 0.125rem;
+        }
+        
+        .terms-checkbox label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .terms-checkbox a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+        
+        .signup-button {
+            background: #3b82f6;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .signup-button:hover {
+            background: #2563eb;
+        }
+        
+        .signup-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        
+        .login-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .trial-badge {
+            background: #16a34a;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+        
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            
+            .nav-container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav-container">
+            <a href="/" class="logo">
+                <div class="logo-icon">Ez</div>
+                EzEdit.co
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="/#features">Features</a></li>
+                <li><a href="/pricing.html">Pricing</a></li>
+                <li><a href="#docs">Docs</a></li>
+            </ul>
+            
+            <div class="auth-buttons">
+                <a href="/login-real.html" class="btn btn-ghost">Log in</a>
+            </div>
+        </nav>
+    </header>
+    
+    <main class="main-content">
+        <div class="signup-container">
+            <div class="signup-header">
+                <h1>Create your account</h1>
+                <p>Start your 7-day free trial <span class="trial-badge">No Credit Card</span></p>
+            </div>
+            
+            <div class="selected-plan" id="selected-plan" style="display: none;">
+                <div class="plan-name" id="plan-name">Pro Plan Selected</div>
+                <div class="plan-price" id="plan-price">$50/month after trial</div>
+            </div>
+            
+            <div class="error-message" id="error-message"></div>
+            <div class="success-message" id="success-message"></div>
+            
+            <form class="signup-form" id="signup-form">
+                <div class="form-group">
+                    <label class="form-label" for="fullname">Full Name</label>
+                    <input 
+                        type="text" 
+                        id="fullname" 
+                        name="fullname" 
+                        class="form-input" 
+                        placeholder="John Smith" 
+                        required 
+                        autocomplete="name"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-input" 
+                        placeholder="john@company.com" 
+                        required 
+                        autocomplete="email"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="password-container">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-input" 
+                            placeholder="Create a strong password" 
+                            required 
+                            autocomplete="new-password"
+                        >
+                        <button type="button" class="password-toggle" id="password-toggle">👁</button>
+                    </div>
+                    <div class="password-strength" id="password-strength"></div>
+                </div>
+                
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="/terms" target="_blank">Terms of Service</a> 
+                        and <a href="/privacy" target="_blank">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="marketing" name="marketing">
+                    <label for="marketing">
+                        Send me product updates and tips (optional)
+                    </label>
+                </div>
+                
+                <button type="submit" class="signup-button" id="signup-button">
+                    <span id="signup-text">Start Free Trial</span>
+                    <span id="signup-spinner" class="spinner" style="display: none;"></span>
+                </button>
+            </form>
+            
+            <div class="login-link">
+                Already have an account? <a href="/login-real.html">Sign in</a>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://sctsykgcfkhadowygcrj.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Check for selected plan
+        let selectedPlan = null;
+        window.addEventListener('load', function() {
+            const planData = localStorage.getItem('selected_plan');
+            if (planData) {
+                selectedPlan = JSON.parse(planData);
+                showSelectedPlan(selectedPlan);
+            }
+        });
+        
+        // Show selected plan
+        function showSelectedPlan(plan) {
+            const planElement = document.getElementById('selected-plan');
+            const planName = document.getElementById('plan-name');
+            const planPrice = document.getElementById('plan-price');
+            
+            if (plan.plan === 'pro') {
+                planName.textContent = 'Pro Plan Selected';
+                planPrice.textContent = plan.billing === 'yearly' ? '$40/month after trial (billed yearly)' : '$50/month after trial';
+            } else if (plan.plan === 'lifetime') {
+                planName.textContent = 'Lifetime Plan Selected';
+                planPrice.textContent = '$497 one-time after trial';
+            }
+            
+            planElement.style.display = 'block';
+        }
+        
+        // Password visibility toggle
+        const passwordInput = document.getElementById('password');
+        const passwordToggle = document.getElementById('password-toggle');
+        
+        passwordToggle.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.textContent = '👁';
+            }
+        });
+        
+        // Password strength indicator
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            const strengthElement = document.getElementById('password-strength');
+            
+            if (password.length === 0) {
+                strengthElement.textContent = '';
+                return;
+            }
+            
+            let score = 0;
+            if (password.length >= 8) score++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score++;
+            
+            if (score < 2) {
+                strengthElement.textContent = 'Weak password';
+                strengthElement.className = 'password-strength strength-weak';
+            } else if (score < 4) {
+                strengthElement.textContent = 'Medium strength';
+                strengthElement.className = 'password-strength strength-medium';
+            } else {
+                strengthElement.textContent = 'Strong password';
+                strengthElement.className = 'password-strength strength-strong';
+            }
+        });
+        
+        // Form submission
+        const signupForm = document.getElementById('signup-form');
+        const signupButton = document.getElementById('signup-button');
+        const signupText = document.getElementById('signup-text');
+        const signupSpinner = document.getElementById('signup-spinner');
+        const errorMessage = document.getElementById('error-message');
+        const successMessage = document.getElementById('success-message');
+        
+        signupForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Show loading state
+            signupButton.disabled = true;
+            signupText.style.display = 'none';
+            signupSpinner.style.display = 'inline-block';
+            
+            const fullname = document.getElementById('fullname').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const marketing = document.getElementById('marketing').checked;
+            
+            try {
+                // Create account with Supabase
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullname,
+                            marketing_consent: marketing
+                        }
+                    }
+                });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (data.user) {
+                    // Create user profile in database
+                    const { error: profileError } = await supabase
+                        .from('user_profiles')
+                        .insert([
+                            {
+                                id: data.user.id,
+                                full_name: fullname,
+                                email: email,
+                                trial_started_at: new Date().toISOString(),
+                                trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                                subscription_status: 'trial',
+                                marketing_consent: marketing
+                            }
+                        ]);
+                    
+                    if (profileError && profileError.code !== '23505') { // Ignore duplicate key error
+                        console.error('Profile creation error:', profileError);
+                    }
+                    
+                    if (data.user.email_confirmed_at) {
+                        // Email already confirmed, redirect directly
+                        successMessage.textContent = 'Account created successfully! Redirecting to dashboard...';
+                        successMessage.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            if (selectedPlan) {
+                                localStorage.setItem('selected_plan', JSON.stringify(selectedPlan));
+                                window.location.href = '/pricing.html';
+                            } else {
+                                window.location.href = '/dashboard-real.html';
+                            }
+                        }, 2000);
+                    } else {
+                        // Email confirmation required
+                        successMessage.innerHTML = `
+                            <strong>Account created successfully!</strong><br>
+                            Please check your email and click the confirmation link to activate your account.
+                        `;
+                        successMessage.style.display = 'block';
+                        
+                        // Store selected plan for after confirmation
+                        if (selectedPlan) {
+                            localStorage.setItem('selected_plan', JSON.stringify(selectedPlan));
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                
+                let errorMsg = 'Account creation failed. Please try again.';
+                if (error.message.includes('already registered')) {
+                    errorMsg = 'An account with this email already exists. <a href="/login-real.html">Sign in instead</a>';
+                } else if (error.message.includes('Password')) {
+                    errorMsg = 'Password must be at least 6 characters long.';
+                } else if (error.message.includes('email')) {
+                    errorMsg = 'Please enter a valid email address.';
+                } else if (error.message.includes('rate limit')) {
+                    errorMsg = 'Too many attempts. Please wait a few minutes and try again.';
+                }
+                
+                errorMessage.innerHTML = errorMsg;
+                errorMessage.style.display = 'block';
+            } finally {
+                // Reset button state
+                signupButton.disabled = false;
+                signupText.style.display = 'inline';
+                signupSpinner.style.display = 'none';
+            }
+        });
+        
+        // Check if already logged in
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                if (selectedPlan) {
+                    window.location.href = '/pricing.html';
+                } else {
+                    window.location.href = '/dashboard-real.html';
+                }
+            }
+        }
+        
+        // Listen for auth changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                if (selectedPlan) {
+                    localStorage.setItem('selected_plan', JSON.stringify(selectedPlan));
+                    window.location.href = '/pricing.html';
+                } else {
+                    window.location.href = '/dashboard-real.html';
+                }
+            }
+        });
+        
+        // Initialize
+        checkAuth();
+    </script>
+</body>
+</html>
