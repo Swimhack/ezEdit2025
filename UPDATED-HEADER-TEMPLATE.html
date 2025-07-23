@@ -1,0 +1,103 @@
+<!-- Updated EzEdit.co Header Navigation Template -->
+<!-- Use this template for all pages to ensure consistent navigation -->
+
+<header class="header">
+    <nav class="nav-container">
+        <a href="/" class="logo">
+            <div class="logo-icon">Ez</div>
+            EzEdit.co
+        </a>
+        
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="/pricing.html">Pricing</a></li>
+            <li><a href="#docs">Docs</a></li>
+            <li><a href="/dashboard-real.html" title="Dashboard">⊞</a></li>
+        </ul>
+        
+        <div class="auth-buttons">
+            <a href="/login-real.html" class="btn btn-ghost">Log in</a>
+            <a href="/signup.html" class="btn btn-primary">Sign up</a>
+        </div>
+    </nav>
+</header>
+
+<!-- 
+NAVIGATION MAPPING:
+- Login: /login-real.html (working page with Supabase auth)
+- Signup: /signup.html (working page with Supabase auth)
+- Pricing: /pricing.html (working page with Stripe integration)
+- Dashboard: /dashboard-real.html (working user dashboard)
+- Features: #features (scroll to features section)
+- Docs: #docs (placeholder for future documentation)
+
+LEGACY PATHS REMOVED:
+❌ /login (old path, causes 404)
+❌ /signup (old path, causes 404)
+❌ /#pricing (inconsistent routing)
+
+CURRENT PATHS USED:
+✅ /login-real.html (functional login page)
+✅ /signup.html (functional signup page)
+✅ /pricing.html (functional pricing page)
+✅ /dashboard-real.html (functional dashboard)
+-->
+
+<!-- Example Usage in Different Page Types -->
+
+<!-- For Landing Page (index.html) -->
+<header class="header">
+    <nav class="nav-container">
+        <a href="/" class="logo">
+            <div class="logo-icon">Ez</div>
+            EzEdit.co
+        </a>
+        
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="/pricing.html">Pricing</a></li>
+            <li><a href="#docs">Docs</a></li>
+            <li><a href="/dashboard-real.html" title="Dashboard">⊞</a></li>
+        </ul>
+        
+        <div class="auth-buttons">
+            <a href="/login-real.html" class="btn btn-ghost">Log in</a>
+            <a href="/signup.html" class="btn btn-primary">Start Free Trial</a>
+        </div>
+    </nav>
+</header>
+
+<!-- For Authenticated Pages (dashboard, editor, billing) -->
+<header class="header">
+    <nav class="nav-container">
+        <a href="/" class="logo">
+            <div class="logo-icon">Ez</div>
+            EzEdit.co
+        </a>
+        
+        <ul class="nav-links">
+            <li><a href="/dashboard-real.html">Dashboard</a></li>
+            <li><a href="/editor-real.html">Editor</a></li>
+            <li><a href="/billing.html">Billing</a></li>
+            <li><a href="/pricing.html">Pricing</a></li>
+        </ul>
+        
+        <div class="auth-buttons">
+            <button onclick="logout()" class="btn btn-ghost">Log out</button>
+            <a href="/billing.html" class="btn btn-primary">Account</a>
+        </div>
+    </nav>
+</header>
+
+<!-- CSS Classes Required -->
+<!--
+.header - Main header container
+.nav-container - Navigation flex container
+.logo - Logo link styling
+.logo-icon - Icon/avatar styling
+.nav-links - Horizontal navigation list
+.auth-buttons - Authentication button container
+.btn - Base button class
+.btn-ghost - Transparent/outline button
+.btn-primary - Primary colored button
+-->
