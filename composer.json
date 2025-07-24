@@ -1,0 +1,43 @@
+{
+    "name": "ezedit/ezedit-production",
+    "description": "EzEdit.co - Edit Legacy Websites with AI-Powered Simplicity",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-curl": "*",
+        "ext-openssl": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "EzEdit\\": "src/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "echo 'EzEdit.co Production Environment Configured'",
+            "php -v",
+            "php -m | grep -E '(json|mbstring|curl|openssl)'"
+        ],
+        "test": [
+            "phpunit"
+        ],
+        "optimize": [
+            "composer dump-autoload --optimize --no-dev"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

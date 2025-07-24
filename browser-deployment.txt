@@ -1,0 +1,48 @@
+
+🌐 BROWSER-BASED DEPLOYMENT INSTRUCTIONS
+========================================
+
+Since we can't directly upload files, here's how to deploy using a web browser:
+
+1. 📋 Copy the deployment helper content:
+   - Open: deploy-missing.php in a text editor
+   - Copy all content (Ctrl+A, Ctrl+C)
+
+2. 🌐 Access the current server:
+   - Visit: http://159.65.224.175
+   - The homepage should be working
+
+3. 📝 Create the deployment helper:
+   - Access droplet console via DigitalOcean web interface
+   - Run: sudo nano /var/www/html/deploy-helper.php
+   - Paste the deployment helper content
+   - Save: Ctrl+X, Y, Enter
+
+4. 🚀 Use the deployment helper:
+   - Visit: http://159.65.224.175/deploy-helper.php?force=1
+   - Upload the missing editor.php file
+   - Test that all pages work
+
+5. 🧹 Clean up:
+   - Delete the helper: sudo rm /var/www/html/deploy-helper.php
+
+📋 QUICK DEPLOYMENT COMMANDS (Run in droplet console):
+====================================================
+
+# Create editor.php directly
+sudo nano /var/www/html/editor.php
+# (Paste the content from editor-for-upload.php)
+
+# Set permissions
+sudo chown www-data:www-data /var/www/html/editor.php
+sudo chmod 644 /var/www/html/editor.php
+
+# Test
+curl http://localhost/editor.php
+
+🌐 Test URLs after deployment:
+- http://159.65.224.175/
+- http://159.65.224.175/auth/login.php  
+- http://159.65.224.175/dashboard.php
+- http://159.65.224.175/editor.php
+

@@ -1,0 +1,35 @@
+# Create data directory for SQLite and logs
+sudo mkdir -p /var/www/html/data
+sudo chown www-data:www-data /var/www/html/data
+sudo chmod 755 /var/www/html/data
+
+# Create .env file from example
+sudo cp /var/www/html/.env.example /var/www/html/.env
+sudo chown www-data:www-data /var/www/html/.env
+sudo chmod 600 /var/www/html/.env
+
+# Set proper permissions for all files
+sudo chown -R www-data:www-data /var/www/html/
+sudo find /var/www/html/ -type f -exec chmod 644 {} \;
+sudo find /var/www/html/ -type d -exec chmod 755 {} \;
+
+# Make FTP and API directories writable
+sudo chmod 755 /var/www/html/ftp/
+sudo chmod 755 /var/www/html/api/
+sudo chmod 755 /var/www/html/config/
+
+# Restart web server
+sudo systemctl reload nginx
+
+# Test the deployment
+curl -s -o /dev/null -w "Homepage: %{http_code}\n" "http://localhost/index.php"
+curl -s -o /dev/null -w "Login: %{http_code}\n" "http://localhost/auth/login.php"
+curl -s -o /dev/null -w "Dashboard: %{http_code}\n" "http://localhost/dashboard.php"
+curl -s -o /dev/null -w "Editor: %{http_code}\n" "http://localhost/editor.php"
+
+echo "✅ Deployment completed!"
+echo "🌐 Live URLs:"
+echo "   Homepage: http://159.65.224.175/index.php"
+echo "   Login: http://159.65.224.175/auth/login.php" 
+echo "   Dashboard: http://159.65.224.175/dashboard.php"
+echo "   Editor: http://159.65.224.175/editor.php"

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: ezedit-production
+    env: php
+    buildCommand: composer install --no-dev --optimize-autoloader || echo "No composer found"
+    startCommand: cd public && php -S 0.0.0.0:$PORT
+    healthCheckPath: /health.php
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: EzEdit.co
+    scaling:
+      minInstances: 1
+      maxInstances: 10
+      targetCPUPercent: 70
+    disk:
+      name: ezedit-disk
+      sizeGB: 1
+      mountPath: /var/www/storage

@@ -1,0 +1,612 @@
+GUARANTEED DEPLOYMENT - EXECUTE IN DIGITALOCEAN CONSOLE
+=======================================================
+
+🌐 Open: https://cloud.digitalocean.com/droplets/509389318/console
+
+📋 COPY AND PASTE THESE COMMANDS (one at a time):
+
+# Step 1: Navigate and backup
+cd /var/www/html
+mkdir -p /backup/$(date +%Y%m%d_%H%M%S)
+cp -r * /backup/$(date +%Y%m%d_%H%M%S)/ 2>/dev/null || true
+
+# Step 2: Clear and prepare
+rm -rf /var/www/html/*
+mkdir -p /var/www/html/{api,auth,config,css,js,ftp,assets}
+
+# Step 3: Deploy index.php
+cat > /var/www/html/index.php << 'EOFINDEX'
+<?php
+session_start();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EzEdit.co - Edit Your Website Files Directly</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.php" class="nav-brand">EzEdit.co</a>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="index.php#features" class="nav-link">Features</a>
+                <a href="index.php#pricing" class="nav-link">Pricing</a>
+                <a href="docs.php" class="nav-link">Documentation</a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="dashboard.php" class="nav-link">Dashboard</a>
+                    <a href="auth/logout.php" class="nav-link btn btn-secondary">Logout</a>
+                <?php else: ?>
+                    <a href="auth/login.php" class="nav-link">Login</a>
+                    <a href="auth/register.php" class="nav-link btn btn-primary">Get Started</a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Edit Your Website Files Directly</h1>
+            <p class="hero-subtitle">No downloads. No complicated setups. Just connect via FTP and start editing instantly in your browser.</p>
+            <div class="hero-actions">
+                <a href="auth/register.php" class="btn btn-primary btn-lg">Start Free Trial</a>
+                <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="text-center mb-5">Everything You Need to Edit Your Website</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h3>Direct FTP Access</h3>
+                    <p>Connect to any FTP server and browse your files instantly. No software installation required.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✏️</div>
+                    <h3>Powerful Code Editor</h3>
+                    <p>Full-featured code editor with syntax highlighting, auto-completion, and multi-file support.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Assistant</h3>
+                    <p>Get intelligent code suggestions, error fixes, and explanations powered by advanced AI.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3>Auto-Save</h3>
+                    <p>Never lose your work with automatic saving and version history for all your edits.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure Connection</h3>
+                    <p>All connections are encrypted and credentials are stored securely. Your data is always protected.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Works Everywhere</h3>
+                    <p>Access from any device with a web browser. Desktop, tablet, or mobile - edit anywhere.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="text-center mb-5">Simple, Transparent Pricing</h2>
+            <p class="text-center pricing-subtitle">No setup fees | Cancel anytime | 30-day money back guarantee</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Free</h3>
+                    <div class="price">$0<span>/forever</span></div>
+                    <ul class="pricing-features">
+                        <li>✓ 1 FTP connection</li>
+                        <li>✓ Basic code editor</li>
+                        <li>✓ 5 AI requests/day</li>
+                        <li>✓ Community support</li>
+                    </ul>
+                    <a href="auth/register.php" class="btn btn-secondary btn-block">Start Free</a>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="badge">Most Popular</div>
+                    <h3>Single Site</h3>
+                    <div class="price">$20<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>✓ 1 FTP connection</li>
+                        <li>✓ Advanced editor features</li>
+                        <li>✓ Unlimited AI assistance</li>
+                        <li>✓ Priority support</li>
+                        <li>✓ Auto-save & history</li>
+                        <li>✓ Custom themes</li>
+                    </ul>
+                    <a href="auth/register.php" class="btn btn-primary btn-block">Start Free Trial</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Unlimited</h3>
+                    <div class="price">$100<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>✓ Unlimited FTP connections</li>
+                        <li>✓ All editor features</li>
+                        <li>✓ Unlimited AI assistance</li>
+                        <li>✓ Premium support</li>
+                        <li>✓ Team collaboration</li>
+                        <li>✓ API access</li>
+                        <li>✓ White-label option</li>
+                    </ul>
+                    <a href="auth/register.php" class="btn btn-primary btn-block">Start Free Trial</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <a href="index.php#features">Features</a>
+                    <a href="index.php#pricing">Pricing</a>
+                    <a href="docs.php">Documentation</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <a href="#">Twitter</a>
+                    <a href="#">GitHub</a>
+                    <a href="#">Discord</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 EzEdit.co. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="js/main.js"></script>
+</body>
+</html>
+EOFINDEX
+
+# Step 4: Deploy main CSS
+cat > /var/www/html/css/main.css << 'EOFCSS'
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary: #64748b;
+    --dark: #1e293b;
+    --light: #f8fafc;
+    --border: #e5e7eb;
+    --radius: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--dark);
+    background: var(--light);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.navbar {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.nav-link {
+    color: var(--secondary);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--primary);
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.nav-toggle span {
+    width: 25px;
+    height: 3px;
+    background: var(--dark);
+    margin: 3px 0;
+    transition: 0.3s;
+}
+
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: flex;
+    }
+    
+    .nav-menu {
+        position: fixed;
+        left: -100%;
+        top: 70px;
+        flex-direction: column;
+        background: white;
+        width: 100%;
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: 0 10px 27px rgba(0,0,0,0.05);
+        padding: 2rem 0;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: none;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+}
+
+.btn-secondary {
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.btn-secondary:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.hero {
+    padding: 5rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-align: center;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.features {
+    padding: 5rem 0;
+    background: white;
+}
+
+.features h2 {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    padding: 2rem;
+    border-radius: var(--radius);
+    background: var(--light);
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.pricing {
+    padding: 5rem 0;
+    background: var(--light);
+}
+
+.pricing h2 {
+    font-size: 2.5rem;
+}
+
+.pricing-subtitle {
+    font-size: 1.1rem;
+    color: var(--secondary);
+    margin-bottom: 3rem;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.pricing-card {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+    transition: transform 0.3s;
+}
+
+.pricing-card.featured {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+}
+
+.pricing-card.featured:hover {
+    transform: scale(1.05) translateY(-5px);
+}
+
+.badge {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+.price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.price span {
+    font-size: 1rem;
+    color: var(--secondary);
+    font-weight: normal;
+}
+
+.pricing-features {
+    list-style: none;
+    margin: 2rem 0;
+}
+
+.pricing-features li {
+    padding: 0.5rem 0;
+    color: var(--secondary);
+}
+
+.footer {
+    background: var(--dark);
+    color: white;
+    padding: 3rem 0 1rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h4 {
+    margin-bottom: 1rem;
+}
+
+.footer-section a {
+    display: block;
+    color: #94a3b8;
+    text-decoration: none;
+    padding: 0.25rem 0;
+    transition: color 0.3s;
+}
+
+.footer-section a:hover {
+    color: white;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid #334155;
+    color: #94a3b8;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mb-5 {
+    margin-bottom: 3rem;
+}
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .features h2, .pricing h2 {
+        font-size: 1.75rem;
+    }
+    
+    .pricing-card.featured {
+        transform: none;
+    }
+}
+EOFCSS
+
+# Step 5: Deploy JavaScript
+cat > /var/www/html/js/main.js << 'EOFJS'
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.getElementById('navToggle');
+    const navMenu = document.getElementById('navMenu');
+    
+    if (navToggle) {
+        navToggle.addEventListener('click', function() {
+            navMenu.classList.toggle('active');
+        });
+    }
+    
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                navMenu.classList.remove('active');
+            }
+        });
+    });
+    
+    document.addEventListener('click', function(event) {
+        if (!navToggle.contains(event.target) && !navMenu.contains(event.target)) {
+            navMenu.classList.remove('active');
+        }
+    });
+});
+EOFJS
+
+# Step 6: Deploy health check
+cat > /var/www/html/health.php << 'EOFHEALTH'
+<?php
+header('Content-Type: application/json');
+echo json_encode([
+    'status' => 'healthy',
+    'service' => 'ezedit.co',
+    'timestamp' => date('Y-m-d H:i:s'),
+    'version' => '1.0.0'
+]);
+EOFHEALTH
+
+# Step 7: Set permissions and restart
+chown -R www-data:www-data /var/www/html
+find /var/www/html -type f -exec chmod 644 {} \;
+find /var/www/html -type d -exec chmod 755 {} \;
+systemctl reload nginx
+
+# Step 8: Test deployment
+echo "Testing deployment..."
+curl -s -o /dev/null -w "Homepage: %{http_code}\n" "http://localhost/index.php"
+curl -s -o /dev/null -w "Health: %{http_code}\n" "http://localhost/health.php"
+
+echo "✅ DEPLOYMENT COMPLETE!"
+echo "🌐 Your site is live at: http://159.65.224.175/index.php"
+
+=======================================================
+✅ After running these commands, verify at:
+   http://159.65.224.175/index.php
+=======================================================

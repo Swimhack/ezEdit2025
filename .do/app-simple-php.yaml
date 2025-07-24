@@ -1,0 +1,31 @@
+name: ezedit-production
+region: nyc
+services:
+- name: web
+  environment_slug: php
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 8080
+  source_dir: /
+  github:
+    repo: jamesstrickland/ezedit.co
+    branch: main
+    deploy_on_push: true
+  build_command: |
+    echo "Building EzEdit.co..."
+  run_command: |
+    cd public && php -S 0.0.0.0:$PORT
+  routes:
+  - path: /
+  health_check:
+    http_path: /health.php
+    initial_delay_seconds: 30
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_NAME
+    value: EzEdit.co

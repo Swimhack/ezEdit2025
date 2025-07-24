@@ -1,0 +1,13 @@
+name: ezedit-static
+region: nyc
+static_sites:
+- name: ezedit-frontend
+  source_dir: public
+  build_command: echo "Static build complete"
+  output_dir: /
+  catchall_document: index.html
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
