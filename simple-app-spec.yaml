@@ -1,0 +1,15 @@
+name: ezedit-simple
+region: nyc
+services:
+- name: web
+  environment_slug: php
+  instance_size_slug: basic-xxs
+  instance_count: 1
+  http_port: 8080
+  run_command: php -S 0.0.0.0:8080 -t .
+  source_dir: /
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: PHP_VERSION
+    value: "8.2"
