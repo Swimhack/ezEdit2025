@@ -8,6 +8,7 @@ services:
   http_port: 3000
   build_command: npm install && npm run build
   run_command: npm start
+  dockerfile_path: ""
   source_dir: /
   github:
     repo: Swimhack/ezEdit2025
