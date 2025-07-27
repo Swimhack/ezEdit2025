@@ -1,0 +1,45 @@
+name: ezedit-production
+region: nyc
+services:
+- name: web
+  environment_slug: php
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 8080
+  source_dir: /
+  github:
+    repo: jamesstrickland/ezedit.co
+    branch: main
+    deploy_on_push: true
+  build_command: |
+    composer install --no-dev --optimize-autoloader || echo "No composer dependencies"
+  run_command: |
+    cd public && php -S 0.0.0.0:$PORT
+  routes:
+  - path: /
+  autoscaling:
+    min_instance_count: 1
+    max_instance_count: 10
+    metrics:
+      cpu:
+        percent: 70
+  health_check:
+    http_path: /health.php
+    initial_delay_seconds: 60
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_NAME
+    value: EzEdit.co
+  - key: PHP_VERSION
+    value: "8.2"
+databases:
+- engine: PG
+  name: ezedit-db
+  num_nodes: 1
+  size: db-s-1vcpu-1gb
+  version: "14"

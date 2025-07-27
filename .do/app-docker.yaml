@@ -1,0 +1,20 @@
+name: ezedit-production
+region: nyc3
+services:
+- name: web
+  dockerfile_path: Dockerfile
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 80
+  source_dir: /
+  github:
+    repo: Swimhack/ezEdit2025
+    branch: main
+    deploy_on_push: true
+  routes:
+  - path: /
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_NAME
+    value: EzEdit.co

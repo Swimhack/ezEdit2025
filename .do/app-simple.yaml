@@ -1,0 +1,24 @@
+name: ezedit-production
+region: nyc3
+services:
+- name: web
+  environment_slug: php
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 8080
+  build_command: |
+    echo "<?php phpinfo(); ?>" > public/info.php
+    composer install --no-dev --optimize-autoloader || echo "No composer deps"
+  run_command: heroku-php-apache2 public/
+  source_dir: /
+  github:
+    repo: Swimhack/ezEdit2025
+    branch: main
+    deploy_on_push: true
+  routes:
+  - path: /
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_NAME
+    value: EzEdit.co

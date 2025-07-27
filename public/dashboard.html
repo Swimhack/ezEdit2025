@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EzEdit.co</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-brand">EzEdit.co</a>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-menu" id="navMenu">
+                <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                <a href="docs.html" class="nav-link">Documentation</a>
+                <a href="settings.html" class="nav-link">Settings</a>
+                <a href="#" class="nav-link btn btn-secondary" onclick="logout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>My FTP Sites</h1>
+            <button class="btn btn-primary" onclick="showAddSiteModal()">
+                <span class="btn-icon">+</span> Add New Site
+            </button>
+        </div>
+
+        <div class="sites-grid" id="sitesGrid">
+            <!-- Sites will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Add Site Modal -->
+    <div id="addSiteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add FTP Site</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="addSiteForm" class="modal-form">
+                <div class="form-group">
+                    <label for="siteName">Site Name</label>
+                    <input type="text" id="siteName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="siteHost">FTP Host</label>
+                    <input type="text" id="siteHost" name="host" placeholder="ftp.example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="sitePort">Port</label>
+                    <input type="number" id="sitePort" name="port" value="21" required>
+                </div>
+                <div class="form-group">
+                    <label for="siteUsername">Username</label>
+                    <input type="text" id="siteUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="sitePassword">Password</label>
+                    <input type="password" id="sitePassword" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox">
+                        <input type="checkbox" name="passive" checked> Use passive mode
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Site</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/site-manager.js"></script>
+</body>
+</html>

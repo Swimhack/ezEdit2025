@@ -1,0 +1,14 @@
+name: ezedit-live
+region: nyc3
+static_sites:
+- name: web
+  source_dir: public
+  build_command: echo "Build complete"
+  output_dir: /
+  index_document: index.php
+  catchall_document: index.php
+  routes:
+  - path: /
+  envs:
+  - key: APP_ENV
+    value: production

@@ -1,0 +1,30 @@
+name: ezedit-production
+region: nyc
+services:
+- name: web
+  environment_slug: php
+  instance_size_slug: basic-xxs
+  instance_count: 1
+  http_port: 8080
+  build_command: |
+    echo "Building EzEdit.co..."
+  run_command: |
+    cd public && php -S 0.0.0.0:$PORT
+  source_dir: /
+  git:
+    repo_clone_url: https://github.com/Swimhack/ezEdit2025.git
+    branch: main
+  routes:
+  - path: /
+  health_check:
+    http_path: /health.php
+    initial_delay_seconds: 30
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: APP_ENV
+    value: production
+  - key: APP_NAME
+    value: EzEdit.co

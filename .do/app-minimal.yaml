@@ -1,0 +1,51 @@
+name: ezedit-live
+region: nyc3
+services:
+- name: web
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 3000
+  build_command: |
+    mkdir -p public
+    cat > public/index.html << 'EOF'
+    <!DOCTYPE html>
+    <html><head><title>EzEdit.co - Coming Soon</title>
+    <style>body{font-family:Arial;text-align:center;padding:50px;background:#f5f5f5;}
+    .container{max-width:600px;margin:0 auto;background:white;padding:40px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.1);}
+    h1{color:#3b82f6;margin-bottom:20px;}
+    .pricing{margin:30px 0;}
+    .price{display:inline-block;margin:10px;padding:15px;border:1px solid #ddd;border-radius:8px;}
+    </style></head>
+    <body><div class="container">
+    <h1>🚀 EzEdit.co - Edit Legacy Websites with AI</h1>
+    <p>Professional code editor with FTP/SFTP integration</p>
+    <div class="pricing">
+    <div class="price"><strong>Free</strong><br>$0/forever<br>Browse & explore</div>
+    <div class="price" style="border-color:#3b82f6;"><strong>Single Site</strong><br>$20/month<br>Individual developers</div>
+    <div class="price"><strong>Unlimited</strong><br>$100/month<br>Agencies & power users</div>
+    </div>
+    <p><em>No setup fees | Cancel anytime | 30-day money back</em></p>
+    <p>🎯 <strong>Status:</strong> Deployment successful! Live URL active.</p>
+    </div></body></html>
+    EOF
+    cat > server.js << 'EOF'
+    const http = require('http');
+    const fs = require('fs');
+    const server = http.createServer((req, res) => {
+      fs.readFile('public/index.html', (err, data) => {
+        if (err) {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.end(data);
+      });
+    });
+    server.listen(3000, () => console.log('EzEdit.co live on port 3000'));
+    EOF
+  run_command: node server.js
+  source_dir: /
+  routes:
+  - path: /

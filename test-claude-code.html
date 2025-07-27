@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Claude Code Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1e1e1e; color: #cccccc; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-section { background: #2d2d30; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .test-button { background: #0078d4; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .test-button:hover { background: #106ebe; }
+        .result { background: #1a1a1a; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 3px solid #0078d4; }
+        .error { border-left-color: #f87171; }
+        .success { border-left-color: #10b981; }
+        textarea { width: 100%; height: 100px; background: #3c3c3c; color: #cccccc; border: 1px solid #555; padding: 10px; border-radius: 4px; }
+        pre { background: #1e1e1e; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Claude Code Integration Test</h1>
+        
+        <div class="test-section">
+            <h2>API Endpoint Test</h2>
+            <p>Test the basic functionality of the Claude Code API endpoint.</p>
+            
+            <button class="test-button" onclick="testBasicAPI()">Test Basic API</button>
+            <button class="test-button" onclick="testCodeExplanation()">Test Code Explanation</button>
+            <button class="test-button" onclick="testBugAnalysis()">Test Bug Analysis</button>
+            <button class="test-button" onclick="testCodeGeneration()">Test Code Generation</button>
+            
+            <div id="api-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Custom Message Test</h2>
+            <p>Test with your own message and code.</p>
+            
+            <label for="testMessage">Message:</label>
+            <textarea id="testMessage" placeholder="Enter your message here...">Explain this code</textarea>
+            
+            <label for="testCode">Code (optional):</label>
+            <textarea id="testCode" placeholder="Enter code here...">function hello() {
+    console.log("Hello, World!");
+}</textarea>
+            
+            <label for="testLanguage">Language:</label>
+            <select id="testLanguage" style="background: #3c3c3c; color: #cccccc; border: 1px solid #555; padding: 5px; border-radius: 4px;">
+                <option value="javascript">JavaScript</option>
+                <option value="php">PHP</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="python">Python</option>
+            </select>
+            
+            <button class="test-button" onclick="testCustomMessage()">Send Custom Message</button>
+            
+            <div id="custom-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Performance Test</h2>
+            <p>Test response times and error handling.</p>
+            
+            <button class="test-button" onclick="testPerformance()">Test Performance</button>
+            <button class="test-button" onclick="testErrorHandling()">Test Error Handling</button>
+            
+            <div id="performance-results"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testAPI(message, code = '', language = 'javascript', filename = '') {
+            const startTime = Date.now();
+            
+            try {
+                const response = await fetch('public/api/ai-assistant.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        code: code,
+                        language: language,
+                        filename: filename
+                    })
+                });
+                
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                return {
+                    success: true,
+                    data: data,
+                    responseTime: responseTime
+                };
+                
+            } catch (error) {
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                return {
+                    success: false,
+                    error: error.message,
+                    responseTime: responseTime
+                };
+            }
+        }
+        
+        function displayResult(containerId, title, result) {
+            const container = document.getElementById(containerId);
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${result.success ? 'success' : 'error'}`;
+            
+            let content = `<h3>${title}</h3>`;
+            content += `<p><strong>Response Time:</strong> ${result.responseTime}ms</p>`;
+            
+            if (result.success) {
+                content += `<p><strong>Model:</strong> ${result.data.model || 'Unknown'}</p>`;
+                content += `<p><strong>Timestamp:</strong> ${result.data.timestamp || 'Unknown'}</p>`;
+                content += `<p><strong>Response:</strong></p>`;
+                content += `<pre>${result.data.response || 'No response'}</pre>`;
+            } else {
+                content += `<p><strong>Error:</strong> ${result.error}</p>`;
+            }
+            
+            resultDiv.innerHTML = content;
+            container.appendChild(resultDiv);
+        }
+        
+        async function testBasicAPI() {
+            const result = await testAPI('Hello, can you help me?');
+            displayResult('api-results', 'Basic API Test', result);
+        }
+        
+        async function testCodeExplanation() {
+            const code = `function calculateTotal(items) {
+    return items.reduce((sum, item) => sum + item.price, 0);
+}`;
+            const result = await testAPI('Explain this code', code, 'javascript', 'utils.js');
+            displayResult('api-results', 'Code Explanation Test', result);
+        }
+        
+        async function testBugAnalysis() {
+            const code = `function getUserData(id) {
+    var user = database.query("SELECT * FROM users WHERE id = " + id);
+    document.innerHTML = "<h1>" + user.name + "</h1>";
+    return user;
+}`;
+            const result = await testAPI('Find bugs in this code', code, 'javascript', 'user.js');
+            displayResult('api-results', 'Bug Analysis Test', result);
+        }
+        
+        async function testCodeGeneration() {
+            const result = await testAPI('Generate a function that validates email addresses', '', 'javascript');
+            displayResult('api-results', 'Code Generation Test', result);
+        }
+        
+        async function testCustomMessage() {
+            const message = document.getElementById('testMessage').value;
+            const code = document.getElementById('testCode').value;
+            const language = document.getElementById('testLanguage').value;
+            
+            const result = await testAPI(message, code, language, 'test.js');
+            displayResult('custom-results', 'Custom Message Test', result);
+        }
+        
+        async function testPerformance() {
+            const tests = [
+                { message: 'Quick test 1', code: 'console.log("test");' },
+                { message: 'Quick test 2', code: 'function test() { return true; }' },
+                { message: 'Quick test 3', code: 'const x = 42;' }
+            ];
+            
+            const results = [];
+            for (const test of tests) {
+                const result = await testAPI(test.message, test.code);
+                results.push(result.responseTime);
+            }
+            
+            const avgTime = results.reduce((a, b) => a + b, 0) / results.length;
+            const container = document.getElementById('performance-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = `
+                <h3>Performance Test Results</h3>
+                <p><strong>Tests completed:</strong> ${results.length}</p>
+                <p><strong>Response times:</strong> ${results.join('ms, ')}ms</p>
+                <p><strong>Average response time:</strong> ${avgTime.toFixed(2)}ms</p>
+            `;
+            container.appendChild(resultDiv);
+        }
+        
+        async function testErrorHandling() {
+            // Test with invalid JSON
+            try {
+                const response = await fetch('public/api/ai-assistant.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: 'invalid json'
+                });
+                
+                const data = await response.json();
+                displayResult('performance-results', 'Error Handling Test', {
+                    success: false,
+                    error: 'Should have failed with invalid JSON',
+                    responseTime: 0
+                });
+            } catch (error) {
+                displayResult('performance-results', 'Error Handling Test', {
+                    success: true,
+                    data: { response: 'Correctly handled invalid JSON: ' + error.message },
+                    responseTime: 0
+                });
+            }
+        }
+    </script>
+</body>
+</html>
