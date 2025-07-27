@@ -1,13 +1,20 @@
 [build]
-  command = "npm run build"
+  command = "npm install && npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "20"
   NEXT_TELEMETRY_DISABLED = "1"
+  NEXT_PUBLIC_SUPABASE_URL = "https://placeholder.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "placeholder-key"
 
 # Essential plugin for Next.js on Netlify
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Enable Next.js runtime
+[functions]
+  included_files = ["!node_modules/@swc/core-linux-x64-musl/**", "!node_modules/@swc/core-linux-x64-gnu/**", "!node_modules/@esbuild/linux-x64/**"]
 
 # Security headers
 [[headers]]

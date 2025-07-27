@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   experimental: {
     optimizePackageImports: ['lucide-react', '@supabase/supabase-js']
+  },
+  images: {
+    unoptimized: true
   },
   async headers() {
     return [
