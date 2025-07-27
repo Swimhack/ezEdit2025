@@ -164,10 +164,10 @@ class DashboardManager {
         const siteData = {
             id: Date.now().toString(),
             name: formData.get('siteName') || form.querySelector('#siteName').value,
-            host: formData.get('ftpHost') || form.querySelector('#ftpHost').value,
-            port: formData.get('ftpPort') || form.querySelector('#ftpPort').value,
-            username: formData.get('ftpUsername') || form.querySelector('#ftpUsername').value,
-            password: formData.get('ftpPassword') || form.querySelector('#ftpPassword').value,
+            host: formData.get('ftpHost') || form.querySelector('#siteHost')?.value || '',
+            port: formData.get('ftpPort') || form.querySelector('#sitePort')?.value || '',
+            username: formData.get('ftpUsername') || form.querySelector('#siteUsername')?.value || '',
+            password: formData.get('ftpPassword') || form.querySelector('#sitePassword')?.value || '',
             rootDirectory: formData.get('rootDirectory') || form.querySelector('#rootDirectory').value,
             webUrl: formData.get('webUrl') || form.querySelector('#webUrl').value,
             dateAdded: new Date().toISOString(),
@@ -257,10 +257,10 @@ class DashboardManager {
         const form = document.getElementById('addSiteForm');
         if (!form) return;
         
-        const host = form.querySelector('#ftpHost').value;
-        const port = form.querySelector('#ftpPort').value;
-        const username = form.querySelector('#ftpUsername').value;
-        const password = form.querySelector('#ftpPassword').value;
+        const host = form.querySelector('#siteHost')?.value || '';
+        const port = form.querySelector('#sitePort')?.value || '';
+        const username = form.querySelector('#siteUsername')?.value || '';
+        const password = form.querySelector('#sitePassword')?.value || '';
         
         if (!host || !username || !password) {
             this.showNotification('Please fill in host, username, and password before testing.', 'error');
@@ -443,10 +443,10 @@ class DashboardManager {
         const form = document.getElementById('addSiteForm');
         if (form) {
             form.querySelector('#siteName').value = site.name;
-            form.querySelector('#ftpHost').value = site.host;
-            form.querySelector('#ftpPort').value = site.port;
-            form.querySelector('#ftpUsername').value = site.username;
-            form.querySelector('#ftpPassword').value = ''; // Don't pre-fill password
+            form.querySelector('#siteHost')?.value = site.host;
+            form.querySelector('#sitePort')?.value = site.port;
+            form.querySelector('#siteUsername')?.value = site.username;
+            form.querySelector('#sitePassword')?.value = ''; // Don't pre-fill password
             form.querySelector('#rootDirectory').value = site.rootDirectory || '';
             form.querySelector('#webUrl').value = site.webUrl || '';
             
