@@ -9,29 +9,50 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="nav-brand">EzEdit.co</a>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <a href="index.html" class="nav-brand">
+                <div class="logo-icon">Ez</div>
+                <span class="logo-text">EzEdit.co</span>
+            </a>
             <div class="nav-menu" id="navMenu">
                 <a href="#features" class="nav-link">Features</a>
                 <a href="#pricing" class="nav-link">Pricing</a>
-                <a href="docs.html" class="nav-link">Documentation</a>
-                <a href="auth/login.html" class="nav-link">Login</a>
-                <a href="auth/register.html" class="nav-link btn btn-primary">Get Started</a>
+                <a href="docs.html" class="nav-link">Docs</a>
+                <a href="dashboard.html" class="nav-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </a>
+                <a href="auth/login.html" class="nav-link">Log in</a>
+                <a href="auth/register.html" class="btn btn-primary">Sign up</a>
             </div>
         </div>
     </nav>
 
     <section class="hero">
         <div class="container">
-            <h1>Edit Your Website Files Directly</h1>
-            <p class="hero-subtitle">No downloads. No complicated setups. Just connect via FTP and start editing instantly in your browser.</p>
-            <div class="hero-actions">
-                <a href="auth/register.html" class="btn btn-primary btn-lg">Start Free Trial</a>
-                <a href="#features" class="btn btn-secondary btn-lg">Learn More</a>
+            <h1>Edit Legacy Websites with <span class="highlight">AI-Powered</span> Simplicity</h1>
+            <p class="hero-subtitle">Connect to any website via FTP/SFTP and update your code using natural language prompts. Secure, fast, and incredibly simple.</p>
+            
+            <div class="email-signup">
+                <h3>Get early access to EzEdit</h3>
+                <div class="email-form">
+                    <input type="email" class="email-input" placeholder="Enter your email">
+                    <button class="btn btn-primary">
+                        Get Invite
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 0.5rem;">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="auth/register.html" class="btn btn-primary btn-large">Get Started for Free</a>
+                <a href="#demo" class="btn btn-outline btn-large">Watch Demo</a>
             </div>
         </div>
     </section>

@@ -1,8 +1,10 @@
 /* EzEdit.co Dashboard Styles */
 
 .dashboard-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: calc(100vh - 80px);
     background: var(--bg-secondary);
-    min-height: 100vh;
 }
 
 .dashboard-container {
@@ -11,11 +13,62 @@
     min-height: calc(100vh - 80px);
 }
 
+/* Navigation Admin Badge */
+.nav-admin-badge {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Trial Banner */
+.trial-banner {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: var(--border-radius);
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    color: #92400e;
+    font-size: 0.875rem;
+}
+
+.trial-banner strong {
+    font-weight: 600;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
 /* Sidebar */
 .dashboard-sidebar {
     background: var(--bg-primary);
     border-right: 1px solid var(--border-color);
     padding: 2rem 0;
+}
+
+.dashboard-sidebar h2 {
+    padding: 0 2rem;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 .sidebar-header {
@@ -359,10 +412,11 @@
     align-items: center;
 }
 
-.modal-header h3 {
+.modal-header h3,
+.modal-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--primary-blue);
     margin: 0;
 }
 

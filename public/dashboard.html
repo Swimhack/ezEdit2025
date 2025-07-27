@@ -8,74 +8,139 @@
     <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
-    <nav class="navbar">
+    <!-- Header Navigation -->
+    <header class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="nav-brand">EzEdit.co</a>
-            <button class="nav-toggle" id="navToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="dashboard.html" class="nav-link active">Dashboard</a>
-                <a href="docs.html" class="nav-link">Documentation</a>
-                <a href="settings.html" class="nav-link">Settings</a>
-                <a href="#" class="nav-link btn btn-secondary" onclick="logout()">Logout</a>
+            <a href="index.html" class="nav-brand">
+                <div class="logo-icon">Ez</div>
+                <span class="logo-text">EzEdit.co</span>
+            </a>
+            <div class="nav-menu">
+                <a href="index.html#features" class="nav-link">Features</a>
+                <a href="index.html#pricing" class="nav-link">Pricing</a>
+                <a href="#docs" class="nav-link">Docs</a>
+                <a href="dashboard.html" class="nav-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                </a>
+                <span class="nav-admin-badge">Admin</span>
+                <a href="#" class="nav-link" onclick="logout()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16,17 21,12 16,7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Log out
+                </a>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <div class="dashboard-container">
-        <div class="dashboard-header">
-            <h1>My FTP Sites</h1>
-            <button class="btn btn-primary" onclick="showAddSiteModal()">
-                <span class="btn-icon">+</span> Add New Site
-            </button>
-        </div>
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <h2>Dashboard</h2>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-link active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#sites" class="sidebar-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6"></path>
+                        <path d="m21 12-6-6-6 6-6-6"></path>
+                    </svg>
+                    My Sites
+                </a>
+                <a href="#settings" class="sidebar-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
 
-        <div class="sites-grid" id="sitesGrid">
-            <!-- Sites will be loaded here -->
-        </div>
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Trial Mode Banner -->
+            <div class="trial-banner">
+                <strong>Free Trial Mode:</strong> You can browse and edit files, but saving changes requires a premium subscription.
+            </div>
+
+            <div class="dashboard-header">
+                <h1>My FTP Sites</h1>
+                <button class="btn btn-primary" onclick="showAddSiteModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Site
+                </button>
+            </div>
+
+            <div class="sites-grid" id="sitesGrid">
+                <!-- Sites will be loaded here -->
+            </div>
+        </main>
     </div>
 
     <!-- Add Site Modal -->
     <div id="addSiteModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add FTP Site</h2>
+                <h3 class="modal-title">Edit FTP Connection</h3>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <form id="addSiteForm" class="modal-form">
-                <div class="form-group">
-                    <label for="siteName">Site Name</label>
-                    <input type="text" id="siteName" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="siteHost">FTP Host</label>
-                    <input type="text" id="siteHost" name="host" placeholder="ftp.example.com" required>
-                </div>
-                <div class="form-group">
-                    <label for="sitePort">Port</label>
-                    <input type="number" id="sitePort" name="port" value="21" required>
-                </div>
-                <div class="form-group">
-                    <label for="siteUsername">Username</label>
-                    <input type="text" id="siteUsername" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="sitePassword">Password</label>
-                    <input type="password" id="sitePassword" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox">
-                        <input type="checkbox" name="passive" checked> Use passive mode
-                    </label>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Site</button>
-                </div>
-            </form>
+            <div class="modal-body">
+                <form id="addSiteForm" class="modal-form">
+                    <div class="form-group">
+                        <label for="siteName">Site Name</label>
+                        <input type="text" id="siteName" name="name" placeholder="eastgateministries.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="siteHost">FTP Host</label>
+                        <input type="text" id="siteHost" name="host" placeholder="72.167.42.141" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sitePort">Port</label>
+                        <input type="number" id="sitePort" name="port" placeholder="21" value="21" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="siteUsername">Username</label>
+                        <input type="text" id="siteUsername" name="username" placeholder="eastgate_ftp" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sitePassword">Password (leave empty to keep current password)</label>
+                        <input type="password" id="sitePassword" name="password" placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label for="siteRootDir">Root Directory (Optional)</label>
+                        <input type="text" id="siteRootDir" name="root_directory" placeholder="httpdocs/">
+                    </div>
+                    <div class="form-group">
+                        <label for="siteWebUrl">Web URL (Optional)</label>
+                        <input type="url" id="siteWebUrl" name="web_url" placeholder="http://eastgateministries.com/">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="testConnection()">Test Connection</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Connection</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

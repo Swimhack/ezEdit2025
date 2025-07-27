@@ -64,21 +64,28 @@ $csrfToken = $user->generateCSRFToken();
 </head>
 <body class="auth-page">
     <!-- Header Navigation -->
-    <header class="header">
-        <nav class="nav-container">
-            <a href="../index.php" class="logo">
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-brand">
                 <div class="logo-icon">Ez</div>
                 <span class="logo-text">EzEdit.co</span>
             </a>
             <div class="nav-menu">
-                <a href="../index.php#features" class="nav-link">Features</a>
-                <a href="../index.php#pricing" class="nav-link">Pricing</a>
+                <a href="../index.html#features" class="nav-link">Features</a>
+                <a href="../index.html#pricing" class="nav-link">Pricing</a>
                 <a href="#docs" class="nav-link">Docs</a>
-                <div class="nav-divider"></div>
-                <a href="login.php" class="nav-link active">Log in</a>
-                <a href="register.php" class="btn-primary">Sign up</a>
+                <a href="../dashboard.html" class="nav-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </a>
+                <a href="login.php" class="nav-link">Log in</a>
+                <a href="register.php" class="btn btn-primary">Sign up</a>
             </div>
-        </nav>
+        </div>
     </header>
 
     <!-- Main Content -->
@@ -90,24 +97,21 @@ $csrfToken = $user->generateCSRFToken();
                     <p>Sign in to your account</p>
                 </div>
 
+                <?php if (!empty($error)): ?>
+                <div class="error-message" style="display: block; margin-bottom: 1rem;">
+                    <div class="error-content">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <span><?php echo htmlspecialchars($error); ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <form class="auth-form" id="loginForm" method="POST">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
-                    <div class="form-section">
-                        <h2>Sign In</h2>
-                        <p class="form-subtitle">Enter your credentials to access your account</p>
-                        <?php if (!empty($error)): ?>
-                        <div class="error-message" style="display: block; margin-bottom: 1rem;">
-                            <div class="error-content">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                                </svg>
-                                <span><?php echo htmlspecialchars($error); ?></span>
-                            </div>
-                        </div>
-                        <?php endif; ?>
-                    </div>
 
                     <div class="form-group">
                         <label for="email">Email</label>
@@ -150,12 +154,7 @@ $csrfToken = $user->generateCSRFToken();
                         </label>
                     </div>
 
-                    <button type="submit" class="btn-primary btn-full btn-with-icon" id="loginButton">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                            <polyline points="10,17 15,12 10,7"></polyline>
-                            <line x1="15" y1="12" x2="3" y2="12"></line>
-                        </svg>
+                    <button type="submit" class="btn btn-primary btn-full" id="loginButton">
                         Sign in
                     </button>
 
