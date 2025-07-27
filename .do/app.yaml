@@ -1,18 +1,20 @@
-name: ezedit-nextjs
+name: orca-app
 region: nyc
+features:
+  - buildpack-stack=ubuntu-22
 services:
-- name: web
+- name: ezedit2025
   environment_slug: node-js
   instance_size_slug: basic-xxs
   instance_count: 1
   http_port: 3000
   build_command: npm install && npm run build
   run_command: npm start
-  dockerfile_path: ""
   source_dir: /
   github:
     repo: Swimhack/ezEdit2025
     branch: main
+    deploy_on_push: true
   routes:
   - path: /
   health_check:
@@ -25,23 +27,43 @@ services:
   envs:
   - key: NODE_ENV
     value: production
+    scope: BUILD_TIME
   - key: NODE_VERSION
     value: "20"
-  - key: NPM_VERSION
-    value: "10"
+    scope: BUILD_TIME
   - key: NEXT_TELEMETRY_DISABLED
     value: "1"
+    scope: BUILD_TIME
   - key: NEXT_PUBLIC_SUPABASE_URL
-    value: "https://placeholder.supabase.co"
+    value: "https://natjhcqynqziccssnwim.supabase.co"
+    scope: BUILD_TIME
   - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    value: "placeholder-key"
+    value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5hdGpoY3F5bnF6aWNjc3Nud2ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTE5NjY0NTAsImV4cCI6MjAyNzU0MjQ1MH0.5WJUTcFAG3AH_7vYG7TgfZsZ16DLrgugWWloacJdL0I"
+    scope: BUILD_TIME
+  - key: AI_AGENT_MODE
+    value: production
+    scope: BUILD_TIME
+  - key: ENABLE_OPERATOR
+    value: "true"
+    scope: BUILD_TIME
   - key: OPENAI_API_KEY
     value: "your-openai-key-here"
+    scope: RUN_TIME
   - key: ANTHROPIC_API_KEY
     value: "your-anthropic-key-here"
-databases:
-- engine: PG
-  name: ezedit-db
-  num_nodes: 1
-  size: db-s-1vcpu-1gb
-  version: "14"
+    scope: RUN_TIME
+ingress:
+  rules:
+    - match:
+        path:
+          prefix: /
+        authority:
+          exact: ''
+      component:
+        name: ezedit2025
+domains:
+  - domain: ezedit.co
+    type: PRIMARY
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
