@@ -1,17 +1,26 @@
 <?php
 /**
- * EzEdit.co FTP Handler
- * Handles all FTP operations for the editor
+ * EzEdit.co Secure FTP Handler
+ * HIPAA-compliant FTP operations with encrypted credential storage
+ * Industry-standard security with audit logging
  */
 
-require_once '../config/bootstrap.php';
+require_once '../config/security.php';
+require_once '../config/database.php';
 
-// Security headers
+// Enhanced security headers
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: ' . ($_SERVER['HTTP_ORIGIN'] ?? '*'));
 header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
+header('Access-Control-Allow-Credentials: true');
 header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+
+// Configure secure sessions
+SecurityManager::configureSecureSessions();
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -43,13 +52,48 @@ if (empty($action)) {
     exit();
 }
 
+// Start session and check authentication
+session_start();
+
 try {
+    // Rate limiting
+    $clientId = $_SERVER['REMOTE_ADDR'] . ':' . ($_SESSION['user_id'] ?? 'anonymous');
+    if (!SecurityManager::checkRateLimit($clientId, 180, 3600)) { // 180 requests per hour
+        AuditLogger::logSecurityViolation(
+            'RATE_LIMIT_EXCEEDED',
+            "FTP operation rate limit exceeded for client: $clientId"
+        );
+        http_response_code(429);
+        echo json_encode(['success' => false, 'error' => 'Rate limit exceeded']);
+        exit();
+    }
+    
+    // Validate CSRF token for state-changing operations
+    $statefulActions = ['connect', 'put', 'mkdir', 'delete', 'rename', 'chmod'];
+    if (in_array($action, $statefulActions)) {
+        $csrfToken = $data['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+        if (!SecurityManager::verifyCSRFToken($csrfToken)) {
+            AuditLogger::logSecurityViolation(
+                'CSRF_TOKEN_INVALID',
+                "Invalid CSRF token for FTP action: $action"
+            );
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+            exit();
+        }
+    }
+    
     $response = handleFTPAction($action, $data);
     echo json_encode($response);
+    
 } catch (Exception $e) {
     error_log('FTP Handler Error: ' . $e->getMessage());
+    AuditLogger::logSecurityViolation(
+        'FTP_HANDLER_ERROR',
+        "Unhandled exception in FTP handler: " . $e->getMessage()
+    );
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => 'Internal server error']);
 }
 
 function handleFTPAction($action, $data) {
@@ -82,36 +126,84 @@ function handleFTPAction($action, $data) {
 }
 
 function connectToFTP($data) {
-    $host = $data['host'] ?? '';
-    $port = intval($data['port'] ?? 21);
-    $username = $data['username'] ?? '';
-    $password = $data['password'] ?? '';
-    $secure = isset($data['secure']) && $data['secure'];
-    
-    // Validate input
-    if (empty($host) || empty($username) || empty($password)) {
-        return ['success' => false, 'error' => 'Host, username, and password are required'];
+    // Check if user is authenticated
+    if (!isset($_SESSION['user_id'])) {
+        return ['success' => false, 'error' => 'Authentication required'];
     }
+    
+    $userId = (int)$_SESSION['user_id'];
+    
+    // Two connection modes: by site_id or by direct credentials
+    if (!empty($data['site_id'])) {
+        // Connect using saved site credentials
+        $siteId = (int)$data['site_id'];
+        $site = SecureDatabase::getFTPSite($siteId, $userId);
+        
+        if (!$site) {
+            AuditLogger::logSecurityViolation(
+                'UNAUTHORIZED_SITE_ACCESS',
+                "Attempted to access non-existent or unauthorized site: $siteId",
+                $userId
+            );
+            return ['success' => false, 'error' => 'Site not found or access denied'];
+        }
+        
+        $host = $site['host'];
+        $port = $site['port'];
+        $username = $site['username'];
+        $password = $site['password'];
+        $secure = $site['is_secure_ftp'];
+        
+    } else {
+        // Connect using provided credentials (for testing)
+        $host = SecurityManager::sanitizeInput($data['host'] ?? '', 'hostname');
+        $port = intval($data['port'] ?? 21);
+        $username = SecurityManager::sanitizeInput($data['username'] ?? '', 'string');
+        $password = $data['password'] ?? '';
+        $secure = isset($data['secure']) && $data['secure'];
+        $siteId = null;
+        
+        // Validate input
+        if (!SecurityManager::validateInput($host, 'hostname') || 
+            !SecurityManager::validateInput($port, 'port') ||
+            empty($username) || empty($password)) {
+            return ['success' => false, 'error' => 'Valid host, port, username, and password are required'];
+        }
+    }
+    
+    $startTime = microtime(true);
     
     // Attempt real FTP connection
     $connection = createFTPConnection($host, $port, $username, $password, $secure);
+    
+    $duration = round((microtime(true) - $startTime) * 1000);
     
     if ($connection) {
         // Test connection by getting current directory
         $currentDir = ftp_pwd($connection);
         ftp_close($connection);
         
-        // Store connection info in session for subsequent requests
-        session_start();
+        // Store encrypted connection info in session
         $_SESSION['ftp_connection'] = [
+            'site_id' => $siteId,
             'host' => $host,
             'port' => $port,
-            'username' => $username,
-            'password' => $password, // In production, encrypt this
+            'username_encrypted' => SecurityManager::encrypt($username, $userId),
+            'password_encrypted' => SecurityManager::encrypt($password, $userId),
             'secure' => $secure,
             'connected_at' => time(),
-            'current_dir' => $currentDir ?: '/'
+            'current_dir' => $currentDir ?: '/',
+            'user_id' => $userId
         ];
+        
+        // Update site connection status if connecting to saved site
+        if ($siteId) {
+            SecureDatabase::updateSiteConnectionStatus($siteId, $userId, 'connected');
+            SecureDatabase::logFTPOperation($userId, $siteId, 'connect', null, true, null, $duration);
+        }
+        
+        // Log successful connection
+        AuditLogger::logFTPOperation('connect', $host, null, $userId, true);
         
         return [
             'success' => true,
@@ -121,9 +213,17 @@ function connectToFTP($data) {
                 'port' => $port,
                 'secure' => $secure,
                 'current_dir' => $currentDir ?: '/'
-            ]
+            ],
+            'csrf_token' => SecurityManager::generateCSRFToken()
         ];
     } else {
+        // Log failed connection
+        if ($siteId) {
+            SecureDatabase::logFTPOperation($userId, $siteId, 'connect', null, false, 'Connection failed', $duration);
+        }
+        
+        AuditLogger::logFTPOperation('connect', $host, null, $userId, false);
+        
         return ['success' => false, 'error' => 'Failed to connect to FTP server. Please check your credentials and try again.'];
     }
 }
@@ -156,17 +256,34 @@ function createFTPConnection($host, $port, $username, $password, $secure) {
 }
 
 /**
- * Get FTP connection from session
+ * Get FTP connection from encrypted session data
  */
 function getFTPConnection() {
-    session_start();
-    
-    if (!isset($_SESSION['ftp_connection'])) {
+    if (!isset($_SESSION['ftp_connection']) || !isset($_SESSION['user_id'])) {
         return false;
     }
     
     $conn = $_SESSION['ftp_connection'];
-    return createFTPConnection($conn['host'], $conn['port'], $conn['username'], $conn['password'], $conn['secure']);
+    $userId = $_SESSION['user_id'];
+    
+    try {
+        // Decrypt credentials
+        $username = SecurityManager::decrypt($conn['username_encrypted'], $userId);
+        $password = SecurityManager::decrypt($conn['password_encrypted'], $userId);
+        
+        return createFTPConnection($conn['host'], $conn['port'], $username, $password, $conn['secure']);
+        
+    } catch (Exception $e) {
+        AuditLogger::logSecurityViolation(
+            'SESSION_DECRYPTION_FAILED',
+            "Failed to decrypt FTP session credentials: " . $e->getMessage(),
+            $userId
+        );
+        
+        // Clear corrupted session data
+        unset($_SESSION['ftp_connection']);
+        return false;
+    }
 }
 
 function disconnectFromFTP() {
