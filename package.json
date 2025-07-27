@@ -1,22 +1,37 @@
 {
-  "name": "ezedit",
-  "version": "1.0.0",
-  "description": "EzEdit.co - Online FTP File Editor with AI Assistant",
-  "main": "server.js",
+  "name": "ezedit-nextjs",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "build": "echo 'Build complete'",
-    "dev": "node server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
   },
-  "keywords": ["ftp", "editor", "web", "ai"],
-  "author": "EzEdit.co",
-  "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "body-parser": "^1.20.2"
+    "@anthropic-ai/sdk": "^0.27.3",
+    "@monaco-editor/react": "^4.6.0",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.47.8",
+    "date-fns": "^4.1.0",
+    "immer": "^10.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "15.1.6",
+    "openai": "^4.75.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.1"
   },
-  "engines": {
-    "node": ">=18.0.0"
+  "devDependencies": {
+    "@types/node": "^22.10.6",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "15.1.6",
+    "postcss": "^8.5.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2"
   }
 }

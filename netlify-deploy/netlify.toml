@@ -1,0 +1,103 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "echo 'Build complete'"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
+
+# Redirect API calls to serverless functions
+[[redirects]]
+  from = "/api/auth"
+  to = "/.netlify/functions/auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/health"
+  to = "/.netlify/functions/health"
+  status = 200
+
+[[redirects]]
+  from = "/api/ftp"
+  to = "/.netlify/functions/ftp"
+  status = 200
+
+[[redirects]]
+  from = "/api/ai-assistant"
+  to = "/.netlify/functions/ai-assistant"
+  status = 200
+
+# Handle PHP-style URLs
+[[redirects]]
+  from = "/health.php"
+  to = "/.netlify/functions/health"
+  status = 200
+
+[[redirects]]
+  from = "/auth/*"
+  to = "/auth.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard.php"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/editor.php"
+  to = "/editor.html"
+  status = 200
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+
+# Headers for security and performance
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Edge functions for enhanced performance
+[[edge_functions]]
+  path = "/dashboard/*"
+  function = "auth-middleware"
+
+# Context-specific settings
+[context.production]
+  command = "echo 'Production build complete'"
+  
+[context.production.environment]
+  NODE_ENV = "production"
+  APP_ENV = "production"
+
+[context.deploy-preview]
+  command = "echo 'Preview build complete'"
+  
+[context.branch-deploy]
+  command = "echo 'Branch build complete'"
