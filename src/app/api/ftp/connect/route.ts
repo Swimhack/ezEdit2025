@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createSupabaseServerClient } from '@/lib/supabase'
 
 // Note: In a real implementation, you would use an actual FTP/SFTP library
 // For demo purposes, this simulates the FTP connection
 export async function POST(request: NextRequest) {
   try {
-    const { cookies } = await import('next/headers')
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createSupabaseServerClient()
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession()
@@ -89,8 +88,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { cookies } = await import('next/headers')
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createSupabaseServerClient()
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession()

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createSupabaseServerClient } from '@/lib/supabase'
 
 // Mock file system data for demo purposes
 const mockFiles = [
@@ -274,8 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 export async function GET(request: NextRequest) {
   try {
-    const { cookies } = await import('next/headers')
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createSupabaseServerClient()
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession()
@@ -342,8 +341,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { cookies } = await import('next/headers')
-    const supabase = createRouteHandlerClient({ cookies })
+    const supabase = await createSupabaseServerClient()
     
     // Check authentication
     const { data: { session } } = await supabase.auth.getSession()

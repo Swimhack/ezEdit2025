@@ -1,40 +1,39 @@
-name: ezedit-production
+name: ezedit-nextjs
 region: nyc
 services:
 - name: web
-  environment_slug: php
+  environment_slug: node-js
   instance_size_slug: basic-xxs
   instance_count: 1
-  http_port: 8080
-  build_command: |
-    composer install --no-dev --optimize-autoloader || echo "No composer dependencies"
-  run_command: heroku-php-apache2 -C apache.conf public/
+  http_port: 3000
+  build_command: npm ci && npm run build
+  run_command: npm start
   source_dir: /
-  git:
-    repo_clone_url: https://github.com/Swimhack/ezEdit2025.git
+  github:
+    repo: Swimhack/ezEdit2025
     branch: main
   routes:
   - path: /
   health_check:
-    http_path: /health
+    http_path: /
     initial_delay_seconds: 60
     period_seconds: 10
     timeout_seconds: 5
     success_threshold: 1
     failure_threshold: 3
   envs:
-  - key: APP_ENV
+  - key: NODE_ENV
     value: production
-  - key: APP_NAME
-    value: EzEdit.co
-  - key: PHP_VERSION
-    value: "8.2"
-  - key: SESSION_DRIVER
-    value: file
-  - key: CACHE_DRIVER
-    value: file
-  - key: LOG_LEVEL
-    value: info
+  - key: NEXT_TELEMETRY_DISABLED
+    value: "1"
+  - key: NEXT_PUBLIC_SUPABASE_URL
+    value: "https://placeholder.supabase.co"
+  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+    value: "placeholder-key"
+  - key: OPENAI_API_KEY
+    value: "your-openai-key-here"
+  - key: ANTHROPIC_API_KEY
+    value: "your-anthropic-key-here"
 databases:
 - engine: PG
   name: ezedit-db
