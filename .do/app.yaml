@@ -6,7 +6,7 @@ services:
   instance_size_slug: basic-xxs
   instance_count: 1
   http_port: 3000
-  build_command: npm ci && npm run build
+  build_command: npm install && npm run build
   run_command: npm start
   source_dir: /
   github:
@@ -24,6 +24,10 @@ services:
   envs:
   - key: NODE_ENV
     value: production
+  - key: NODE_VERSION
+    value: "20"
+  - key: NPM_VERSION
+    value: "10"
   - key: NEXT_TELEMETRY_DISABLED
     value: "1"
   - key: NEXT_PUBLIC_SUPABASE_URL
