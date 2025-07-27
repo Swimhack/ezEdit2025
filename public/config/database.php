@@ -15,13 +15,28 @@ class Database {
         $this->config = Environment::getDatabaseConfig();
         
         try {
-            $dsn = "mysql:host={$this->config['host']};port={$this->config['port']};dbname={$this->config['name']};charset=utf8mb4";
-            $this->connection = new PDO($dsn, $this->config['username'], $this->config['password'], [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
-            ]);
+            // Try PostgreSQL first (Supabase)
+            if ($this->config['connection'] === 'pgsql') {
+                $dsn = "pgsql:host={$this->config['host']};port={$this->config['port']};dbname={$this->config['name']};sslmode=require";
+                $this->connection = new PDO($dsn, $this->config['username'], $this->config['password'], [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false
+                ]);
+                
+                // Create PostgreSQL tables if they don't exist
+                $this->createPostgreSQLTables();
+                
+            } else {
+                // MySQL fallback
+                $dsn = "mysql:host={$this->config['host']};port={$this->config['port']};dbname={$this->config['name']};charset=utf8mb4";
+                $this->connection = new PDO($dsn, $this->config['username'], $this->config['password'], [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+                ]);
+            }
         } catch (PDOException $e) {
             // Fall back to SQLite for demo/development
             $this->createSQLiteDatabase();
@@ -97,6 +112,75 @@ class Database {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             used BOOLEAN DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        );
+        ";
+        
+        $this->connection->exec($sql);
+    }
+    
+    private function createPostgreSQLTables() {
+        $sql = "
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            name VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP,
+            is_active BOOLEAN DEFAULT TRUE,
+            email_verified BOOLEAN DEFAULT FALSE
+        );
+        
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            session_token VARCHAR(255) UNIQUE NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        );
+        
+        CREATE TABLE IF NOT EXISTS ftp_connections (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            host VARCHAR(255) NOT NULL,
+            port INTEGER DEFAULT 21,
+            username VARCHAR(255) NOT NULL,
+            password_encrypted TEXT NOT NULL,
+            root_directory VARCHAR(500),
+            web_url VARCHAR(500),
+            secure BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_used TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        );
+        
+        CREATE TABLE IF NOT EXISTS password_resets (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            token VARCHAR(255) UNIQUE NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            used BOOLEAN DEFAULT FALSE,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        );
+        
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            action VARCHAR(100) NOT NULL,
+            resource_type VARCHAR(50),
+            resource_id VARCHAR(50),
+            details JSONB,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
         );
         ";
         

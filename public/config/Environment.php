@@ -102,11 +102,13 @@ class Environment {
      */
     public static function getDatabaseConfig() {
         return [
+            'connection' => self::get('DB_CONNECTION', 'pgsql'),
             'host' => self::get('DB_HOST', 'localhost'),
-            'port' => self::get('DB_PORT', 3306),
-            'name' => self::get('DB_NAME', 'ezedit_db'),
-            'username' => self::get('DB_USERNAME', 'ezedit_user'),
-            'password' => self::get('DB_PASSWORD', '')
+            'port' => self::get('DB_PORT', 5432),
+            'name' => self::get('DB_DATABASE', 'postgres'),
+            'username' => self::get('DB_USERNAME', 'postgres'),
+            'password' => self::get('DB_PASSWORD', ''),
+            'url' => self::get('DATABASE_URL', '')
         ];
     }
     
@@ -130,7 +132,20 @@ class Environment {
             'claude_api_key' => self::get('CLAUDE_API_KEY', ''),
             'claude_api_url' => self::get('CLAUDE_API_URL', 'https://api.anthropic.com/v1'),
             'supabase_url' => self::get('SUPABASE_URL', ''),
-            'supabase_key' => self::get('SUPABASE_ANON_KEY', '')
+            'supabase_anon_key' => self::get('SUPABASE_ANON_KEY', ''),
+            'supabase_service_role_key' => self::get('SUPABASE_SERVICE_ROLE_KEY', '')
+        ];
+    }
+    
+    /**
+     * Get Supabase configuration
+     */
+    public static function getSupabaseConfig() {
+        return [
+            'url' => self::get('SUPABASE_URL', ''),
+            'anon_key' => self::get('SUPABASE_ANON_KEY', ''),
+            'service_role_key' => self::get('SUPABASE_SERVICE_ROLE_KEY', ''),
+            'jwt_secret' => self::get('SUPABASE_JWT_SECRET', '')
         ];
     }
     
