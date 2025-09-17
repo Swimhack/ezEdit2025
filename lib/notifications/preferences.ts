@@ -115,9 +115,9 @@ export class NotificationPreferencesManager {
 
       if (data) {
         return {
-          ...data,
-          created_at: new Date(data.created_at),
-          updated_at: new Date(data.updated_at)
+          ...(data as any),
+          created_at: new Date((data as any).created_at),
+          updated_at: new Date((data as any).updated_at)
         };
       }
 
@@ -150,9 +150,9 @@ export class NotificationPreferencesManager {
       }
 
       const preferences = (data || []).map(row => ({
-        ...row,
-        created_at: new Date(row.created_at),
-        updated_at: new Date(row.updated_at)
+        ...(row as any),
+        created_at: new Date((row as any).created_at),
+        updated_at: new Date((row as any).updated_at)
       }));
 
       // Ensure all default types have preferences
@@ -178,7 +178,7 @@ export class NotificationPreferencesManager {
     try {
       const preference = NotificationPreferenceModel.create(data);
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('notification_preferences')
         .insert({
           id: preference.id,
@@ -225,7 +225,7 @@ export class NotificationPreferencesManager {
       const updatedFields = NotificationPreferenceModel.update(currentPreference, updates);
 
       // Update in database
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('notification_preferences')
         .update({
           ...updatedFields,
@@ -449,20 +449,20 @@ export class NotificationPreferencesManager {
       }
 
       deliveryData.forEach(delivery => {
-        const channel = delivery.channel as NotificationChannel;
-        const type = delivery.notification_type;
+        const channel = (delivery as any).channel as NotificationChannel;
+        const type = (delivery as any).notification_type;
 
         if (channelStats[channel]) {
           channelStats[channel].sent++;
-          if (delivery.opened_at) channelStats[channel].opened++;
-          if (delivery.clicked_at) channelStats[channel].clicked++;
+          if ((delivery as any).opened_at) channelStats[channel].opened++;
+          if ((delivery as any).clicked_at) channelStats[channel].clicked++;
         }
 
         if (!typeStats[type]) {
           typeStats[type] = { sent: 0, opened: 0, engagement: 0 };
         }
         typeStats[type].sent++;
-        if (delivery.opened_at) typeStats[type].opened++;
+        if ((delivery as any).opened_at) typeStats[type].opened++;
       });
 
       // Calculate rates
@@ -704,7 +704,7 @@ export class NotificationPreferencesManager {
       }
 
       const preferences = data || [];
-      const uniqueUsers = new Set(preferences.map(p => p.user_id)).size;
+      const uniqueUsers = new Set(preferences.map(p => (p as any).user_id)).size;
 
       const enabledByChannel: any = {};
       const enabledByType: any = {};
@@ -714,10 +714,10 @@ export class NotificationPreferencesManager {
       });
 
       preferences.forEach(pref => {
-        if (pref.enabled) {
-          enabledByType[pref.notification_type] = (enabledByType[pref.notification_type] || 0) + 1;
+        if ((pref as any).enabled) {
+          enabledByType[(pref as any).notification_type] = (enabledByType[(pref as any).notification_type] || 0) + 1;
 
-          Object.entries(pref.channels).forEach(([channel, enabled]) => {
+          Object.entries((pref as any).channels).forEach(([channel, enabled]) => {
             if (enabled) {
               enabledByChannel[channel] = (enabledByChannel[channel] || 0) + 1;
             }

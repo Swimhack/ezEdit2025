@@ -833,20 +833,36 @@ export class DataSanitizer {
 export function createSanitizer(level: SanitizationLevel): DataSanitizer {
   const configs: Record<SanitizationLevel, Partial<SanitizationConfig>> = {
     [SanitizationLevel.NONE]: {
-      piiDetection: { enabled: false },
-      validation: { enabled: false }
+      piiDetection: {
+        enabled: false,
+        types: [],
+        redactionChar: '*',
+        preserveFormat: false,
+        confidenceThreshold: 0.9
+      },
+      validation: {
+        enabled: false,
+        rules: [],
+        strictMode: false,
+        maxLength: 1000000,
+        allowedCharsets: []
+      }
     },
     [SanitizationLevel.BASIC]: {
       level,
       piiDetection: {
         enabled: true,
         types: [PIIType.SSN, PIIType.CREDIT_CARD],
+        redactionChar: '*',
+        preserveFormat: true,
         confidenceThreshold: 0.9
       },
       validation: {
         enabled: true,
         rules: [ValidationRule.NO_SCRIPT_TAGS, ValidationRule.NO_SQL_INJECTION],
-        strictMode: false
+        strictMode: false,
+        maxLength: 100000,
+        allowedCharsets: ['utf8']
       }
     },
     [SanitizationLevel.MODERATE]: {
@@ -854,6 +870,8 @@ export function createSanitizer(level: SanitizationLevel): DataSanitizer {
       piiDetection: {
         enabled: true,
         types: [PIIType.SSN, PIIType.CREDIT_CARD, PIIType.EMAIL, PIIType.PHONE],
+        redactionChar: '*',
+        preserveFormat: true,
         confidenceThreshold: 0.8
       },
       validation: {
@@ -864,7 +882,9 @@ export function createSanitizer(level: SanitizationLevel): DataSanitizer {
           ValidationRule.NO_XSS_ATTEMPTS,
           ValidationRule.LENGTH_LIMIT
         ],
-        strictMode: false
+        strictMode: false,
+        maxLength: 50000,
+        allowedCharsets: ['utf8', 'ascii']
       }
     },
     [SanitizationLevel.STRICT]: {
@@ -872,12 +892,16 @@ export function createSanitizer(level: SanitizationLevel): DataSanitizer {
       piiDetection: {
         enabled: true,
         types: Object.values(PIIType).filter(t => t !== PIIType.CUSTOM),
+        redactionChar: '*',
+        preserveFormat: true,
         confidenceThreshold: 0.7
       },
       validation: {
         enabled: true,
         rules: Object.values(ValidationRule),
-        strictMode: true
+        strictMode: true,
+        maxLength: 10000,
+        allowedCharsets: ['ascii']
       }
     },
     [SanitizationLevel.PARANOID]: {
@@ -885,6 +909,7 @@ export function createSanitizer(level: SanitizationLevel): DataSanitizer {
       piiDetection: {
         enabled: true,
         types: Object.values(PIIType).filter(t => t !== PIIType.CUSTOM),
+        redactionChar: 'X',
         confidenceThreshold: 0.5,
         preserveFormat: false
       },
@@ -892,7 +917,8 @@ export function createSanitizer(level: SanitizationLevel): DataSanitizer {
         enabled: true,
         rules: Object.values(ValidationRule),
         strictMode: true,
-        maxLength: 1000
+        maxLength: 1000,
+        allowedCharsets: ['ascii']
       }
     }
   };

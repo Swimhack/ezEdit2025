@@ -137,7 +137,7 @@ export interface UpdateNotificationDeliveryData {
 export const CreateNotificationDeliverySchema = z.object({
   notification_id: z.string().uuid(),
   channel: z.nativeEnum(DeliveryChannel),
-  metadata: z.record(z.any()).nullable().optional()
+  metadata: z.any().nullable().optional()
 });
 
 /**
@@ -150,7 +150,7 @@ export const UpdateNotificationDeliverySchema = z.object({
   failed_at: z.date().nullable().optional(),
   provider_message_id: z.string().max(255).nullable().optional(),
   error_message: z.string().max(1000).nullable().optional(),
-  metadata: z.record(z.any()).nullable().optional()
+  metadata: z.any().nullable().optional()
 });
 
 /**
