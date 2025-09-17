@@ -1,0 +1,480 @@
+openapi: 3.0.0
+info:
+  title: EzEdit OAuth API
+  description: Google OAuth integration endpoints for authentication
+  version: 1.0.0
+  contact:
+    name: EzEdit Authentication Team
+    email: auth@ezedit.co
+
+servers:
+  - url: https://ezedit.co/api/auth
+    description: Production OAuth endpoints
+  - url: http://localhost:3000/api/auth
+    description: Development server
+
+security:
+  - SessionAuth: []
+
+paths:
+  /oauth/google/signin:
+    post:
+      summary: Initiate Google OAuth sign-in flow
+      tags: [OAuth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuthInitiateRequest'
+      responses:
+        '200':
+          description: OAuth flow initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthInitiateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /oauth/google/callback:
+    get:
+      summary: Handle Google OAuth callback
+      tags: [OAuth]
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Authorization code from Google
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+          description: OAuth state parameter
+        - name: scope
+          in: query
+          schema:
+            type: string
+          description: Granted scopes
+        - name: error
+          in: query
+          schema:
+            type: string
+          description: OAuth error code
+        - name: error_description
+          in: query
+          schema:
+            type: string
+          description: OAuth error description
+      responses:
+        '302':
+          description: Redirect to success or error page
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Redirect URL
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /oauth/profile:
+    get:
+      summary: Get current user's OAuth profile
+      tags: [OAuth]
+      responses:
+        '200':
+          description: OAuth profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update OAuth profile preferences
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOAuthProfileRequest'
+      responses:
+        '200':
+          description: OAuth profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /oauth/link:
+    post:
+      summary: Link Google account to existing user account
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountLinkRequest'
+      responses:
+        '200':
+          description: Account linking initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountLinkResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /oauth/link/confirm:
+    post:
+      summary: Confirm account linking with token
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmLinkRequest'
+      responses:
+        '200':
+          description: Account linked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountLinkConfirmation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: Link confirmation expired
+
+  /oauth/unlink:
+    post:
+      summary: Unlink Google account from user account
+      tags: [OAuth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnlinkAccountRequest'
+      responses:
+        '200':
+          description: Account unlinked successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /oauth/token/refresh:
+    post:
+      summary: Refresh OAuth access token
+      tags: [OAuth]
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefreshResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Refresh token invalid or expired
+
+  /oauth/revoke:
+    post:
+      summary: Revoke OAuth tokens and sign out
+      tags: [OAuth]
+      responses:
+        '200':
+          description: Tokens revoked successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /oauth/sessions:
+    get:
+      summary: Get user's OAuth session history
+      tags: [OAuth]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: OAuth sessions retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthSessionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
+  schemas:
+    OAuthInitiateRequest:
+      type: object
+      properties:
+        redirect_uri:
+          type: string
+          format: uri
+          description: Post-authentication redirect URL
+        scopes:
+          type: array
+          items:
+            type: string
+          default: ['openid', 'email', 'profile']
+        link_existing:
+          type: boolean
+          default: false
+          description: Link to existing account if email matches
+
+    OAuthInitiateResponse:
+      type: object
+      properties:
+        auth_url:
+          type: string
+          format: uri
+          description: Google OAuth authorization URL
+        state:
+          type: string
+          description: OAuth state parameter
+        expires_in:
+          type: integer
+          description: Authorization URL expiration in seconds
+
+    OAuthProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [google]
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        given_name:
+          type: string
+        family_name:
+          type: string
+        picture_url:
+          type: string
+          format: uri
+        verified_email:
+          type: boolean
+        locale:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UpdateOAuthProfileRequest:
+      type: object
+      properties:
+        sync_profile_picture:
+          type: boolean
+          description: Sync profile picture from Google
+        sync_name:
+          type: boolean
+          description: Sync name from Google
+        preferred_auth_method:
+          type: string
+          enum: [email, google, either]
+
+    AccountLinkRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          description: Current account password for verification
+        oauth_profile_id:
+          type: string
+          format: uuid
+          description: OAuth profile to link
+
+    AccountLinkResponse:
+      type: object
+      properties:
+        link_id:
+          type: string
+          format: uuid
+        confirmation_required:
+          type: boolean
+        message:
+          type: string
+
+    ConfirmLinkRequest:
+      type: object
+      required: [confirmation_token]
+      properties:
+        confirmation_token:
+          type: string
+          description: Email confirmation token
+
+    AccountLinkConfirmation:
+      type: object
+      properties:
+        success:
+          type: boolean
+        linked_account:
+          $ref: '#/components/schemas/OAuthProfile'
+        message:
+          type: string
+
+    UnlinkAccountRequest:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          description: Current account password for verification
+        revoke_tokens:
+          type: boolean
+          default: true
+          description: Revoke OAuth tokens from Google
+
+    TokenRefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: New access token (hashed in storage)
+        expires_in:
+          type: integer
+          description: Token expiration in seconds
+        token_type:
+          type: string
+          default: Bearer
+        scope:
+          type: string
+          description: Token scopes
+
+    OAuthSessionList:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OAuthSessionSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    OAuthSessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+          enum: [google]
+        status:
+          type: string
+          enum: [completed, expired, error]
+        ip_address:
+          type: string
+        user_agent:
+          type: string
+        location:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

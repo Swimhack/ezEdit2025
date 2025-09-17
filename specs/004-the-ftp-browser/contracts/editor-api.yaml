@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: FTP Editor API
+  description: Three-pane FTP file editor API contracts
+  version: 1.0.0
+
+servers:
+  - url: /api/ftp/editor
+    description: FTP Editor API endpoints
+
+paths:
+  /layout:
+    get:
+      summary: Get editor layout configuration
+      description: Returns current editor layout settings and pane visibility
+      parameters:
+        - name: connectionId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: FTP connection identifier
+      responses:
+        '200':
+          description: Editor layout configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorLayout'
+        '400':
+          description: Missing or invalid connection ID
+        '404':
+          description: Connection not found
+
+    put:
+      summary: Update editor layout configuration
+      description: Save new layout settings for the current session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorLayout'
+      responses:
+        '200':
+          description: Layout updated successfully
+        '400':
+          description: Invalid layout configuration
+
+  /file:
+    post:
+      summary: Load file for editing
+      description: Load file content from FTP server into editor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - connectionId
+                - filePath
+              properties:
+                connectionId:
+                  type: string
+                  description: FTP connection identifier
+                filePath:
+                  type: string
+                  description: Full path to file on FTP server
+      responses:
+        '200':
+          description: File loaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileContent'
+        '400':
+          description: Invalid request parameters
+        '403':
+          description: Permission denied
+        '404':
+          description: File not found
+        '413':
+          description: File too large
+
+    put:
+      summary: Save file changes
+      description: Save edited file content back to FTP server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - connectionId
+                - filePath
+                - content
+              properties:
+                connectionId:
+                  type: string
+                filePath:
+                  type: string
+                content:
+                  type: string
+                  description: File content to save
+      responses:
+        '200':
+          description: File saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  lastModified:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid request
+        '403':
+          description: Permission denied
+        '409':
+          description: File modified by another process
+
+  /preview:
+    get:
+      summary: Get file preview and metadata
+      description: Get file metadata and preview content for display in right pane
+      parameters:
+        - name: connectionId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: filePath
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: includePreview
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Whether to include preview content for supported file types
+      responses:
+        '200':
+          description: File metadata and preview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilePreview'
+        '400':
+          description: Invalid parameters
+        '404':
+          description: File not found
+
+components:
+  schemas:
+    EditorLayout:
+      type: object
+      required:
+        - paneVisibility
+        - layout
+      properties:
+        paneVisibility:
+          type: object
+          required:
+            - tree
+            - editor
+            - preview
+          properties:
+            tree:
+              type: boolean
+            editor:
+              type: boolean
+            preview:
+              type: boolean
+        layout:
+          type: object
+          required:
+            - treeWidth
+            - previewWidth
+            - editorHeight
+            - orientation
+          properties:
+            treeWidth:
+              type: integer
+              minimum: 200
+              maximum: 800
+            previewWidth:
+              type: integer
+              minimum: 200
+              maximum: 600
+            editorHeight:
+              type: integer
+              minimum: 300
+            orientation:
+              type: string
+              enum: [horizontal, vertical]
+
+    FileContent:
+      type: object
+      required:
+        - path
+        - content
+        - encoding
+        - size
+        - lastModified
+      properties:
+        path:
+          type: string
+          description: Full file path
+        content:
+          type: string
+          description: File content as string
+        encoding:
+          type: string
+          enum: [utf-8, binary, ascii]
+        size:
+          type: integer
+          description: File size in bytes
+        lastModified:
+          type: string
+          format: date-time
+        permissions:
+          type: string
+          description: FTP permissions string
+        mimeType:
+          type: string
+          description: Detected MIME type
+
+    FilePreview:
+      type: object
+      required:
+        - path
+        - name
+        - type
+        - size
+        - lastModified
+      properties:
+        path:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [file, directory]
+        size:
+          type: integer
+        lastModified:
+          type: string
+          format: date-time
+        permissions:
+          type: string
+        mimeType:
+          type: string
+        preview:
+          type: object
+          properties:
+            available:
+              type: boolean
+            content:
+              type: string
+              description: Preview content (first 1000 chars for text files)
+            thumbnail:
+              type: string
+              description: Base64 thumbnail for images

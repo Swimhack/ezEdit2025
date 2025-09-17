@@ -1,0 +1,422 @@
+openapi: 3.0.0
+info:
+  title: EzEdit Deployment API
+  description: Internal API for deployment management and monitoring
+  version: 1.0.0
+  contact:
+    name: EzEdit Deployment Team
+    email: deployment@ezedit.co
+
+servers:
+  - url: https://ezedit.fly.dev/api/internal
+    description: Production deployment API
+  - url: http://localhost:3000/api/internal
+    description: Development server
+
+security:
+  - AdminAuth: []
+
+paths:
+  /deployment/status:
+    get:
+      summary: Get current deployment status
+      tags: [Deployment]
+      responses:
+        '200':
+          description: Current deployment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /deployment/trigger:
+    post:
+      summary: Trigger new deployment
+      tags: [Deployment]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerDeploymentRequest'
+      responses:
+        '202':
+          description: Deployment triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /deployment/rollback:
+    post:
+      summary: Rollback to previous version
+      tags: [Deployment]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackRequest'
+      responses:
+        '202':
+          description: Rollback initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deployment/logs:
+    get:
+      summary: Get deployment logs
+      tags: [Deployment]
+      parameters:
+        - name: deployment_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 1000
+      responses:
+        '200':
+          description: Deployment logs retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentLogs'
+
+  /health:
+    get:
+      summary: Application health check
+      tags: [Health]
+      security: []
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: Application is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /health/detailed:
+    get:
+      summary: Detailed health check with dependencies
+      tags: [Health]
+      responses:
+        '200':
+          description: Detailed health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedHealthStatus'
+
+  /metrics:
+    get:
+      summary: Get deployment metrics
+      tags: [Monitoring]
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: 24h
+      responses:
+        '200':
+          description: Deployment metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentMetrics'
+
+  /config/validate:
+    post:
+      summary: Validate deployment configuration
+      tags: [Configuration]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentConfig'
+      responses:
+        '200':
+          description: Configuration is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+        '400':
+          description: Configuration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResult'
+
+components:
+  securitySchemes:
+    AdminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DeploymentStatus:
+      type: object
+      properties:
+        current_version:
+          type: string
+        deployment_id:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, success, failed, rolled_back]
+        environment:
+          type: string
+          enum: [production, staging]
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        health_check_status:
+          type: boolean
+
+    TriggerDeploymentRequest:
+      type: object
+      required: [version, environment]
+      properties:
+        version:
+          type: string
+          description: Version tag or commit hash
+        environment:
+          type: string
+          enum: [production, staging]
+        force:
+          type: boolean
+          default: false
+        skip_health_check:
+          type: boolean
+          default: false
+
+    RollbackRequest:
+      type: object
+      required: [target_version]
+      properties:
+        target_version:
+          type: string
+          description: Version to rollback to
+        reason:
+          type: string
+          description: Reason for rollback
+
+    DeploymentResponse:
+      type: object
+      properties:
+        deployment_id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+        estimated_duration:
+          type: integer
+          description: Estimated duration in seconds
+
+    DeploymentLogs:
+      type: object
+      properties:
+        deployment_id:
+          type: string
+        logs:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp:
+                type: string
+                format: date-time
+              level:
+                type: string
+                enum: [info, warn, error]
+              message:
+                type: string
+              source:
+                type: string
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+
+    DetailedHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        uptime:
+          type: integer
+        checks:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/ServiceHealth'
+            external_apis:
+              $ref: '#/components/schemas/ServiceHealth'
+            storage:
+              $ref: '#/components/schemas/ServiceHealth'
+
+    ServiceHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+        response_time:
+          type: number
+          description: Response time in milliseconds
+        last_check:
+          type: string
+          format: date-time
+        error:
+          type: string
+
+    DeploymentMetrics:
+      type: object
+      properties:
+        period:
+          type: string
+        deployments_count:
+          type: integer
+        success_rate:
+          type: number
+        average_duration:
+          type: number
+          description: Average deployment duration in seconds
+        rollback_count:
+          type: integer
+        performance:
+          type: object
+          properties:
+            response_time_p95:
+              type: number
+            error_rate:
+              type: number
+            uptime_percentage:
+              type: number
+
+    DeploymentConfig:
+      type: object
+      properties:
+        app_name:
+          type: string
+        domain:
+          type: string
+        regions:
+          type: array
+          items:
+            type: string
+        resources:
+          type: object
+          properties:
+            cpu:
+              type: integer
+            memory:
+              type: string
+            storage:
+              type: string
+        scaling:
+          type: object
+          properties:
+            min_instances:
+              type: integer
+            max_instances:
+              type: integer
+            auto_scaling:
+              type: boolean
+
+    ValidationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              severity:
+                type: string
+                enum: [error, warning, info]
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

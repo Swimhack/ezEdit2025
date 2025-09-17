@@ -1,0 +1,54 @@
+# fly.toml app configuration file generated for ezedit
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+
+app = "ezedit-co"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  [build.args]
+    NEXT_PUBLIC_SUPABASE_URL = "https://sctzykgcfkhadowyqcrj.supabase.co"
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY"
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_TYooMQauvdEDq54NiTphI7jx"
+    NEXT_PUBLIC_APP_URL = "https://ezedit-co.fly.dev"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  max_machines_running = 10
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "15s"
+    method = "GET"
+    timeout = "10s"
+    path = "/api/health"
+
+[[vm]]
+  memory = "4gb"
+  cpu_kind = "shared"
+  cpus = 2
+
+[auto_scaling]
+  min_machines_running = 1
+  max_machines_running = 10
+
+  [[auto_scaling.metrics]]
+    name = "cpu"
+    target = 80
+
+  [[auto_scaling.metrics]]
+    name = "memory"
+    target = 85
+
+[[vm.mounts]]
+  source = "ezedit_data"
+  destination = "/data"

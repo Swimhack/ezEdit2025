@@ -1,0 +1,619 @@
+openapi: 3.0.0
+info:
+  title: EzEdit API
+  description: AI-powered website and membership platform API
+  version: 1.0.0
+  contact:
+    name: EzEdit Support
+    email: support@ezedit.co
+
+servers:
+  - url: https://api.ezedit.co/v1
+    description: Production server
+  - url: http://localhost:3000/api
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /ai/generate:
+    post:
+      summary: Generate website from natural language prompt
+      tags: [AI]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+      responses:
+        '200':
+          description: Generation started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /sites:
+    post:
+      summary: Create new site
+      tags: [Sites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSiteRequest'
+      responses:
+        '201':
+          description: Site created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      summary: List user's sites
+      tags: [Sites]
+      parameters:
+        - name: org_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, archived]
+      responses:
+        '200':
+          description: Sites retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Site'
+                  total:
+                    type: integer
+
+  /sites/{siteId}:
+    get:
+      summary: Get site details
+      tags: [Sites]
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Site retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update site configuration
+      tags: [Sites]
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSiteRequest'
+      responses:
+        '200':
+          description: Site updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Site'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /sites/{siteId}/publish:
+    post:
+      summary: Publish site
+      tags: [Sites]
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Site published successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /memberships:
+    post:
+      summary: Create membership subscription
+      tags: [Memberships]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMembershipRequest'
+      responses:
+        '201':
+          description: Membership created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      summary: List user's memberships
+      tags: [Memberships]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, cancelled, expired, paused]
+      responses:
+        '200':
+          description: Memberships retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memberships:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Membership'
+
+  /memberships/{membershipId}/cancel:
+    post:
+      summary: Cancel membership
+      tags: [Memberships]
+      parameters:
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Membership cancelled successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payments/checkout:
+    post:
+      summary: Initialize payment checkout
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /payments/webhook:
+    post:
+      summary: Stripe webhook endpoint
+      tags: [Payments]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processed successfully
+
+  /content:
+    post:
+      summary: Create content
+      tags: [Content]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContentRequest'
+      responses:
+        '201':
+          description: Content created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+
+  /content/{contentId}:
+    get:
+      summary: Get content
+      tags: [Content]
+      parameters:
+        - name: contentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Content retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /programs/{programId}/progress:
+    get:
+      summary: Get program progress
+      tags: [Programs]
+      parameters:
+        - name: programId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Progress retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramProgress'
+
+    post:
+      summary: Update program progress
+      tags: [Programs]
+      parameters:
+        - name: programId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProgressRequest'
+      responses:
+        '200':
+          description: Progress updated successfully
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    GenerateRequest:
+      type: object
+      required: [prompt, type]
+      properties:
+        prompt:
+          type: string
+          maxLength: 10000
+        type:
+          type: string
+          enum: [site_generation, content_creation, design_update]
+        site_id:
+          type: string
+          format: uuid
+        options:
+          type: object
+          properties:
+            style:
+              type: string
+            features:
+              type: array
+              items:
+                type: string
+
+    GenerateResponse:
+      type: object
+      properties:
+        prompt_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        estimated_time:
+          type: integer
+        result_preview:
+          type: object
+
+    Site:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+          format: uuid
+        domain:
+          type: string
+        subdomain:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        config:
+          type: object
+        status:
+          type: string
+          enum: [draft, published, archived]
+        site_type:
+          type: string
+          enum: [benchonly, fitweb, custom]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateSiteRequest:
+      type: object
+      required: [title, subdomain, site_type]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        subdomain:
+          type: string
+          pattern: '^[a-z0-9-]{3,63}$'
+        site_type:
+          type: string
+          enum: [benchonly, fitweb, custom]
+        description:
+          type: string
+        config:
+          type: object
+
+    UpdateSiteRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        domain:
+          type: string
+        config:
+          type: object
+
+    Membership:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        site_id:
+          type: string
+          format: uuid
+        tier:
+          type: string
+        status:
+          type: string
+          enum: [active, cancelled, expired, paused]
+        expires_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    CreateMembershipRequest:
+      type: object
+      required: [site_id, tier]
+      properties:
+        site_id:
+          type: string
+          format: uuid
+        tier:
+          type: string
+        payment_method_id:
+          type: string
+
+    CheckoutRequest:
+      type: object
+      required: [price_id, success_url, cancel_url]
+      properties:
+        price_id:
+          type: string
+        success_url:
+          type: string
+          format: uri
+        cancel_url:
+          type: string
+          format: uri
+        metadata:
+          type: object
+
+    CheckoutResponse:
+      type: object
+      properties:
+        checkout_url:
+          type: string
+          format: uri
+        session_id:
+          type: string
+
+    Content:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        site_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [page, post, program, media]
+        title:
+          type: string
+        slug:
+          type: string
+        data:
+          type: object
+        access_level:
+          type: string
+        published:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    CreateContentRequest:
+      type: object
+      required: [site_id, type, title, slug]
+      properties:
+        site_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [page, post, program, media]
+        title:
+          type: string
+        slug:
+          type: string
+        data:
+          type: object
+        access_level:
+          type: string
+        published:
+          type: boolean
+
+    ProgramProgress:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        program_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [not_started, in_progress, completed]
+        progress_data:
+          type: object
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+    UpdateProgressRequest:
+      type: object
+      required: [progress_data]
+      properties:
+        progress_data:
+          type: object
+        completion_percentage:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
