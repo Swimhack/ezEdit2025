@@ -52,9 +52,9 @@ function formatFileInfo(item: any, path: string): any {
 // Rate limiting and circuit breaker
 const requestCounts = new Map<string, { count: number, resetTime: number }>()
 const failureCounts = new Map<string, { count: number, resetTime: number }>()
-const RATE_LIMIT = 10 // requests per minute
-const FAILURE_THRESHOLD = 5 // failures before circuit breaker opens
-const CIRCUIT_BREAKER_TIMEOUT = 60000 // 1 minute
+const RATE_LIMIT = 5 // reduced from 10 to 5 requests per minute
+const FAILURE_THRESHOLD = 3 // reduced from 5 to 3 failures before circuit breaker opens
+const CIRCUIT_BREAKER_TIMEOUT = 120000 // increased from 1 minute to 2 minutes
 
 function checkRateLimit(clientId: string): boolean {
   const now = Date.now()
@@ -138,8 +138,14 @@ export async function POST(request: NextRequest) {
 
   // Circuit breaker
   if (!checkCircuitBreaker(websiteId)) {
+    logger.warn('Circuit breaker open for website', {
+      websiteId,
+      correlationId,
+      operation: 'ftp_list_circuit_breaker_open'
+    });
+
     return NextResponse.json(
-      { error: 'Service temporarily unavailable due to repeated failures. Please try again later.' },
+      { error: 'Service temporarily unavailable due to repeated failures. Please wait 2 minutes and try again.' },
       { status: 503 }
     )
   }

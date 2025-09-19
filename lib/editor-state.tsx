@@ -258,18 +258,34 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   /**
    * Load file tree from FTP server
    */
-  const loadFileTree = useCallback(async (websiteId: string) => {
+  const loadFileTree = useCallback(async (websiteId: string, retryCount = 0) => {
+    const MAX_RETRIES = 2; // Limit retries to prevent infinite loops
+
+    if (retryCount > MAX_RETRIES) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: 'Failed to connect after multiple attempts. Please check your connection and try again later.'
+      });
+      return;
+    }
+
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
       const response = await fetch('/api/ftp/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ websiteId, path: '/' })
+        body: JSON.stringify({ websiteId, path: '/' }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
 
         // Provide specific user-friendly error messages
@@ -280,7 +296,8 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         } else if (response.status === 503) {
           throw new Error('Cannot connect to FTP server. Please check if the server is available.');
         } else if (response.status === 429) {
-          throw new Error('Too many requests. Please wait a moment and try again.');
+          // For rate limiting, suggest a longer wait
+          throw new Error('Too many requests. The server is busy. Please wait 30 seconds and try again.');
         } else {
           throw new Error(`Failed to connect: ${errorMessage}`);
         }
@@ -308,10 +325,18 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_FILE_TREE', payload: fileTree });
     } catch (error) {
       console.error('Failed to load file tree:', error);
-      dispatch({
-        type: 'SET_ERROR',
-        payload: error instanceof Error ? error.message : 'Failed to load file tree'
-      });
+
+      if (error.name === 'AbortError') {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: 'Connection timed out. The server may be busy or unavailable.'
+        });
+      } else {
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to load file tree'
+        });
+      }
     }
   }, []);
 
@@ -514,6 +539,9 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     if (!state.connectionId) return;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
       await fetch(`${apiBase}/layout`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -521,10 +549,17 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           websiteId: state.connectionId,
           paneVisibility: state.paneVisibility,
           layout: state.layout
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
     } catch (error) {
-      console.error('Failed to save layout:', error);
+      if (error.name === 'AbortError') {
+        console.warn('Layout save request timed out');
+      } else {
+        console.error('Failed to save layout:', error);
+      }
     }
   }, [state.connectionId, state.paneVisibility, state.layout, apiBase]);
 
@@ -535,26 +570,43 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     if (!state.connectionId) return;
 
     try {
-      const response = await fetch(`${apiBase}/layout?websiteId=${state.connectionId}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch(`${apiBase}/layout?websiteId=${state.connectionId}`, {
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
       if (response.ok) {
         const layout = await response.json();
-        dispatch({ type: 'UPDATE_PANE_VISIBILITY', payload: layout.paneVisibility });
-        dispatch({ type: 'UPDATE_LAYOUT', payload: layout.layout });
+        if (layout.paneVisibility) {
+          dispatch({ type: 'UPDATE_PANE_VISIBILITY', payload: layout.paneVisibility });
+        }
+        if (layout.layout) {
+          dispatch({ type: 'UPDATE_LAYOUT', payload: layout.layout });
+        }
       }
     } catch (error) {
-      console.error('Failed to load layout:', error);
+      if (error.name === 'AbortError') {
+        console.warn('Layout load request timed out');
+      } else {
+        console.error('Failed to load layout:', error);
+      }
+      // Don't propagate layout loading errors to prevent infinite retries
     }
   }, [state.connectionId, apiBase]);
 
-  // Auto-save layout changes
-  useEffect(() => {
-    if (state.connectionId) {
-      const timer = setTimeout(() => {
-        saveLayoutToSession();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [state.paneVisibility, state.layout, saveLayoutToSession]);
+  // Auto-save layout changes (disabled to prevent infinite retries)
+  // useEffect(() => {
+  //   if (state.connectionId) {
+  //     const timer = setTimeout(() => {
+  //       saveLayoutToSession();
+  //     }, 1000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [state.paneVisibility, state.layout, saveLayoutToSession]);
 
   const contextValue: EditorContextType = {
     state,

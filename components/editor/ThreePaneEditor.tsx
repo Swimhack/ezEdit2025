@@ -76,8 +76,8 @@ export default function ThreePaneEditor({
 
       loadFileTreeWithTimeout();
 
-      // Load saved layout
-      actions.loadLayoutFromSession();
+      // Load saved layout (disabled to prevent infinite retries)
+      // actions.loadLayoutFromSession();
     }
   }, [connectionId, connectionConfig, actions]);
 

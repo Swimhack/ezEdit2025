@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createAPILogger } from '@/lib/pino-logger';
+import { createRequestLogger } from '@/lib/logger';
 
 // In-memory storage for demo purposes
 // In production, this would be stored in a database per user
@@ -14,7 +14,7 @@ const layoutStorage = new Map<string, any>();
  * GET - Load editor layout configuration
  */
 export async function GET(request: NextRequest) {
-  const apiLogger = createAPILogger(request as any, '/api/ftp/editor/layout');
+  const apiLogger = createRequestLogger(request);
 
   try {
     const { searchParams } = new URL(request.url);
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
  * PUT - Save editor layout configuration
  */
 export async function PUT(request: NextRequest) {
-  const apiLogger = createAPILogger(request as any, '/api/ftp/editor/layout');
+  const apiLogger = createRequestLogger(request);
 
   try {
     const body = await request.json();
