@@ -48,19 +48,19 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    apiLogger.info({
+    apiLogger.info('Layout configuration loaded', {
       userId,
       websiteId,
       operation: 'LOAD_LAYOUT'
-    }, 'Layout configuration loaded');
+    });
 
     return NextResponse.json(savedLayout);
 
   } catch (error) {
-    apiLogger.error({
+    apiLogger.error('Layout load operation failed', {
       error: error instanceof Error ? error.message : error,
       operation: 'LOAD_LAYOUT'
-    }, 'Layout load operation failed');
+    });
 
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -132,13 +132,13 @@ export async function PUT(request: NextRequest) {
     // Save to storage
     layoutStorage.set(storageKey, updatedLayout);
 
-    apiLogger.info({
+    apiLogger.info('Layout configuration saved', {
       userId,
       websiteId,
       paneVisibility: updatedLayout.paneVisibility,
       layout: updatedLayout.layout,
       operation: 'SAVE_LAYOUT'
-    }, 'Layout configuration saved');
+    });
 
     return NextResponse.json({
       success: true,
@@ -146,10 +146,10 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    apiLogger.error({
+    apiLogger.error('Layout save operation failed', {
       error: error instanceof Error ? error.message : error,
       operation: 'SAVE_LAYOUT'
-    }, 'Layout save operation failed');
+    });
 
     return NextResponse.json(
       { error: 'Internal server error' },
