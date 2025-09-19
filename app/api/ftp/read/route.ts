@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client as FTPClient } from 'basic-ftp'
 import { addConnection, getConnection, type FTPConnection, queueFTPOperation } from '@/lib/ftp-connections'
-import { getWebsite } from '@/lib/websites-store'
+import { getWebsite } from '@/lib/websites-memory-store'
 
 export async function POST(request: NextRequest) {
   const { websiteId, filePath } = await request.json()

@@ -1,0 +1,269 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Authentication Sign-In API",
+    "description": "Enhanced authentication endpoint with comprehensive error handling and logging",
+    "version": "005.1.0"
+  },
+  "paths": {
+    "/api/auth/signin": {
+      "post": {
+        "summary": "Authenticate user with email and password",
+        "description": "Handles user sign-in with enhanced error handling, retry logic, and comprehensive logging for troubleshooting authentication issues",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User email address",
+                    "example": "user@example.com",
+                    "maxLength": 255
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "User password",
+                    "minLength": 1,
+                    "maxLength": 128
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["user", "session", "correlationId"],
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "required": ["id", "email"],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "User unique identifier"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email",
+                          "description": "User email address"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": ["user", "developer", "admin", "superadmin"],
+                          "description": "User role for authorization"
+                        }
+                      }
+                    },
+                    "session": {
+                      "type": "object",
+                      "required": ["access_token", "refresh_token", "expires_at"],
+                      "properties": {
+                        "access_token": {
+                          "type": "string",
+                          "description": "JWT access token"
+                        },
+                        "refresh_token": {
+                          "type": "string",
+                          "description": "JWT refresh token"
+                        },
+                        "expires_at": {
+                          "type": "integer",
+                          "description": "Token expiration timestamp"
+                        }
+                      }
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Request correlation ID for tracing"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Request correlation ID",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-Rate-Limit-Remaining": {
+                "description": "Remaining requests in current window",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_fields": {
+                    "summary": "Missing required fields",
+                    "value": {
+                      "error": "Email and password are required",
+                      "code": "MISSING_FIELDS",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  },
+                  "invalid_email": {
+                    "summary": "Invalid email format",
+                    "value": {
+                      "error": "Invalid email format",
+                      "code": "INVALID_EMAIL",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_credentials": {
+                    "summary": "Invalid email or password",
+                    "value": {
+                      "error": "Invalid email or password",
+                      "code": "INVALID_CREDENTIALS",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  },
+                  "account_locked": {
+                    "summary": "Account temporarily locked",
+                    "value": {
+                      "error": "Account temporarily locked due to too many failed attempts",
+                      "code": "ACCOUNT_LOCKED",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Too many sign-in attempts, please try again later",
+                  "code": "RATE_LIMITED",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "An unexpected error occurred",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Authentication service is temporarily unavailable",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-rate-limit": {
+          "limit": 5,
+          "window": "15m",
+          "scope": "ip"
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "code", "correlationId"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code",
+            "enum": [
+              "MISSING_FIELDS",
+              "INVALID_EMAIL",
+              "INVALID_CREDENTIALS",
+              "ACCOUNT_LOCKED",
+              "RATE_LIMITED",
+              "INTERNAL_SERVER_ERROR",
+              "SERVICE_UNAVAILABLE"
+            ]
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request correlation ID for debugging"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details (development only)"
+          }
+        }
+      }
+    }
+  }
+}

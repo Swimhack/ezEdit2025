@@ -45,5 +45,3 @@ export function createWebsite(userId: string, input: Omit<WebsiteRecord, 'id' | 
   fs.writeFileSync(websitesFile, JSON.stringify(items, null, 2), 'utf8')
   return record
 }
-
-

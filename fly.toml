@@ -1,7 +1,7 @@
 # fly.toml app configuration file generated for ezedit
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 
-app = "ezedit-co"
+app = "ezeditapp"
 primary_region = "iad"
 
 [build]
@@ -9,8 +9,9 @@ primary_region = "iad"
   [build.args]
     NEXT_PUBLIC_SUPABASE_URL = "https://sctzykgcfkhadowyqcrj.supabase.co"
     NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY"
+    SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU5MTkwNSwiZXhwIjoyMDY3MTY3OTA1fQ.LZO9ckLrpeSFGf1Av0v9bFqpSP8dcQllrFJ-yHGAZdo"
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_TYooMQauvdEDq54NiTphI7jx"
-    NEXT_PUBLIC_APP_URL = "https://ezedit-co.fly.dev"
+    NEXT_PUBLIC_APP_URL = "https://ezeditapp.fly.dev"
 
 [env]
   NODE_ENV = "production"

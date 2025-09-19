@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/lib/logging/*": ["./lib/logging/*"],
+      "@/lib/security/*": ["./lib/security/*"],
+      "@/lib/models/*": ["./lib/models/*"],
+      "@/lib/services/*": ["./lib/services/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

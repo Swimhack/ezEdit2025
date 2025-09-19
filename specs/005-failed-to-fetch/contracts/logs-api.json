@@ -1,0 +1,523 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Application Logs API",
+    "description": "Secure endpoint for accessing application logs with role-based authorization",
+    "version": "005.1.0"
+  },
+  "paths": {
+    "/api/logs": {
+      "get": {
+        "summary": "Retrieve application logs",
+        "description": "Secure endpoint for authorized users to access application logs for troubleshooting. Requires appropriate role and authentication.",
+        "tags": ["Logging"],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["error", "authentication", "access", "performance"],
+              "default": "error"
+            },
+            "description": "Type of logs to retrieve"
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["debug", "info", "warn", "error", "fatal"],
+              "default": "error"
+            },
+            "description": "Minimum log level to include"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start timestamp for log range (ISO 8601)"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End timestamp for log range (ISO 8601)"
+          },
+          {
+            "name": "correlationId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by correlation ID for request tracing"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by user ID (admin/superadmin only)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "description": "Maximum number of log entries to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Number of log entries to skip"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Log entries retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["logs", "total", "filters", "correlationId"],
+                  "properties": {
+                    "logs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/LogEntry"
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "description": "Total number of matching log entries"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "description": "Applied filters for this request"
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Request correlation ID"
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "offset": {
+                          "type": "integer"
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Request correlation ID",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-Rate-Limit-Remaining": {
+                "description": "Remaining requests in current window",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "invalid_date_range": {
+                    "summary": "Invalid date range",
+                    "value": {
+                      "error": "Invalid date range: 'from' must be before 'to'",
+                      "code": "INVALID_DATE_RANGE",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  },
+                  "invalid_limit": {
+                    "summary": "Invalid limit parameter",
+                    "value": {
+                      "error": "Limit must be between 1 and 1000",
+                      "code": "INVALID_LIMIT",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Authentication required to access logs",
+                  "code": "AUTHENTICATION_REQUIRED",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient permissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Insufficient permissions to access logs",
+                  "code": "INSUFFICIENT_PERMISSIONS",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Rate limit exceeded for log access",
+                  "code": "RATE_LIMITED",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "An error occurred while retrieving logs",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKeyAuth": []
+          }
+        ],
+        "x-rate-limit": {
+          "limit": 100,
+          "window": "15m",
+          "scope": "user"
+        }
+      },
+      "post": {
+        "summary": "Create log entry",
+        "description": "Internal endpoint for application components to create log entries. Restricted to internal service calls.",
+        "tags": ["Logging"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLogRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Log entry created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["id", "correlationId"],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Created log entry ID"
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Request correlation ID"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Log entry timestamp"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid log data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "internalAuth": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "LogEntry": {
+        "type": "object",
+        "required": ["id", "timestamp", "level", "message", "correlationId"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Log entry unique identifier"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request correlation ID"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Log entry timestamp"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["debug", "info", "warn", "error", "fatal"],
+            "description": "Log level"
+          },
+          "message": {
+            "type": "string",
+            "description": "Log message"
+          },
+          "errorType": {
+            "type": "string",
+            "description": "Error type/class (for error logs)"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Application error code"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Associated user ID (filtered by role)"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Session identifier"
+          },
+          "route": {
+            "type": "string",
+            "description": "API route or page"
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["frontend", "backend", "database", "external"],
+            "description": "Error source"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional context data (sanitized)"
+          }
+        }
+      },
+      "CreateLogRequest": {
+        "type": "object",
+        "required": ["level", "message", "correlationId"],
+        "properties": {
+          "correlationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request correlation ID"
+          },
+          "level": {
+            "type": "string",
+            "enum": ["debug", "info", "warn", "error", "fatal"],
+            "description": "Log level"
+          },
+          "message": {
+            "type": "string",
+            "description": "Log message"
+          },
+          "errorType": {
+            "type": "string",
+            "description": "Error type/class"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Application error code"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Associated user ID"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Session identifier"
+          },
+          "route": {
+            "type": "string",
+            "description": "API route or page"
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["frontend", "backend", "database", "external"],
+            "description": "Error source"
+          },
+          "context": {
+            "type": "object",
+            "description": "Additional context data"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "code", "correlationId"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request correlation ID for debugging"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details (development only)"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token from Supabase authentication"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for external tools and monitoring"
+      },
+      "internalAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Internal service JWT token"
+      }
+    }
+  }
+}

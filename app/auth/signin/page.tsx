@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
+import { supabase } from '@/lib/supabase'
+import { validateInput, sanitizeHtml } from '@/lib/security/input-validation'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,22 +13,49 @@ function SignInForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
 
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   // Check for error in URL parameters
   useEffect(() => {
-    const urlError = searchParams.get('error')
+    const urlParams = new URLSearchParams(window.location.search)
+    const urlError = urlParams.get('error')
     if (urlError) {
       setError(decodeURIComponent(urlError))
     }
-  }, [searchParams])
+  }, [])
+
+  const handleEmailChange = (value: string) => {
+    // Sanitize input in real-time
+    const sanitized = sanitizeHtml(value, 'strict')
+    setEmail(sanitized)
+  }
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value)
+  }
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setValidationErrors({})
+
+    // Validate and sanitize inputs
+    const validation = validateInput(
+      { email, password },
+      {
+        email: { required: true, type: 'email', sanitize: true },
+        password: { required: true, type: 'string', minLength: 1 }
+      }
+    )
+
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors)
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/auth/signin', {
@@ -35,8 +64,8 @@ function SignInForm() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email,
-          password
+          email: validation.sanitized.email,
+          password: validation.sanitized.password
         })
       })
 
@@ -57,7 +86,26 @@ function SignInForm() {
   }
 
   const handleGoogleSignIn = async () => {
-    setError('Google sign in is temporarily disabled. Please use email and password.')
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        setError(error.message)
+      }
+      // If successful, the user will be redirected to Google
+    } catch (err: any) {
+      setError(err.message || 'Failed to initiate Google sign in')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -89,9 +137,18 @@ function SignInForm() {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  className={`appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    validationErrors.email ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {validationErrors.email && (
+                  <div className="mt-1 text-sm text-red-600">
+                    {validationErrors.email.map((error, index) => (
+                      <div key={index}>{error}</div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -107,9 +164,18 @@ function SignInForm() {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  className={`appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    validationErrors.password ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {validationErrors.password && (
+                  <div className="mt-1 text-sm text-red-600">
+                    {validationErrors.password.map((error, index) => (
+                      <div key={index}>{error}</div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -176,14 +242,5 @@ function SignInForm() {
 }
 
 export default function SignIn() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        <p className="mt-4 text-gray-600">Loading...</p>
-      </div>
-    </div>}>
-      <SignInForm />
-    </Suspense>
-  )
+  return <SignInForm />
 }

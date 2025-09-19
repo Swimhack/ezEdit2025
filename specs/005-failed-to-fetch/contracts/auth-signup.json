@@ -1,0 +1,295 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Authentication Sign-Up API",
+    "description": "Enhanced user registration endpoint with comprehensive error handling and logging",
+    "version": "005.1.0"
+  },
+  "paths": {
+    "/api/auth/signup": {
+      "post": {
+        "summary": "Register new user with email and password",
+        "description": "Handles user registration with enhanced error handling, validation, and comprehensive logging for troubleshooting signup issues",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "company"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User email address",
+                    "example": "user@example.com",
+                    "maxLength": 255
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "User password",
+                    "minLength": 8,
+                    "maxLength": 128,
+                    "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]"
+                  },
+                  "company": {
+                    "type": "string",
+                    "description": "Company or organization name",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "plan": {
+                    "type": "string",
+                    "enum": ["FREE", "SINGLE_SITE", "UNLIMITED"],
+                    "description": "Selected subscription plan",
+                    "default": "FREE"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registration successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["user", "session", "correlationId"],
+                  "properties": {
+                    "user": {
+                      "type": "object",
+                      "required": ["id", "email"],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "User unique identifier"
+                        },
+                        "email": {
+                          "type": "string",
+                          "format": "email",
+                          "description": "User email address"
+                        },
+                        "role": {
+                          "type": "string",
+                          "enum": ["user"],
+                          "description": "Default user role"
+                        },
+                        "emailConfirmed": {
+                          "type": "boolean",
+                          "description": "Whether email has been confirmed"
+                        }
+                      }
+                    },
+                    "session": {
+                      "type": "object",
+                      "required": ["access_token", "refresh_token", "expires_at"],
+                      "properties": {
+                        "access_token": {
+                          "type": "string",
+                          "description": "JWT access token"
+                        },
+                        "refresh_token": {
+                          "type": "string",
+                          "description": "JWT refresh token"
+                        },
+                        "expires_at": {
+                          "type": "integer",
+                          "description": "Token expiration timestamp"
+                        }
+                      }
+                    },
+                    "organization": {
+                      "type": "object",
+                      "required": ["id", "name", "plan"],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "Organization unique identifier"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Organization name"
+                        },
+                        "plan": {
+                          "type": "string",
+                          "enum": ["FREE", "SINGLE_SITE", "UNLIMITED"],
+                          "description": "Organization subscription plan"
+                        }
+                      }
+                    },
+                    "correlationId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Request correlation ID for tracing"
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Correlation-ID": {
+                "description": "Request correlation ID",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "missing_fields": {
+                    "summary": "Missing required fields",
+                    "value": {
+                      "error": "Email, password, and company are required",
+                      "code": "MISSING_FIELDS",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  },
+                  "weak_password": {
+                    "summary": "Password doesn't meet requirements",
+                    "value": {
+                      "error": "Password must be at least 8 characters with uppercase, lowercase, number, and special character",
+                      "code": "WEAK_PASSWORD",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  },
+                  "invalid_email": {
+                    "summary": "Invalid email format",
+                    "value": {
+                      "error": "Invalid email format",
+                      "code": "INVALID_EMAIL",
+                      "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "An account with this email already exists",
+                  "code": "USER_EXISTS",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Too many signup attempts, please try again later",
+                  "code": "RATE_LIMITED",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "An unexpected error occurred during registration",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Registration service is temporarily unavailable",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "x-rate-limit": {
+          "limit": 3,
+          "window": "15m",
+          "scope": "ip"
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "code", "correlationId"],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code",
+            "enum": [
+              "MISSING_FIELDS",
+              "INVALID_EMAIL",
+              "WEAK_PASSWORD",
+              "USER_EXISTS",
+              "RATE_LIMITED",
+              "INTERNAL_SERVER_ERROR",
+              "SERVICE_UNAVAILABLE"
+            ]
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request correlation ID for debugging"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details (development only)"
+          }
+        }
+      }
+    }
+  }
+}
