@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: EzEdit FTP Editor API - Bug Fix Contracts
+  description: API contracts for fixing FTP editor loading failure
+  version: 1.0.0
+
+paths:
+  /api/websites/{id}:
+    get:
+      summary: Get website configuration for editor
+      description: Retrieve website configuration using aligned storage system
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Website ID
+      responses:
+        '200':
+          description: Website configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  website:
+                    $ref: '#/components/schemas/Website'
+        '404':
+          description: Website not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/ftp/editor/connection/test:
+    post:
+      summary: Test FTP connection before editor load
+      description: Validate FTP connection parameters and connectivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                websiteId:
+                  type: string
+                  description: Website ID to test connection for
+      responses:
+        '200':
+          description: Connection test successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [connected]
+                  message:
+                    type: string
+                  capabilities:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Invalid request or configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructuredError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructuredError'
+        '500':
+          description: Connection failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructuredError'
+
+  /api/ftp/editor/session:
+    post:
+      summary: Initialize editor session
+      description: Create new editor session with connection validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                websiteId:
+                  type: string
+                  description: Website ID for the session
+      responses:
+        '200':
+          description: Session initialized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorSession'
+        '400':
+          description: Invalid website ID or configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructuredError'
+        '500':
+          description: Session initialization failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StructuredError'
+
+  /api/ftp/editor/session/{sessionId}/status:
+    get:
+      summary: Get editor session status
+      description: Retrieve current session status and error state
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Editor session ID
+      responses:
+        '200':
+          description: Session status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionStatus'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Website:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        url:
+          type: string
+        type:
+          type: string
+          enum: [FTP, SFTP, FTPS]
+        host:
+          type: string
+        username:
+          type: string
+        port:
+          type: string
+        path:
+          type: string
+      required:
+        - id
+        - name
+        - url
+        - type
+        - host
+        - username
+        - port
+        - path
+
+    EditorSession:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        websiteId:
+          type: string
+        connectionStatus:
+          $ref: '#/components/schemas/ConnectionStatus'
+        currentFile:
+          type: string
+          nullable: true
+        lastActivity:
+          type: string
+          format: date-time
+        errorState:
+          $ref: '#/components/schemas/StructuredError'
+          nullable: true
+      required:
+        - sessionId
+        - websiteId
+        - connectionStatus
+        - lastActivity
+
+    SessionStatus:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ConnectionStatus'
+        errorState:
+          $ref: '#/components/schemas/StructuredError'
+          nullable: true
+        fileCount:
+          type: integer
+        lastActivity:
+          type: string
+          format: date-time
+      required:
+        - status
+        - lastActivity
+
+    ConnectionStatus:
+      type: string
+      enum:
+        - initializing
+        - connected
+        - loading
+        - error
+        - disconnected
+        - timeout
+
+    StructuredError:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [connection, authentication, server, configuration, timeout, unknown]
+        code:
+          type: string
+        userMessage:
+          type: string
+        technicalDetails:
+          type: string
+        retryable:
+          type: boolean
+        suggestedAction:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        context:
+          type: object
+          additionalProperties: true
+      required:
+        - type
+        - code
+        - userMessage
+        - retryable
+        - suggestedAction
+        - timestamp
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - error
+        - timestamp

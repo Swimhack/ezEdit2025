@@ -1,0 +1,466 @@
+openapi: 3.0.3
+info:
+  title: EzEdit.co Authentication API - 2025 Security Standards
+  description: Enhanced authentication API supporting WebAuthn, 2FA, and modern security standards
+  version: 2025.1.0
+  contact:
+    name: EzEdit.co Security Team
+    email: security@ezedit.co
+
+servers:
+  - url: https://ezedit.co/api
+    description: Production server
+  - url: https://staging.ezedit.co/api
+    description: Staging server
+
+paths:
+  /auth/webauthn/register:
+    post:
+      summary: Register WebAuthn credential
+      description: Register a new FIDO2/WebAuthn credential for passwordless authentication
+      tags:
+        - WebAuthn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - displayName
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                displayName:
+                  type: string
+                  example: John Doe
+                requireResidentKey:
+                  type: boolean
+                  default: false
+                userVerification:
+                  type: string
+                  enum: [required, preferred, discouraged]
+                  default: preferred
+      responses:
+        '200':
+          description: Registration options generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAuthnRegistrationOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: User already has WebAuthn credential
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/webauthn/verify-registration:
+    post:
+      summary: Verify WebAuthn registration
+      description: Verify and complete WebAuthn credential registration
+      tags:
+        - WebAuthn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - response
+              properties:
+                email:
+                  type: string
+                  format: email
+                response:
+                  $ref: '#/components/schemas/WebAuthnRegistrationResponse'
+      responses:
+        '201':
+          description: WebAuthn credential registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  credentialId:
+                    type: string
+                  verified:
+                    type: boolean
+                  nickname:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/webauthn/authenticate:
+    post:
+      summary: Initiate WebAuthn authentication
+      description: Generate authentication challenge for WebAuthn credential
+      tags:
+        - WebAuthn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                userVerification:
+                  type: string
+                  enum: [required, preferred, discouraged]
+                  default: preferred
+      responses:
+        '200':
+          description: Authentication options generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebAuthnAuthenticationOptions'
+        '404':
+          description: No WebAuthn credentials found for user
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/webauthn/verify-authentication:
+    post:
+      summary: Verify WebAuthn authentication
+      description: Verify WebAuthn authentication response and create session
+      tags:
+        - WebAuthn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - response
+              properties:
+                email:
+                  type: string
+                  format: email
+                response:
+                  $ref: '#/components/schemas/WebAuthnAuthenticationResponse'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationSuccess'
+        '401':
+          description: Authentication failed
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/mfa/setup:
+    post:
+      summary: Setup Multi-Factor Authentication
+      description: Configure MFA methods for enhanced security
+      tags:
+        - MFA
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - method
+              properties:
+                method:
+                  type: string
+                  enum: [totp, sms, email, webauthn]
+                phoneNumber:
+                  type: string
+                  description: Required for SMS method
+                email:
+                  type: string
+                  format: email
+                  description: Required for email method
+      responses:
+        '200':
+          description: MFA setup initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                  secret:
+                    type: string
+                    description: TOTP secret (for TOTP method)
+                  qrCode:
+                    type: string
+                    description: QR code data URL (for TOTP method)
+                  backupCodes:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/security-assessment:
+    get:
+      summary: Get security assessment
+      description: Retrieve user's current security posture and recommendations
+      tags:
+        - Security
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Security assessment retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityAssessment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    WebAuthnRegistrationOptions:
+      type: object
+      properties:
+        challenge:
+          type: string
+          description: Base64url encoded challenge
+        rp:
+          type: object
+          properties:
+            name:
+              type: string
+              example: EzEdit.co
+            id:
+              type: string
+              example: ezedit.co
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Base64url encoded user ID
+            name:
+              type: string
+            displayName:
+              type: string
+        pubKeyCredParams:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [public-key]
+              alg:
+                type: integer
+                description: COSE algorithm identifier
+        timeout:
+          type: integer
+          example: 60000
+        authenticatorSelection:
+          type: object
+          properties:
+            requireResidentKey:
+              type: boolean
+            userVerification:
+              type: string
+              enum: [required, preferred, discouraged]
+        attestation:
+          type: string
+          enum: [none, indirect, direct]
+
+    WebAuthnRegistrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        rawId:
+          type: string
+        response:
+          type: object
+          properties:
+            attestationObject:
+              type: string
+            clientDataJSON:
+              type: string
+        type:
+          type: string
+          enum: [public-key]
+
+    WebAuthnAuthenticationOptions:
+      type: object
+      properties:
+        challenge:
+          type: string
+        timeout:
+          type: integer
+        rpId:
+          type: string
+        allowCredentials:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+                enum: [public-key]
+              transports:
+                type: array
+                items:
+                  type: string
+                  enum: [usb, nfc, ble, internal]
+        userVerification:
+          type: string
+          enum: [required, preferred, discouraged]
+
+    WebAuthnAuthenticationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        rawId:
+          type: string
+        response:
+          type: object
+          properties:
+            authenticatorData:
+              type: string
+            clientDataJSON:
+              type: string
+            signature:
+              type: string
+            userHandle:
+              type: string
+        type:
+          type: string
+          enum: [public-key]
+
+    AuthenticationSuccess:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+            displayName:
+              type: string
+            lastAuthentication:
+              type: string
+              format: date-time
+        expiresIn:
+          type: integer
+          description: Token expiration in seconds
+
+    SecurityAssessment:
+      type: object
+      properties:
+        overallScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        authenticationMethods:
+          type: array
+          items:
+            type: object
+            properties:
+              method:
+                type: string
+              enabled:
+                type: boolean
+              strength:
+                type: string
+                enum: [weak, medium, strong]
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+                enum: [low, medium, high, critical]
+              title:
+                type: string
+              description:
+                type: string
+              action:
+                type: string
+        lastAssessment:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: WebAuthn
+    description: FIDO2/WebAuthn passwordless authentication
+  - name: MFA
+    description: Multi-factor authentication setup
+  - name: Security
+    description: Security assessment and monitoring

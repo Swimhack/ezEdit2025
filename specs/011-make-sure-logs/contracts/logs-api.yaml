@@ -1,0 +1,783 @@
+openapi: 3.0.3
+info:
+  title: Enhanced Logging API
+  description: Comprehensive logging API for FTP and editor troubleshooting
+  version: 1.0.0
+  contact:
+    name: EzEdit Support
+    url: https://ezedit.co/support
+
+servers:
+  - url: /api
+    description: API base path
+
+paths:
+  /logs:
+    get:
+      summary: Retrieve application logs with advanced filtering
+      description: Get logs with comprehensive filtering, search, and pagination capabilities
+      operationId: getLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: timeRange
+          in: query
+          description: Time range filter in ISO format
+          schema:
+            type: object
+            properties:
+              start:
+                type: string
+                format: date-time
+                example: "2025-09-18T00:00:00Z"
+              end:
+                type: string
+                format: date-time
+                example: "2025-09-18T23:59:59Z"
+        - name: levels
+          in: query
+          description: Log levels to include (comma-separated)
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/LogLevel'
+          example: ["ERROR", "WARN"]
+        - name: categories
+          in: query
+          description: Log categories to include (comma-separated)
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/LogCategory'
+          example: ["FTP", "EDITOR"]
+        - name: userId
+          in: query
+          description: Filter by specific user ID
+          schema:
+            type: string
+            format: uuid
+        - name: correlationId
+          in: query
+          description: Filter by correlation ID
+          schema:
+            type: string
+        - name: fullTextSearch
+          in: query
+          description: Full-text search across log messages
+          schema:
+            type: string
+            maxLength: 500
+        - name: ftpHost
+          in: query
+          description: Filter FTP logs by host
+          schema:
+            type: string
+        - name: ftpOperation
+          in: query
+          description: Filter FTP logs by operation type
+          schema:
+            $ref: '#/components/schemas/FTPOperation'
+        - name: editorOperation
+          in: query
+          description: Filter editor logs by operation type
+          schema:
+            $ref: '#/components/schemas/EditorOperation'
+        - name: fileName
+          in: query
+          description: Filter editor logs by file name
+          schema:
+            type: string
+        - name: hasErrors
+          in: query
+          description: Filter logs that have associated errors
+          schema:
+            type: boolean
+        - name: minDuration
+          in: query
+          description: Minimum operation duration in milliseconds
+          schema:
+            type: integer
+            minimum: 0
+        - name: maxDuration
+          in: query
+          description: Maximum operation duration in milliseconds
+          schema:
+            type: integer
+            minimum: 0
+        - name: page
+          in: query
+          description: Page number for pagination (1-based)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: sortBy
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [timestamp, level, category, duration]
+            default: timestamp
+        - name: sortOrder
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Logs retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogsResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized - invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /logs/stream:
+    get:
+      summary: Real-time log streaming via Server-Sent Events
+      description: Stream logs in real-time with filtering capabilities
+      operationId: streamLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: levels
+          in: query
+          description: Log levels to stream (comma-separated)
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/LogLevel'
+        - name: categories
+          in: query
+          description: Log categories to stream (comma-separated)
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/LogCategory'
+        - name: userId
+          in: query
+          description: Filter by specific user ID
+          schema:
+            type: string
+            format: uuid
+        - name: correlationId
+          in: query
+          description: Filter by correlation ID
+          schema:
+            type: string
+        - name: batchSize
+          in: query
+          description: Number of logs per batch message
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: SSE stream established
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream
+        '400':
+          description: Invalid stream parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /logs/export:
+    post:
+      summary: Export logs in various formats
+      description: Export filtered logs as downloadable files
+      operationId: exportLogs
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Export file generated successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              description: Attachment filename
+              schema:
+                type: string
+                example: 'attachment; filename="logs-export-2025-09-18.json"'
+            Content-Type:
+              description: File MIME type
+              schema:
+                type: string
+                example: 'application/json'
+        '400':
+          description: Invalid export parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Export too large - reduce filters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /logs/stats:
+    get:
+      summary: Get logging statistics and metrics
+      description: Retrieve aggregated statistics for log analysis
+      operationId: getLogStats
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: timeRange
+          in: query
+          description: Time range for statistics
+          schema:
+            type: object
+            properties:
+              start:
+                type: string
+                format: date-time
+              end:
+                type: string
+                format: date-time
+        - name: groupBy
+          in: query
+          description: Group statistics by field
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [category, level, user, hour, day]
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogStatsResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LogLevel:
+      type: string
+      enum: [TRACE, DEBUG, INFO, WARN, ERROR, FATAL]
+
+    LogCategory:
+      type: string
+      enum: [FTP, EDITOR, AUTH, API, SYSTEM, DATABASE, NETWORK]
+
+    LogSource:
+      type: string
+      enum: [CLIENT, SERVER, FTP_CLIENT, EDITOR, DATABASE, EXTERNAL]
+
+    FTPOperation:
+      type: string
+      enum: [CONNECT, DISCONNECT, LIST, UPLOAD, DOWNLOAD, DELETE, MKDIR, RMDIR, RENAME, CHMOD, STAT]
+
+    EditorOperation:
+      type: string
+      enum: [LOAD, SAVE, PREVIEW, VALIDATE, SWITCH, MODIFY, SEARCH, REPLACE, FORMAT, AUTOCOMPLETE]
+
+    StorageTier:
+      type: string
+      enum: [HOT, WARM, COLD]
+
+    ApplicationLog:
+      type: object
+      required: [id, correlationId, timestamp, level, category, source, message, event, tier]
+      properties:
+        id:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+        parentCorrelationId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        processingTime:
+          type: integer
+          minimum: 0
+        level:
+          $ref: '#/components/schemas/LogLevel'
+        category:
+          $ref: '#/components/schemas/LogCategory'
+        source:
+          $ref: '#/components/schemas/LogSource'
+        message:
+          type: string
+          maxLength: 10000
+        event:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+        userId:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+        userAgent:
+          type: string
+        ipAddress:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/PerformanceMetrics'
+        tier:
+          $ref: '#/components/schemas/StorageTier'
+        compressedSize:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FTPOperationLog:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationLog'
+        - type: object
+          required: [ftpContext]
+          properties:
+            category:
+              type: string
+              enum: [FTP]
+            ftpContext:
+              type: object
+              required: [host, port, username, protocol, operation]
+              properties:
+                host:
+                  type: string
+                port:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                username:
+                  type: string
+                protocol:
+                  type: string
+                  enum: [FTP, SFTP, FTPS]
+                operation:
+                  $ref: '#/components/schemas/FTPOperation'
+                remotePath:
+                  type: string
+                localPath:
+                  type: string
+                fileSize:
+                  type: integer
+                  minimum: 0
+                transferredBytes:
+                  type: integer
+                  minimum: 0
+                transferSpeed:
+                  type: number
+                  minimum: 0
+                connectionPoolId:
+                  type: string
+                isPassiveMode:
+                  type: boolean
+                ftpErrorCode:
+                  type: integer
+                  minimum: 100
+                  maximum: 599
+                ftpErrorMessage:
+                  type: string
+                retryAttempt:
+                  type: integer
+                  minimum: 0
+                connectionTime:
+                  type: integer
+                  minimum: 0
+                dataTransferTime:
+                  type: integer
+                  minimum: 0
+
+    EditorOperationLog:
+      allOf:
+        - $ref: '#/components/schemas/ApplicationLog'
+        - type: object
+          required: [editorContext]
+          properties:
+            category:
+              type: string
+              enum: [EDITOR]
+            editorContext:
+              type: object
+              required: [operation]
+              properties:
+                fileId:
+                  type: string
+                fileName:
+                  type: string
+                filePath:
+                  type: string
+                fileSize:
+                  type: integer
+                  minimum: 0
+                fileExtension:
+                  type: string
+                mimeType:
+                  type: string
+                operation:
+                  $ref: '#/components/schemas/EditorOperation'
+                previousState:
+                  type: string
+                currentState:
+                  type: string
+                contentLength:
+                  type: integer
+                  minimum: 0
+                lineCount:
+                  type: integer
+                  minimum: 0
+                modificationCount:
+                  type: integer
+                  minimum: 0
+                cursorPosition:
+                  type: object
+                  properties:
+                    line:
+                      type: integer
+                      minimum: 0
+                    column:
+                      type: integer
+                      minimum: 0
+                selectedText:
+                  type: object
+                  properties:
+                    start:
+                      type: object
+                      properties:
+                        line:
+                          type: integer
+                          minimum: 0
+                        column:
+                          type: integer
+                          minimum: 0
+                    end:
+                      type: object
+                      properties:
+                        line:
+                          type: integer
+                          minimum: 0
+                        column:
+                          type: integer
+                          minimum: 0
+                leftPaneVisible:
+                  type: boolean
+                rightPaneVisible:
+                  type: boolean
+                activePane:
+                  type: string
+                  enum: [tree, editor, preview]
+                syntaxErrors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      line:
+                        type: integer
+                        minimum: 0
+                      column:
+                        type: integer
+                        minimum: 0
+                      message:
+                        type: string
+                      severity:
+                        type: string
+                        enum: [error, warning]
+                loadTime:
+                  type: integer
+                  minimum: 0
+                saveTime:
+                  type: integer
+                  minimum: 0
+                renderTime:
+                  type: integer
+                  minimum: 0
+
+    PerformanceMetrics:
+      type: object
+      required: [startTime, endTime, duration]
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          minimum: 0
+        requestSize:
+          type: integer
+          minimum: 0
+        responseSize:
+          type: integer
+          minimum: 0
+        networkLatency:
+          type: integer
+          minimum: 0
+        bandwidth:
+          type: number
+          minimum: 0
+        connectionTime:
+          type: integer
+          minimum: 0
+        memoryUsage:
+          type: object
+          properties:
+            heapUsed:
+              type: integer
+              minimum: 0
+            heapTotal:
+              type: integer
+              minimum: 0
+            external:
+              type: integer
+              minimum: 0
+        cpuUsage:
+          type: object
+          properties:
+            user:
+              type: integer
+              minimum: 0
+            system:
+              type: integer
+              minimum: 0
+        cacheHitRate:
+          type: number
+          minimum: 0
+          maximum: 1
+        errorRate:
+          type: number
+          minimum: 0
+          maximum: 1
+        throughput:
+          type: number
+          minimum: 0
+        queryCount:
+          type: integer
+          minimum: 0
+        queryTime:
+          type: integer
+          minimum: 0
+        customMetrics:
+          type: object
+          additionalProperties:
+            type: number
+
+    LogsResponse:
+      type: object
+      required: [logs, pagination, totalCount]
+      properties:
+        logs:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/ApplicationLog'
+              - $ref: '#/components/schemas/FTPOperationLog'
+              - $ref: '#/components/schemas/EditorOperationLog'
+        pagination:
+          type: object
+          required: [page, limit, totalPages, totalCount]
+          properties:
+            page:
+              type: integer
+              minimum: 1
+            limit:
+              type: integer
+              minimum: 1
+            totalPages:
+              type: integer
+              minimum: 0
+            totalCount:
+              type: integer
+              minimum: 0
+            hasNext:
+              type: boolean
+            hasPrevious:
+              type: boolean
+        totalCount:
+          type: integer
+          minimum: 0
+        filters:
+          type: object
+          description: Applied filters for reference
+        queryTime:
+          type: integer
+          description: Query execution time in milliseconds
+
+    ExportRequest:
+      type: object
+      required: [format]
+      properties:
+        format:
+          type: string
+          enum: [json, csv, txt]
+        timeRange:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        levels:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogLevel'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogCategory'
+        userId:
+          type: string
+          format: uuid
+        correlationId:
+          type: string
+        includeMetrics:
+          type: boolean
+          default: false
+        includeContext:
+          type: boolean
+          default: true
+        maxRecords:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          default: 10000
+
+    LogStatsResponse:
+      type: object
+      required: [summary, breakdown]
+      properties:
+        summary:
+          type: object
+          required: [totalLogs, errorCount, avgDuration]
+          properties:
+            totalLogs:
+              type: integer
+              minimum: 0
+            errorCount:
+              type: integer
+              minimum: 0
+            avgDuration:
+              type: number
+              minimum: 0
+            timeRange:
+              type: object
+              properties:
+                start:
+                  type: string
+                  format: date-time
+                end:
+                  type: string
+                  format: date-time
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              group:
+                type: string
+              count:
+                type: integer
+                minimum: 0
+              errorCount:
+                type: integer
+                minimum: 0
+              avgDuration:
+                type: number
+                minimum: 0
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        correlationId:
+          type: string
+          description: Request correlation ID for tracking

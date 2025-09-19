@@ -1,0 +1,492 @@
+openapi: 3.0.3
+info:
+  title: Authentication API
+  version: 1.0.0
+  description: Secure authentication system with email/password, MFA, and session management
+
+servers:
+  - url: /api/auth
+    description: Authentication API endpoints
+
+paths:
+  /register:
+    post:
+      summary: Register new user account
+      description: Create new user account with email verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - company
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User email address
+                password:
+                  type: string
+                  minLength: 12
+                  description: Strong password (12+ chars, mixed case, numbers, symbols)
+                company:
+                  type: string
+                  minLength: 1
+                  description: Company or organization name
+                firstName:
+                  type: string
+                  description: User first name
+                lastName:
+                  type: string
+                  description: User last name
+      responses:
+        '201':
+          description: User created successfully, verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Verification email sent"
+                  userId:
+                    type: string
+                    format: uuid
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /login:
+    post:
+      summary: User login
+      description: Authenticate user with email/password and optional MFA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                mfaCode:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  description: 6-digit TOTP code (required if MFA enabled)
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+                  sessionToken:
+                    type: string
+                    description: JWT session token
+                  expiresAt:
+                    type: string
+                    format: date-time
+        '401':
+          description: Invalid credentials or MFA required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                  mfaRequired:
+                    type: boolean
+                    description: Indicates if MFA code is required
+        '423':
+          description: Account temporarily locked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                  lockedUntil:
+                    type: string
+                    format: date-time
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /logout:
+    post:
+      summary: User logout
+      description: Invalidate current session
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        '401':
+          description: Invalid or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reset-password:
+    post:
+      summary: Request password reset
+      description: Send password reset email to user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset email sent (always returns success for security)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "If the email exists, a reset link has been sent"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reset-password/confirm:
+    post:
+      summary: Confirm password reset
+      description: Set new password using reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - newPassword
+              properties:
+                token:
+                  type: string
+                  description: Password reset token from email
+                newPassword:
+                  type: string
+                  minLength: 12
+                  description: New strong password
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Password updated successfully"
+        '400':
+          description: Invalid token or weak password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: Reset token expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /mfa/setup:
+    post:
+      summary: Setup MFA for user
+      description: Generate and return MFA secret for TOTP setup
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: MFA setup data returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  secret:
+                    type: string
+                    description: Base32 encoded TOTP secret
+                  qrCode:
+                    type: string
+                    description: Data URL for QR code image
+                  backupCodes:
+                    type: array
+                    items:
+                      type: string
+                    description: One-time backup codes
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /mfa/verify:
+    post:
+      summary: Verify and enable MFA
+      description: Verify TOTP code and enable MFA for user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  pattern: '^[0-9]{6}$'
+                  description: 6-digit TOTP code
+      responses:
+        '200':
+          description: MFA enabled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "MFA enabled successfully"
+        '400':
+          description: Invalid TOTP code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions:
+    get:
+      summary: List active sessions
+      description: Get list of active sessions for current user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of active sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SessionInfo'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions/{sessionId}:
+    delete:
+      summary: Revoke session
+      description: Revoke a specific session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session revoked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Session revoked"
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        company:
+          type: string
+        subscriptionTier:
+          type: string
+          enum: [free, pro, enterprise]
+        maxConnections:
+          type: integer
+        mfaEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time
+
+    SessionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ipAddress:
+          type: string
+        userAgent:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastActivityAt:
+          type: string
+          format: date-time
+        isCurrent:
+          type: boolean
+          description: Whether this is the current session
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code for programmatic handling
+        details:
+          type: object
+          description: Additional error details

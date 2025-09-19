@@ -1,0 +1,557 @@
+openapi: 3.0.0
+info:
+  title: Application Logging, Notifications, and Email API
+  version: 1.0.0
+  description: Comprehensive API for logging, multi-channel notifications, and reliable email delivery
+
+security:
+  - bearerAuth: []
+  - cookieAuth: []
+
+paths:
+  /api/logs/stream:
+    get:
+      summary: Stream real-time logs
+      description: Server-sent events stream of application logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [DEBUG, INFO, WARN, ERROR, CRITICAL]
+        - name: source
+          in: query
+          schema:
+            type: string
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Real-time log stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/{token}:
+    get:
+      summary: Access logs with secure token
+      description: Retrieve logs using time-limited access token
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            description: JWT access token
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [DEBUG, INFO, WARN, ERROR, CRITICAL]
+      responses:
+        '200':
+          description: Log entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LogEntry'
+                  total:
+                    type: integer
+                  hasMore:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/logs/tokens:
+    post:
+      summary: Create log access token
+      description: Generate secure token for external log access
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - permissions
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                permissions:
+                  type: object
+                  properties:
+                    levels:
+                      type: array
+                      items:
+                        type: string
+                        enum: [DEBUG, INFO, WARN, ERROR, CRITICAL]
+                    sources:
+                      type: array
+                      items:
+                        type: string
+                expiresIn:
+                  type: string
+                  default: "24h"
+                  description: Duration (e.g., "1h", "24h", "7d")
+      responses:
+        '201':
+          description: Token created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  url:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/notifications/send:
+    post:
+      summary: Send notification
+      description: Dispatch notification through multiple channels
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - type
+                - title
+                - message
+              properties:
+                userId:
+                  type: string
+                type:
+                  type: string
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, CRITICAL]
+                  default: MEDIUM
+                title:
+                  type: string
+                  maxLength: 200
+                message:
+                  type: string
+                  maxLength: 2000
+                data:
+                  type: object
+                channels:
+                  type: array
+                  items:
+                    type: string
+                    enum: [email, sms, push, in-app]
+                scheduledFor:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Notification queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  estimatedDelivery:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/notifications/preferences:
+    get:
+      summary: Get notification preferences
+      description: Retrieve user's notification preferences
+      responses:
+        '200':
+          description: User preferences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationPreference'
+
+    put:
+      summary: Update notification preferences
+      description: Update user's notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/NotificationPreference'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: integer
+                    description: Number of preferences updated
+
+  /api/notifications/{id}/status:
+    get:
+      summary: Get notification delivery status
+      description: Check delivery status across all channels
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Delivery status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  deliveries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeliveryStatus'
+
+  /api/email/send:
+    post:
+      summary: Send email
+      description: Send email with template or custom content
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - to
+                - subject
+              properties:
+                to:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                cc:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                bcc:
+                  type: array
+                  items:
+                    type: string
+                    format: email
+                subject:
+                  type: string
+                  maxLength: 200
+                htmlBody:
+                  type: string
+                textBody:
+                  type: string
+                templateId:
+                  type: string
+                templateData:
+                  type: object
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '201':
+          description: Email queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  messageId:
+                    type: string
+                  status:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          description: Email too large
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Email exceeds 25MB limit"
+
+  /api/email/contact:
+    post:
+      summary: Submit contact form
+      description: Process contact form submission and send notification
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - subject
+                - message
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  maxLength: 20
+                subject:
+                  type: string
+                  maxLength: 200
+                message:
+                  type: string
+                  maxLength: 10000
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '201':
+          description: Contact form submitted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  message:
+                    type: string
+                    example: "Thank you for your message. We'll respond within 24 hours."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Too many requests. Please try again later."
+
+  /api/webhooks/resend:
+    post:
+      summary: Resend webhook
+      description: Handle delivery status webhooks from Resend
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [email.sent, email.delivered, email.bounced, email.complained]
+                data:
+                  type: object
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid webhook
+
+  /api/webhooks/twilio:
+    post:
+      summary: Twilio webhook
+      description: Handle SMS delivery status webhooks from Twilio
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                MessageSid:
+                  type: string
+                MessageStatus:
+                  type: string
+                  enum: [queued, failed, sent, delivered, undelivered]
+      responses:
+        '200':
+          description: Webhook processed
+
+components:
+  schemas:
+    LogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [DEBUG, INFO, WARN, ERROR, CRITICAL]
+        source:
+          type: string
+        message:
+          type: string
+        context:
+          type: object
+        userId:
+          type: string
+        duration:
+          type: number
+
+    NotificationPreference:
+      type: object
+      properties:
+        notificationType:
+          type: string
+        enabled:
+          type: boolean
+        channels:
+          type: object
+          properties:
+            email:
+              type: boolean
+            sms:
+              type: boolean
+            push:
+              type: boolean
+            inApp:
+              type: boolean
+        quietHours:
+          type: object
+          properties:
+            start:
+              type: string
+              pattern: "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+            end:
+              type: string
+              pattern: "^([01]?[0-9]|2[0-3]):[0-5][0-9]$"
+            timezone:
+              type: string
+        frequency:
+          type: string
+          enum: [INSTANT, BATCHED_5MIN, BATCHED_HOURLY, DAILY_DIGEST]
+
+    DeliveryStatus:
+      type: object
+      properties:
+        channel:
+          type: string
+          enum: [EMAIL, SMS, PUSH, IN_APP]
+        status:
+          type: string
+          enum: [PENDING, SENT, DELIVERED, FAILED]
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth-token

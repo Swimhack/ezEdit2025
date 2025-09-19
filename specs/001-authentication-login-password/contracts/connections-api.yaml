@@ -1,0 +1,738 @@
+openapi: 3.0.3
+info:
+  title: Website Connections API
+  version: 1.0.0
+  description: Website connection management for multiple platforms (FTP/SFTP, WordPress, Wix, Shopify)
+
+servers:
+  - url: /api/connections
+    description: Website connections API endpoints
+
+paths:
+  /:
+    get:
+      summary: List website connections
+      description: Get all website connections for authenticated user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, error, connecting]
+          description: Filter by connection status
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [wordpress, wix, shopify, ftp, sftp, custom]
+          description: Filter by platform type
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of website connections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  connections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebsiteConnection'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create new website connection
+      description: Add a new website connection with platform-specific configuration
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConnectionRequest'
+      responses:
+        '201':
+          description: Connection created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  connection:
+                    $ref: '#/components/schemas/WebsiteConnection'
+        '400':
+          description: Invalid connection data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Connection name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Connection limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /{connectionId}:
+    get:
+      summary: Get connection details
+      description: Get detailed information about a specific connection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  connection:
+                    $ref: '#/components/schemas/WebsiteConnectionDetail'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Connection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update connection
+      description: Update website connection configuration
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConnectionRequest'
+      responses:
+        '200':
+          description: Connection updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  connection:
+                    $ref: '#/components/schemas/WebsiteConnection'
+        '400':
+          description: Invalid update data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Connection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete connection
+      description: Remove a website connection and associated credentials
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Connection deleted successfully"
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Connection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /{connectionId}/test:
+    post:
+      summary: Test connection
+      description: Test website connection with current credentials
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection test results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  connected:
+                    type: boolean
+                  message:
+                    type: string
+                  responseTime:
+                    type: integer
+                    description: Response time in milliseconds
+                  details:
+                    type: object
+                    description: Platform-specific test details
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Connection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /{connectionId}/files:
+    get:
+      summary: List files
+      description: List files from connected website
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: path
+          in: query
+          schema:
+            type: string
+          description: Directory path (optional, defaults to root)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: File listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  path:
+                    type: string
+                    description: Current directory path
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FileInfo'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Connection not found or path not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Connection unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Upload file
+      description: Upload file to connected website
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - path
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload
+                path:
+                  type: string
+                  description: Target path on website
+                overwrite:
+                  type: boolean
+                  default: false
+                  description: Whether to overwrite existing files
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  file:
+                    $ref: '#/components/schemas/FileInfo'
+        '400':
+          description: Invalid file or path
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: File already exists (when overwrite=false)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /{connectionId}/files/{fileId}:
+    get:
+      summary: Download file
+      description: Download file from connected website
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: File path or identifier
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: File or connection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete file
+      description: Delete file from connected website
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: File path or identifier
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "File deleted successfully"
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: File or connection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    WebsiteConnection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        platformType:
+          type: string
+          enum: [wordpress, wix, shopify, ftp, sftp, custom]
+        connectionMethod:
+          type: string
+          enum: [rest_api, sftp, ftp, oauth, api_key]
+        status:
+          type: string
+          enum: [active, inactive, error, connecting]
+        lastConnectedAt:
+          type: string
+          format: date-time
+        lastError:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WebsiteConnectionDetail:
+      allOf:
+        - $ref: '#/components/schemas/WebsiteConnection'
+        - type: object
+          properties:
+            connectionConfig:
+              type: object
+              description: Platform-specific configuration (redacted sensitive data)
+            recentActivity:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConnectionActivity'
+
+    CreateConnectionRequest:
+      type: object
+      required:
+        - name
+        - url
+        - platformType
+        - connectionMethod
+        - credentials
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: User-defined connection name
+        url:
+          type: string
+          format: uri
+          description: Website URL
+        platformType:
+          type: string
+          enum: [wordpress, wix, shopify, ftp, sftp, custom]
+        connectionMethod:
+          type: string
+          enum: [rest_api, sftp, ftp, oauth, api_key]
+        credentials:
+          oneOf:
+            - $ref: '#/components/schemas/FTPCredentials'
+            - $ref: '#/components/schemas/SFTPCredentials'
+            - $ref: '#/components/schemas/APIKeyCredentials'
+            - $ref: '#/components/schemas/OAuthCredentials'
+        connectionConfig:
+          type: object
+          description: Platform-specific configuration
+
+    UpdateConnectionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        url:
+          type: string
+          format: uri
+        credentials:
+          oneOf:
+            - $ref: '#/components/schemas/FTPCredentials'
+            - $ref: '#/components/schemas/SFTPCredentials'
+            - $ref: '#/components/schemas/APIKeyCredentials'
+            - $ref: '#/components/schemas/OAuthCredentials'
+        connectionConfig:
+          type: object
+
+    FTPCredentials:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        port:
+          type: integer
+          default: 21
+
+    SFTPCredentials:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        privateKey:
+          type: string
+          description: SSH private key (alternative to password)
+        port:
+          type: integer
+          default: 22
+
+    APIKeyCredentials:
+      type: object
+      required:
+        - apiKey
+      properties:
+        apiKey:
+          type: string
+        apiSecret:
+          type: string
+        endpoint:
+          type: string
+          format: uri
+
+    OAuthCredentials:
+      type: object
+      required:
+        - clientId
+        - clientSecret
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        redirectUri:
+          type: string
+          format: uri
+        scopes:
+          type: array
+          items:
+            type: string
+
+    FileInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        type:
+          type: string
+          enum: [file, directory]
+        size:
+          type: integer
+          description: File size in bytes
+        modifiedAt:
+          type: string
+          format: date-time
+        permissions:
+          type: string
+          description: File permissions (platform-specific format)
+        mimeType:
+          type: string
+          description: MIME type for files
+
+    ConnectionActivity:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [connect, disconnect, file_list, file_upload, file_download, auth_attempt, error]
+        timestamp:
+          type: string
+          format: date-time
+        success:
+          type: boolean
+        details:
+          type: string
+        ipAddress:
+          type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object

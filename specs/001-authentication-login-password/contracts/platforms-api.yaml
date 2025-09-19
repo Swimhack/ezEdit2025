@@ -1,0 +1,540 @@
+openapi: 3.0.3
+info:
+  title: Platform Discovery API
+  version: 1.0.0
+  description: Website platform detection and discovery using web search capabilities
+
+servers:
+  - url: /api/platforms
+    description: Platform discovery API endpoints
+
+paths:
+  /discover:
+    post:
+      summary: Discover website platform
+      description: Analyze website URL to detect platform type and available connection methods
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Website URL to analyze
+                deepScan:
+                  type: boolean
+                  default: false
+                  description: Perform detailed analysis (slower but more accurate)
+      responses:
+        '200':
+          description: Platform detection results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  url:
+                    type: string
+                    format: uri
+                  detection:
+                    $ref: '#/components/schemas/PlatformDetection'
+        '400':
+          description: Invalid URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Website unreachable or detection service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /supported:
+    get:
+      summary: List supported platforms
+      description: Get list of all supported website platforms and their connection methods
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of supported platforms
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  platforms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SupportedPlatform'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /connect/{platformType}:
+    post:
+      summary: Initiate platform connection
+      description: Start OAuth flow or provide connection instructions for specific platform
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platformType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [wordpress, wix, shopify, ftp, sftp, custom]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - connectionName
+                - websiteUrl
+              properties:
+                connectionName:
+                  type: string
+                  description: User-defined name for this connection
+                websiteUrl:
+                  type: string
+                  format: uri
+                  description: Website URL to connect to
+                config:
+                  type: object
+                  description: Platform-specific configuration
+      responses:
+        '200':
+          description: Connection initiation response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/OAuthInitiation'
+                  - $ref: '#/components/schemas/DirectConnection'
+                  - $ref: '#/components/schemas/ConnectionInstructions'
+        '400':
+          description: Invalid platform or configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /oauth/callback/{platformType}:
+    post:
+      summary: Handle OAuth callback
+      description: Process OAuth callback from platform after user authorization
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platformType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [wix, shopify]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - state
+              properties:
+                code:
+                  type: string
+                  description: Authorization code from OAuth provider
+                state:
+                  type: string
+                  description: State parameter for CSRF protection
+                connectionId:
+                  type: string
+                  format: uuid
+                  description: Connection ID from initiation step
+      responses:
+        '200':
+          description: OAuth callback processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  connection:
+                    $ref: '#/components/schemas/WebsiteConnection'
+        '400':
+          description: Invalid OAuth callback data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /wordpress/sites:
+    get:
+      summary: Discover WordPress sites
+      description: Search for WordPress sites using web search APIs
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query (domain, company name, etc.)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: WordPress sites found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  query:
+                    type: string
+                  sites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DiscoveredSite'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Search rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /search:
+    get:
+      summary: Search for websites by platform
+      description: Use web search to find websites built with specific platforms
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: platform
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [wordpress, wix, shopify, joomla, drupal, magento]
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Additional search terms
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Websites found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  platform:
+                    type: string
+                  query:
+                    type: string
+                  sites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DiscoveredSite'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Search rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PlatformDetection:
+      type: object
+      properties:
+        platform:
+          type: string
+          description: Detected platform name
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Detection confidence score (0-1)
+        version:
+          type: string
+          description: Platform version if detected
+        technologies:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetectedTechnology'
+        recommendedMethods:
+          type: array
+          items:
+            type: string
+            enum: [rest_api, sftp, ftp, oauth, api_key]
+          description: Recommended connection methods for this platform
+        requirements:
+          type: object
+          description: Platform-specific connection requirements
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Potential issues or limitations detected
+
+    DetectedTechnology:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Technology name
+        category:
+          type: string
+          description: Technology category (CMS, E-commerce, Analytics, etc.)
+        version:
+          type: string
+          description: Version if detected
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    SupportedPlatform:
+      type: object
+      properties:
+        platformType:
+          type: string
+        displayName:
+          type: string
+        description:
+          type: string
+        supportedMethods:
+          type: array
+          items:
+            type: string
+            enum: [rest_api, sftp, ftp, oauth, api_key]
+        requirements:
+          type: object
+          description: Platform-specific requirements
+        documentation:
+          type: string
+          format: uri
+          description: Link to platform-specific setup documentation
+        isActive:
+          type: boolean
+          description: Whether this platform integration is currently active
+
+    OAuthInitiation:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [oauth]
+        authorizationUrl:
+          type: string
+          format: uri
+          description: URL to redirect user for authorization
+        state:
+          type: string
+          description: CSRF protection state parameter
+        connectionId:
+          type: string
+          format: uuid
+          description: Temporary connection ID for callback processing
+        scopes:
+          type: array
+          items:
+            type: string
+          description: Requested OAuth scopes
+
+    DirectConnection:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [direct]
+        success:
+          type: boolean
+        connection:
+          $ref: '#/components/schemas/WebsiteConnection'
+        message:
+          type: string
+
+    ConnectionInstructions:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [instructions]
+        platform:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectionStep'
+        requirements:
+          type: array
+          items:
+            type: string
+        documentation:
+          type: string
+          format: uri
+
+    ConnectionStep:
+      type: object
+      properties:
+        step:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+        example:
+          type: string
+
+    DiscoveredSite:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        title:
+          type: string
+        description:
+          type: string
+        platform:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        technologies:
+          type: array
+          items:
+            type: string
+        lastChecked:
+          type: string
+          format: date-time
+        accessible:
+          type: boolean
+          description: Whether the site is currently accessible
+
+    WebsiteConnection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        platformType:
+          type: string
+        connectionMethod:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, error, connecting]
+        createdAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object

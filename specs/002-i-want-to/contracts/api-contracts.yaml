@@ -1,0 +1,313 @@
+openapi: 3.0.0
+info:
+  title: Email Validation and Dashboard State API
+  version: 1.0.0
+  description: API contracts for fluid sign-in feature with email validation and dashboard state persistence
+
+paths:
+  /api/auth/validate:
+    post:
+      summary: Validate email with token
+      description: Validates a user's email address using the token sent via email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Validation token from email
+                  minLength: 64
+                  maxLength: 64
+      responses:
+        '200':
+          description: Email successfully validated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Email successfully validated"
+                  user:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                      email_verified:
+                        type: boolean
+                      email_verified_at:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/resend:
+    post:
+      summary: Resend validation email
+      description: Sends a new validation email to the user
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Validation email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Validation email sent"
+                  nextResendAt:
+                    type: string
+                    format: date-time
+                    description: Earliest time for next resend
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Too many attempts. Please try again later."
+                  nextResendAt:
+                    type: string
+                    format: date-time
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/dashboard/state:
+    get:
+      summary: Get saved dashboard state
+      description: Retrieves the user's saved dashboard state
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dashboard state retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/DashboardState'
+                  lastUpdated:
+                    type: string
+                    format: date-time
+        '404':
+          description: No saved state found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: null
+                  message:
+                    type: string
+                    example: "No saved state found"
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Save dashboard state
+      description: Saves the user's current dashboard state
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DashboardState'
+      responses:
+        '200':
+          description: Dashboard state saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "State saved successfully"
+                  savedAt:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid state data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: State data too large
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "State data exceeds maximum size of 100KB"
+
+  /api/dashboard/state/reset:
+    delete:
+      summary: Reset dashboard state to defaults
+      description: Clears the user's saved dashboard state
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dashboard state reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Dashboard state reset to defaults"
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    DashboardState:
+      type: object
+      required:
+        - version
+        - layout
+        - preferences
+        - navigation
+      properties:
+        version:
+          type: integer
+          example: 1
+        layout:
+          type: object
+          properties:
+            sidebarOpen:
+              type: boolean
+            activeTab:
+              type: string
+            expandedSections:
+              type: array
+              items:
+                type: string
+        preferences:
+          type: object
+          properties:
+            sortBy:
+              type: string
+            filterBy:
+              type: array
+              items:
+                type: string
+            itemsPerPage:
+              type: integer
+            theme:
+              type: string
+              enum: [light, dark, auto]
+        navigation:
+          type: object
+          properties:
+            currentPath:
+              type: string
+            scrollPositions:
+              type: object
+              additionalProperties:
+                type: number
+            recentWebsites:
+              type: array
+              items:
+                type: string
+        customization:
+          type: object
+          properties:
+            pinnedItems:
+              type: array
+              items:
+                type: string
+            hiddenSections:
+              type: array
+              items:
+                type: string
+            dashboardLayout:
+              type: string
+        metadata:
+          type: object
+          properties:
+            lastUpdated:
+              type: string
+              format: date-time
+            deviceType:
+              type: string
+            browserInfo:
+              type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code for client handling
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth-token
+      description: JWT authentication token in HTTP-only cookie
