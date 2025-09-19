@@ -326,7 +326,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Failed to load file tree:', error);
 
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         dispatch({
           type: 'SET_ERROR',
           payload: 'Connection timed out. The server may be busy or unavailable.'
@@ -555,7 +555,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
       clearTimeout(timeoutId);
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.warn('Layout save request timed out');
       } else {
         console.error('Failed to save layout:', error);
@@ -589,7 +589,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.warn('Layout load request timed out');
       } else {
         console.error('Failed to load layout:', error);
