@@ -39,8 +39,19 @@ export default function ThreePaneEditor({
   const isTablet = viewportWidth >= 768 && viewportWidth < 1200;
   const isMobile = viewportWidth < 768;
 
+  // Track if we've already initialized to prevent duplicate calls
+  const [isInitialized, setIsInitialized] = useState(false);
+
   // Initialize connection and load file tree
   useEffect(() => {
+    // Prevent duplicate initialization
+    if (!connectionId || !connectionConfig || isInitialized) {
+      return;
+    }
+
+    // Mark as initialized immediately
+    setIsInitialized(true);
+
     if (connectionId && connectionConfig) {
       actions.setConnection(connectionId, {
         sessionId: `session-${Date.now()}`,
@@ -74,12 +85,20 @@ export default function ThreePaneEditor({
         }
       };
 
-      loadFileTreeWithTimeout();
+      // Add a small delay to prevent race conditions
+      const timer = setTimeout(() => {
+        loadFileTreeWithTimeout();
+      }, 100);
 
       // Load saved layout (disabled to prevent infinite retries)
       // actions.loadLayoutFromSession();
+
+      // Cleanup function
+      return () => {
+        clearTimeout(timer);
+      };
     }
-  }, [connectionId, connectionConfig, actions]);
+  }, [connectionId, connectionConfig]); // Remove actions from dependencies to prevent re-runs
 
   // Handle window resize
   useEffect(() => {

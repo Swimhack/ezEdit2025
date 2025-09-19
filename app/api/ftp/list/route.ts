@@ -49,12 +49,27 @@ function formatFileInfo(item: any, path: string): any {
 }
 
 
-// Rate limiting and circuit breaker
+// Rate limiting and circuit breaker - use per-client ID for better granularity
 const requestCounts = new Map<string, { count: number, resetTime: number }>()
 const failureCounts = new Map<string, { count: number, resetTime: number }>()
-const RATE_LIMIT = 5 // reduced from 10 to 5 requests per minute
-const FAILURE_THRESHOLD = 3 // reduced from 5 to 3 failures before circuit breaker opens
-const CIRCUIT_BREAKER_TIMEOUT = 120000 // increased from 1 minute to 2 minutes
+const RATE_LIMIT = 10 // increased back to 10 requests per minute (should be enough with proper client fixes)
+const FAILURE_THRESHOLD = 5 // increased back to 5 failures before circuit breaker opens
+const CIRCUIT_BREAKER_TIMEOUT = 60000 // reduced back to 1 minute
+
+// Clean up old entries periodically to prevent memory leaks
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, value] of requestCounts.entries()) {
+    if (now > value.resetTime) {
+      requestCounts.delete(key)
+    }
+  }
+  for (const [key, value] of failureCounts.entries()) {
+    if (now > value.resetTime) {
+      failureCounts.delete(key)
+    }
+  }
+}, 60000) // Clean up every minute
 
 function checkRateLimit(clientId: string): boolean {
   const now = Date.now()
@@ -145,7 +160,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { error: 'Service temporarily unavailable due to repeated failures. Please wait 2 minutes and try again.' },
+      { error: 'Service temporarily unavailable due to repeated failures. Please wait 1 minute and try again.' },
       { status: 503 }
     )
   }

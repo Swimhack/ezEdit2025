@@ -9,6 +9,8 @@ function LogsContent() {
   const [authenticated, setAuthenticated] = useState(false)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [lastUpdate, setLastUpdate] = useState(new Date())
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -21,6 +23,16 @@ function LogsContent() {
     }
   }, [searchParams])
 
+  // Auto-refresh logs every 5 seconds when enabled
+  useEffect(() => {
+    if (autoRefresh && authenticated) {
+      const interval = setInterval(() => {
+        fetchLogs()
+      }, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [autoRefresh, authenticated])
+
   const fetchLogs = async () => {
     try {
       const response = await fetch('/api/logs', {
@@ -32,6 +44,8 @@ function LogsContent() {
       if (response.ok) {
         const data = await response.json()
         setLogs(data.logs || [])
+        setLastUpdate(new Date())
+        setError('') // Clear any previous errors
       } else {
         setError('Failed to fetch logs')
       }
@@ -109,10 +123,17 @@ function LogsContent() {
       <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-lg shadow-md">
           <div className="border-b border-gray-200 px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Application Logs</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Real-time application logs and events
-            </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Application Logs</h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  Real-time application logs and events
+                </p>
+              </div>
+              <div className="text-sm text-gray-500">
+                Last updated: {lastUpdate.toLocaleTimeString()}
+              </div>
+            </div>
           </div>
 
           <div className="p-6">
@@ -134,19 +155,34 @@ function LogsContent() {
               )}
             </div>
 
-            <div className="mt-4 flex gap-4">
-              <button
-                onClick={fetchLogs}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Refresh Logs
-              </button>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-              >
-                Auto Refresh
-              </button>
+            <div className="mt-4 flex justify-between items-center">
+              <div className="flex gap-4">
+                <button
+                  onClick={fetchLogs}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Refresh Logs
+                </button>
+                <button
+                  onClick={() => setAutoRefresh(!autoRefresh)}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    autoRefresh
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                  }`}
+                >
+                  {autoRefresh ? 'Stop Auto-Refresh' : 'Start Auto-Refresh (5s)'}
+                </button>
+                <button
+                  onClick={() => setLogs([])}
+                  className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+                >
+                  Clear Display
+                </button>
+              </div>
+              <div className="text-sm text-gray-500">
+                {logs.length} log entries {autoRefresh && '(auto-refreshing)'}
+              </div>
             </div>
           </div>
         </div>
