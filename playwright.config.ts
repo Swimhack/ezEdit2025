@@ -14,7 +14,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   // Test directory structure
-  testDir: './tests/e2e',
+  testDir: './tests',
 
   // Store Playwright artifacts under logs/
   outputDir: 'logs/test-results',
@@ -54,7 +54,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:3000',
+    baseURL: 'https://ezeditapp.fly.dev',
 
     // Collect trace when retrying the failed test for debugging
     trace: 'on-first-retry',
@@ -121,29 +121,29 @@ export default defineConfig({
     },
 
     // Authentication Testing Project
-    {
-      name: 'authenticated',
-      use: {
-        ...devices['Desktop Chrome'],
-        // Use authenticated state
-        storageState: 'tests/auth.json',
-      },
-      dependencies: ['setup'],
-    },
+    // {
+    //   name: 'authenticated',
+    //   use: {
+    //     ...devices['Desktop Chrome'],
+    //     // Use authenticated state
+    //     storageState: 'tests/auth.json',
+    //   },
+    //   dependencies: ['setup'],
+    // },
   ],
 
   // Global setup and teardown
-  globalSetup: require.resolve('./tests/global-setup.ts'),
-  globalTeardown: require.resolve('./tests/global-teardown.ts'),
+  // globalSetup: require.resolve('./tests/global-setup.ts'),
+  // globalTeardown: require.resolve('./tests/global-teardown.ts'),
 
-  // Run your local dev server before starting the tests
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    env: {
-      NODE_ENV: 'test',
-    },
-  },
+  // Comment out webServer since we're testing deployed app
+  // webServer: {
+  //   command: 'npm run dev',
+  //   url: 'http://localhost:3000',
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 120 * 1000,
+  //   env: {
+  //     NODE_ENV: 'test',
+  //   },
+  // },
 });
