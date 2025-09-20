@@ -45,8 +45,17 @@ export default function Dashboard() {
   }, [router])
 
   const handleSignOut = async () => {
-    await fetch('/api/auth/signout', { method: 'POST' })
-    router.push('/')
+    try {
+      const response = await fetch('/api/auth/signout', { method: 'POST' })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Failed to sign out')
+      }
+    } catch (err) {
+      console.error('Sign out error', err)
+    } finally {
+      router.push('/auth/signin')
+    }
   }
 
   if (loading) {
@@ -231,3 +240,6 @@ export default function Dashboard() {
     </div>
   )
 }
+
+
+

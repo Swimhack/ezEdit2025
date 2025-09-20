@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database'
 import {
   createErrorResponse,
   ErrorResponses,
@@ -13,16 +14,22 @@ import {
 } from '@/lib/api-error-handler'
 import { createRequestLogger } from '@/lib/logger'
 import { validateInput } from '@/lib/security/input-validation'
-import { AuthenticationError } from '@/lib/errors/types'
+import { AuthenticationError, ERROR_CODES } from '@/lib/errors/types'
 import { randomUUID } from 'crypto'
 
-// Initialize Supabase client
-const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(
+const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
   : null
+
+const VALID_PLANS = ['FREE', 'SINGLE_SITE', 'UNLIMITED'] as const
+const PLAN_TO_SUBSCRIPTION: Record<typeof VALID_PLANS[number], Database['public']['Tables']['organizations']['Row']['subscription_tier']> = {
+  FREE: 'free',
+  SINGLE_SITE: 'starter',
+  UNLIMITED: 'pro'
+}
 
 export async function POST(request: NextRequest) {
   const correlationId = randomUUID()
@@ -31,24 +38,20 @@ export async function POST(request: NextRequest) {
   context.correlationId = correlationId
 
   const startTime = Date.now()
-
-  // Set correlation ID header for response
   const headers = {
     'X-Correlation-ID': correlationId,
     'Content-Type': 'application/json'
   }
 
+  let requestBody: Record<string, any> = {}
+
   try {
-    // Check if Supabase is configured
-    if (!supabase) {
-      logger.warn('Supabase not configured for authentication', {
+    if (!supabaseAdmin) {
+      logger.error('Supabase not configured for authentication', {
         correlationId,
         operation: 'auth_signup_no_supabase'
       })
-      return NextResponse.json(
-        { error: 'Authentication service not available' },
-        { status: 503, headers }
-      )
+      throw ErrorResponses.serviceUnavailable('Authentication service', correlationId)
     }
 
     logger.info('Authentication sign-up attempt started', {
@@ -56,32 +59,33 @@ export async function POST(request: NextRequest) {
       operation: 'auth_signup_start'
     })
 
-    // Parse and validate request body
-    const body = await request.json()
-    const { email, password, company, plan = 'FREE' } = body
-
-    // Validate required fields
-    Validators.requireFields(body, ['email', 'password', 'company'], correlationId)
-
-    // Validate email format
-    Validators.validateEmail(email, correlationId)
-
-    // Validate password strength
-    Validators.validatePassword(password, correlationId)
-
-    // Validate plan if provided
-    const validPlans = ['FREE', 'SINGLE_SITE', 'UNLIMITED']
-    if (plan && !validPlans.includes(plan)) {
-      throw ErrorResponses.badRequest('Invalid subscription plan', correlationId)
+    try {
+      requestBody = await request.json()
+    } catch {
+      throw ErrorResponses.badRequest('Invalid JSON payload', correlationId)
     }
 
-    // Sanitize input using existing validation library
+    if (!requestBody || typeof requestBody !== 'object') {
+      throw ErrorResponses.badRequest('Invalid JSON payload', correlationId)
+    }
+
+    const { email, password, company, plan = 'FREE' } = requestBody as {
+      email?: string
+      password?: string
+      company?: string
+      plan?: string
+    }
+
+    Validators.requireFields(requestBody, ['email', 'password'], correlationId)
+    Validators.validateEmail(email as string, correlationId)
+    Validators.validatePassword(password as string, correlationId)
+
     const validation = validateInput(
       { email, password, company, plan },
       {
         email: { required: true, type: 'email', sanitize: true },
         password: { required: true, type: 'string', minLength: 8 },
-        company: { required: true, type: 'string', sanitize: true, maxLength: 100 },
+        company: { required: false, type: 'string', sanitize: true, maxLength: 100 },
         plan: { required: false, type: 'string', sanitize: true }
       }
     )
@@ -99,24 +103,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Log authentication attempt (without sensitive data)
+    const sanitizedPlan = (validation.sanitized.plan || 'FREE').toUpperCase() as typeof VALID_PLANS[number]
+    if (!VALID_PLANS.includes(sanitizedPlan)) {
+      throw ErrorResponses.badRequest('Invalid subscription plan', correlationId)
+    }
+
+    const sanitizedEmail = String(validation.sanitized.email)
+    const sanitizedCompany = validation.sanitized.company?.trim() || null
+
+    const { data: existingProfile, error: profileLookupError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('email', sanitizedEmail)
+      .maybeSingle()
+
+    if (profileLookupError && profileLookupError.code !== 'PGRST116') {
+      logger.warn('Failed to check for existing profile', {
+        correlationId,
+        error: profileLookupError.message,
+        operation: 'auth_signup_profile_lookup'
+      })
+    }
+
+    if (existingProfile) {
+      logger.warn('Attempted signup with existing email', {
+        correlationId,
+        email: sanitizedEmail,
+        operation: 'auth_signup_duplicate_email'
+      })
+      throw ErrorResponses.userExists(correlationId)
+    }
+
     logger.authAttempt('new_user', 'password', {
-      email: validation.sanitized.email,
-      company: validation.sanitized.company,
-      plan: validation.sanitized.plan,
+      email: sanitizedEmail,
+      company: sanitizedCompany,
+      plan: sanitizedPlan,
       correlationId,
       userAgent: request.headers.get('user-agent'),
       ip: context.ip
     })
 
-    // Attempt user creation with Supabase
-    const { data, error } = await supabase.auth.signUp({
-      email: validation.sanitized.email,
-      password: validation.sanitized.password,
+    const { data, error } = await supabaseAdmin.auth.signUp({
+      email: sanitizedEmail,
+      password: String(validation.sanitized.password),
       options: {
         data: {
-          company: validation.sanitized.company,
-          plan: validation.sanitized.plan || 'FREE'
+          company: sanitizedCompany,
+          plan: sanitizedPlan
         }
       }
     })
@@ -131,103 +164,118 @@ export async function POST(request: NextRequest) {
         operation: 'auth_signup_failure'
       })
 
-      // Map Supabase errors to standard errors
-      if (error.message.includes('User already registered')) {
+      const message = error.message || 'Failed to create account'
+
+      if (message.toLowerCase().includes('user already registered')) {
         throw ErrorResponses.userExists(correlationId)
       }
 
-      if (error.message.includes('Password should be')) {
+      if (message.toLowerCase().includes('password')) {
         throw ErrorResponses.weakPassword(correlationId)
       }
 
-      if (error.message.includes('Too many requests')) {
-        throw ErrorResponses.rateLimited(correlationId)
-      }
-
-      // Generic service unavailable for other Supabase errors
-      throw ErrorResponses.serviceUnavailable('Registration', correlationId)
+      throw new AuthenticationError(
+        ERROR_CODES.SERVICE_UNAVAILABLE,
+        message,
+        503,
+        undefined,
+        correlationId
+      )
     }
 
-    if (!data.user) {
-      logger.error('Registration succeeded but no user data returned', {
-        correlationId,
-        operation: 'auth_signup_no_user'
+    if (!data?.user) {
+      throw ErrorResponses.serviceUnavailable('Authentication', correlationId)
+    }
+
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        email: sanitizedEmail,
+        full_name: sanitizedCompany,
+        role: 'user',
+        failed_login_attempts: 0,
+        account_locked_at: null,
+        password_changed_at: new Date().toISOString()
       })
-      throw ErrorResponses.internalError(correlationId)
-    }
+      .eq('id', data.user.id)
 
-    // Create organization record (assuming organizations table exists)
     let organizationId: string | null = null
-    try {
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          name: validation.sanitized.company,
-          plan: validation.sanitized.plan || 'FREE',
-          owner_id: data.user.id
-        })
-        .select('id')
-        .single()
 
-      if (!orgError && orgData) {
-        organizationId = orgData.id
+    if (sanitizedCompany) {
+      try {
+        const { data: orgData, error: orgError } = await supabaseAdmin
+          .from('organizations')
+          .insert({
+            name: sanitizedCompany,
+            owner_id: data.user.id,
+            subscription_tier: PLAN_TO_SUBSCRIPTION[sanitizedPlan]
+          })
+          .select('id')
+          .single()
+
+        if (orgError) {
+          throw orgError
+        }
+
+        organizationId = orgData?.id ?? null
+      } catch (orgError) {
+        logger.warn('Failed to create organization during signup', {
+          correlationId,
+          error: orgError instanceof Error ? orgError.message : String(orgError),
+          operation: 'auth_signup_create_org'
+        })
       }
-    } catch (orgError) {
-      logger.warn('Failed to create organization', {
-        correlationId,
-        error: orgError,
-        operation: 'create_organization'
-      })
     }
 
-    // Log successful registration
     logger.authSuccess(data.user.id, 'password', duration, {
       correlationId,
       email: data.user.email,
-      company: validation.sanitized.company,
-      plan: validation.sanitized.plan,
+      company: sanitizedCompany,
+      plan: sanitizedPlan,
       operation: 'auth_signup_success'
     })
 
-    // Track registration success in database
-    await supabase.from('authentication_requests').insert({
+    await supabaseAdmin.from('authentication_requests').insert({
       correlation_id: correlationId,
       user_id: data.user.id,
-      email: data.user.email,
+      email: data.user.email ?? sanitizedEmail,
       method: 'password',
       operation: 'signup',
       ip_address: context.ip || '127.0.0.1',
       user_agent: context.userAgent,
-      session_id: data.session?.access_token ?
-        data.session.access_token.substring(0, 8) + '...' : null,
+      session_id: null,
+      timestamp: new Date().toISOString(),
       duration,
       success: true,
       context: {
-        company: validation.sanitized.company,
-        plan: validation.sanitized.plan,
+        company: sanitizedCompany,
+        plan: sanitizedPlan,
         userAgent: context.userAgent,
         correlationId
       }
     })
 
-    // Prepare response
     const response = {
       user: {
         id: data.user.id,
         email: data.user.email,
-        role: 'user', // New users start as 'user' role
+        role: 'user',
         emailConfirmed: data.user.email_confirmed_at !== null
       },
-      session: data.session ? {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_at: data.session.expires_at
-      } : null,
-      organization: organizationId ? {
-        id: organizationId,
-        name: validation.sanitized.company,
-        plan: validation.sanitized.plan || 'FREE'
-      } : null,
+      session: data.session
+        ? {
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+            expires_at: data.session.expires_at
+          }
+        : null,
+      organization: organizationId
+        ? {
+            id: organizationId,
+            name: sanitizedCompany,
+            plan: sanitizedPlan
+          }
+        : null,
       correlationId
     }
 
@@ -243,29 +291,27 @@ export async function POST(request: NextRequest) {
       status: 201,
       headers
     })
-
   } catch (error) {
     const duration = Date.now() - startTime
 
-    // Track failed registration in database
-    if (error instanceof Error && supabase) {
+    if (error instanceof Error && supabaseAdmin) {
       try {
-        const requestBody = await request.json().catch(() => ({}))
-        await supabase.from('authentication_requests').insert({
+        await supabaseAdmin.from('authentication_requests').insert({
           correlation_id: correlationId,
           user_id: null,
-          email: requestBody?.email || 'unknown',
+          email: typeof requestBody.email === 'string' ? requestBody.email : 'unknown',
           method: 'password',
           operation: 'signup',
           ip_address: context.ip || '127.0.0.1',
           user_agent: context.userAgent,
+          timestamp: new Date().toISOString(),
           duration,
           success: false,
-          error_code: (error as any).code || 'UNKNOWN_ERROR',
+          error_code: (error as any).code || ERROR_CODES.SERVICE_UNAVAILABLE,
           error_message: error.message,
           context: {
-            company: requestBody?.company,
-            plan: requestBody?.plan,
+            company: requestBody.company,
+            plan: requestBody.plan,
             userAgent: context.userAgent,
             correlationId
           }
@@ -275,7 +321,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return standardized error response
     return createErrorResponse(
       error instanceof Error ? error : new Error('Unknown error'),
       context
