@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
 import { supabase } from '@/lib/supabase'
 import { validateInput, sanitizeHtml, validatePassword } from '@/lib/security/input-validation'
+import { fetchWithRetry, getAuthErrorMessage, AUTH_RETRY_CONFIG, checkNetworkConnectivity } from '@/lib/retry-logic'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +56,8 @@ function SignUpForm() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
   const [passwordStrength, setPasswordStrength] = useState<any>(null)
   const [selectedPlan, setSelectedPlan] = useState<'FREE' | 'SINGLE_SITE' | 'UNLIMITED'>('FREE')
+  const [retryAttempt, setRetryAttempt] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   const router = useRouter()
 
@@ -72,6 +75,8 @@ function SignUpForm() {
     setLoading(true)
     setError('')
     setValidationErrors({})
+    setRetryAttempt(0)
+    setIsRetrying(false)
 
     // Validate and sanitize inputs
     const validation = validateInput(
@@ -90,7 +95,24 @@ function SignUpForm() {
     }
 
     try {
-      const response = await fetch('/api/auth/signup', {
+      // Check network connectivity first
+      const isOnline = await checkNetworkConnectivity()
+      if (!isOnline) {
+        setError('No internet connection. Please check your network and try again.')
+        return
+      }
+
+      // Create custom retry config with user feedback
+      const retryConfigWithFeedback = {
+        ...AUTH_RETRY_CONFIG,
+        onRetry: (attempt: number, delay: number) => {
+          setRetryAttempt(attempt)
+          setIsRetrying(true)
+          setError(`Connection issue detected. Retrying in ${Math.round(delay / 1000)} seconds... (attempt ${attempt}/3)`)
+        }
+      }
+
+      const response = await fetchWithRetry('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -101,12 +123,15 @@ function SignUpForm() {
           company: validation.sanitized.company,
           plan: selectedPlan
         })
-      })
+      }, retryConfigWithFeedback)
+
+      setIsRetrying(false)
 
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || 'Failed to create account')
+        const errorMessage = data.error || data.message || 'Failed to create account'
+        setError(errorMessage)
         return
       }
 
@@ -119,7 +144,12 @@ function SignUpForm() {
         router.push('/dashboard')
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred')
+      // Use the enhanced error message handler
+      const userFriendlyMessage = getAuthErrorMessage(err)
+      setError(userFriendlyMessage)
+
+      // Log the actual error for debugging
+      console.error('Signup error:', err)
     } finally {
       setLoading(false)
     }
@@ -323,8 +353,21 @@ function SignUpForm() {
             </div>
 
             {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
+              <div className={`rounded-md p-4 ${isRetrying ? 'bg-yellow-50' : 'bg-red-50'}`}>
+                <div className={`text-sm flex items-center ${isRetrying ? 'text-yellow-700' : 'text-red-700'}`}>
+                  {isRetrying && (
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {error}
+                  {retryAttempt > 0 && !isRetrying && (
+                    <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded">
+                      Attempt {retryAttempt}/3
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 

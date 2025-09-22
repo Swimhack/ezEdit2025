@@ -43,6 +43,14 @@ export function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
 
+  // Add CORS headers for API routes
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Correlation-ID');
+    response.headers.set('Access-Control-Max-Age', '86400');
+  }
+
   // Only apply CSP to HTML pages, not to static assets or API routes
   if (!isStaticAsset && !pathname.startsWith('/api/')) {
     // Create a more permissive CSP for Next.js compatibility
