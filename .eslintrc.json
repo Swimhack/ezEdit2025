@@ -1,0 +1,112 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2023,
+    "sourceType": "module",
+    "project": "./tsconfig.json"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "react-hooks"
+  ],
+  "rules": {
+    // Security rules for enterprise authentication
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+
+    // TypeScript strict rules
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-non-null-assertion": "error",
+    "@typescript-eslint/prefer-nullish-coalescing": "error",
+    "@typescript-eslint/prefer-optional-chain": "error",
+
+    // Authentication security rules
+    "no-secrets/no-secrets": "off",
+    "no-hardcoded-credentials": "off",
+
+    // React/Next.js best practices
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/no-unescaped-entities": "off",
+    "react/jsx-no-target-blank": ["error", { "allowReferrer": false }],
+
+    // Code quality rules
+    "prefer-const": "error",
+    "no-var": "error",
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"],
+    "no-duplicate-imports": "error",
+    "no-unreachable": "error",
+    "no-unused-expressions": "error",
+
+    // Async/Promise handling
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "require-await": "error",
+
+    // Naming conventions for enterprise code
+    "@typescript-eslint/naming-convention": [
+      "error",
+      {
+        "selector": "interface",
+        "format": ["PascalCase"]
+      },
+      {
+        "selector": "typeAlias",
+        "format": ["PascalCase"]
+      },
+      {
+        "selector": "enum",
+        "format": ["PascalCase"]
+      },
+      {
+        "selector": "enumMember",
+        "format": ["UPPER_CASE"]
+      },
+      {
+        "selector": "variable",
+        "modifiers": ["const", "global"],
+        "format": ["UPPER_CASE", "camelCase"]
+      }
+    ]
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2023": true
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "overrides": [
+    {
+      "files": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      "env": {
+        "jest": true
+      },
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["pages/api/**/*.ts", "app/api/**/*.ts"],
+      "rules": {
+        "no-console": ["warn", { "allow": ["warn", "error", "info"] }]
+      }
+    }
+  ]
+}

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
 import { supabase } from '@/lib/supabase'
-import { validateInput, sanitizeHtml } from '@/lib/security/input-validation'
 import { fetchWithRetry, getAuthErrorMessage, AUTH_RETRY_CONFIG, checkNetworkConnectivity } from '@/lib/retry-logic'
 
 export const dynamic = 'force-dynamic'
@@ -30,8 +29,8 @@ function SignInForm() {
   }, [])
 
   const handleEmailChange = (value: string) => {
-    // Sanitize input in real-time
-    const sanitized = sanitizeHtml(value, 'strict')
+    // Basic input sanitization
+    const sanitized = value.trim()
     setEmail(sanitized)
   }
 
@@ -47,17 +46,21 @@ function SignInForm() {
     setRetryAttempt(0)
     setIsRetrying(false)
 
-    // Validate and sanitize inputs
-    const validation = validateInput(
-      { email, password },
-      {
-        email: { required: true, type: 'email', sanitize: true },
-        password: { required: true, type: 'string', minLength: 1 }
-      }
-    )
+    // Basic input validation
+    const validationErrors: Record<string, string[]> = {}
 
-    if (!validation.isValid) {
-      setValidationErrors(validation.errors)
+    if (!email.trim()) {
+      validationErrors.email = ['Email is required']
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      validationErrors.email = ['Invalid email format']
+    }
+
+    if (!password) {
+      validationErrors.password = ['Password is required']
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setValidationErrors(validationErrors)
       setLoading(false)
       return
     }
@@ -86,8 +89,8 @@ function SignInForm() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: validation.sanitized.email,
-          password: validation.sanitized.password
+          email: email.trim(),
+          password: password
         })
       }, retryConfigWithFeedback)
 

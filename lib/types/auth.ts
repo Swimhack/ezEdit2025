@@ -73,6 +73,8 @@ export type SecurityEventType =
   | 'failed_login'
   | 'email_verification'
   | 'session_expired'
+  | 'suspicious_activity'
+  | 'login_attempt'
 
 export type EventOutcome = 'success' | 'failure' | 'blocked'
 

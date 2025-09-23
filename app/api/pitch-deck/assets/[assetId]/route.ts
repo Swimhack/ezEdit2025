@@ -28,10 +28,10 @@ export async function OPTIONS(request: NextRequest) {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { assetId: string } }
+  { params }: { params: Promise<{ assetId: string }> }
 ) {
   try {
-    const { assetId } = params
+    const { assetId } = await params
     const { searchParams } = new URL(request.url)
     const format = searchParams.get('format') || 'medium'
 

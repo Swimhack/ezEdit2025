@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
 import { supabase } from '@/lib/supabase'
-import { validateInput, sanitizeHtml, validatePassword } from '@/lib/security/input-validation'
 import { fetchWithRetry, getAuthErrorMessage, AUTH_RETRY_CONFIG, checkNetworkConnectivity } from '@/lib/retry-logic'
 
 export const dynamic = 'force-dynamic'
@@ -78,18 +77,23 @@ function SignUpForm() {
     setRetryAttempt(0)
     setIsRetrying(false)
 
-    // Validate and sanitize inputs
-    const validation = validateInput(
-      { email, password, company },
-      {
-        email: { required: true, type: 'email', sanitize: true },
-        password: { required: true, type: 'password' },
-        company: { required: false, type: 'string', maxLength: 100, sanitize: true }
-      }
-    )
+    // Basic input validation
+    const validationErrors: Record<string, string[]> = {}
 
-    if (!validation.isValid) {
-      setValidationErrors(validation.errors)
+    if (!email.trim()) {
+      validationErrors.email = ['Email is required']
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      validationErrors.email = ['Invalid email format']
+    }
+
+    if (!password) {
+      validationErrors.password = ['Password is required']
+    } else if (password.length < 8) {
+      validationErrors.password = ['Password must be at least 8 characters']
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setValidationErrors(validationErrors)
       setLoading(false)
       return
     }
@@ -118,9 +122,9 @@ function SignUpForm() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: validation.sanitized.email,
-          password: validation.sanitized.password,
-          company: validation.sanitized.company,
+          email: email.trim(),
+          password: password,
+          company: company?.trim() || '',
           plan: selectedPlan
         })
       }, retryConfigWithFeedback)
@@ -158,7 +162,18 @@ function SignUpForm() {
   const handlePasswordChange = (value: string) => {
     setPassword(value)
     if (value) {
-      const strength = validatePassword(value)
+      // Basic password strength check
+      let score = 0
+      if (value.length >= 8) score++
+      if (/[A-Z]/.test(value)) score++
+      if (/[a-z]/.test(value)) score++
+      if (/[0-9]/.test(value)) score++
+      if (/[^A-Za-z0-9]/.test(value)) score++
+
+      const strength = {
+        score,
+        feedback: score < 3 ? ['Password should be at least 8 characters with mixed case, numbers, and symbols'] : []
+      }
       setPasswordStrength(strength)
     } else {
       setPasswordStrength(null)
@@ -166,14 +181,14 @@ function SignUpForm() {
   }
 
   const handleEmailChange = (value: string) => {
-    // Sanitize input in real-time
-    const sanitized = sanitizeHtml(value, 'strict')
+    // Basic input sanitization
+    const sanitized = value.trim()
     setEmail(sanitized)
   }
 
   const handleCompanyChange = (value: string) => {
-    // Sanitize input in real-time
-    const sanitized = sanitizeHtml(value, 'strict')
+    // Basic input sanitization
+    const sanitized = value.trim()
     setCompany(sanitized)
   }
 

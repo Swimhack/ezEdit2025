@@ -27,10 +27,10 @@ export async function OPTIONS(request: NextRequest) {
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sectionId: string } }
+  { params }: { params: Promise<{ sectionId: string }> }
 ) {
   try {
-    const { sectionId } = params
+    const { sectionId } = await params
 
     // Validate section ID parameter
     if (!sectionId || typeof sectionId !== 'string') {
