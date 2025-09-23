@@ -1,0 +1,676 @@
+openapi: 3.0.3
+info:
+  title: Investor Pitch Deck API
+  description: API for managing and serving investor pitch deck content
+  version: 1.0.0
+  contact:
+    name: EzEdit Team
+    email: team@ezedit.co
+
+servers:
+  - url: https://ezeditapp.fly.dev/api/v1
+    description: Production server
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+paths:
+  /pitch-deck/sections:
+    get:
+      summary: Get all pitch deck sections
+      description: Retrieve all pitch deck sections in presentation order
+      operationId: getPitchSections
+      tags:
+        - Pitch Deck
+      parameters:
+        - name: include_hidden
+          in: query
+          description: Include hidden/disabled sections
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of pitch deck sections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PitchSection'
+                  metadata:
+                    type: object
+                    properties:
+                      total_sections:
+                        type: integer
+                      visible_sections:
+                        type: integer
+                      last_updated:
+                        type: string
+                        format: date-time
+
+  /pitch-deck/sections/{sectionId}:
+    get:
+      summary: Get specific pitch deck section
+      description: Retrieve detailed content for a specific section
+      operationId: getPitchSection
+      tags:
+        - Pitch Deck
+      parameters:
+        - name: sectionId
+          in: path
+          required: true
+          description: Section identifier
+          schema:
+            type: string
+            example: "market-analysis"
+      responses:
+        '200':
+          description: Pitch deck section details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PitchSection'
+        '404':
+          description: Section not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pitch-deck/config:
+    get:
+      summary: Get presentation configuration
+      description: Retrieve global presentation settings and theme
+      operationId: getPresentationConfig
+      tags:
+        - Configuration
+      responses:
+        '200':
+          description: Presentation configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/PresentationConfig'
+
+  /pitch-deck/analytics/event:
+    post:
+      summary: Track analytics event
+      description: Record viewer engagement and interaction events
+      operationId: trackAnalyticsEvent
+      tags:
+        - Analytics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsEventRequest'
+      responses:
+        '201':
+          description: Event tracked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Event tracked successfully"
+        '400':
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pitch-deck/contact:
+    post:
+      summary: Submit investor contact form
+      description: Process investor inquiry and contact information
+      operationId: submitContactForm
+      tags:
+        - Contact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactSubmissionRequest'
+      responses:
+        '201':
+          description: Contact form submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: "Thank you for your interest. We'll be in touch soon."
+                  data:
+                    type: object
+                    properties:
+                      submission_id:
+                        type: string
+                      follow_up_timeline:
+                        type: string
+                        example: "within 24 hours"
+        '400':
+          description: Invalid contact form data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /pitch-deck/assets/{assetId}:
+    get:
+      summary: Get pitch deck asset
+      description: Retrieve optimized assets (images, videos, documents)
+      operationId: getPitchAsset
+      tags:
+        - Assets
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          description: Asset identifier
+          schema:
+            type: string
+        - name: format
+          in: query
+          description: Requested format/size
+          schema:
+            type: string
+            enum: [thumbnail, medium, large, original]
+            default: medium
+      responses:
+        '200':
+          description: Asset file
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+            video/*:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Asset not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    PitchSection:
+      type: object
+      required:
+        - id
+        - title
+        - order
+        - content
+        - isVisible
+      properties:
+        id:
+          type: string
+          example: "market-analysis"
+        title:
+          type: string
+          example: "Market Opportunity"
+        order:
+          type: integer
+          minimum: 1
+          example: 3
+        content:
+          $ref: '#/components/schemas/PitchSectionContent'
+        metadata:
+          $ref: '#/components/schemas/PitchSectionMetadata'
+        isVisible:
+          type: boolean
+          example: true
+
+    PitchSectionContent:
+      type: object
+      required:
+        - headline
+        - blocks
+        - layout
+      properties:
+        headline:
+          type: string
+          maxLength: 100
+          example: "Massive Market Opportunity"
+        subheadline:
+          type: string
+          maxLength: 200
+          example: "The file editing and website management market is growing rapidly"
+        blocks:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ContentBlock'
+        backgroundStyle:
+          $ref: '#/components/schemas/BackgroundStyle'
+        layout:
+          type: string
+          enum: [hero, two_column, three_column, centered, full_bleed]
+          example: "two_column"
+
+    ContentBlock:
+      type: object
+      required:
+        - id
+        - type
+        - content
+      properties:
+        id:
+          type: string
+          example: "market-size-chart"
+        type:
+          type: string
+          enum: [text, image, chart, video, button, quote, metrics]
+          example: "chart"
+        content:
+          oneOf:
+            - $ref: '#/components/schemas/TextBlock'
+            - $ref: '#/components/schemas/ImageBlock'
+            - $ref: '#/components/schemas/ChartBlock'
+            - $ref: '#/components/schemas/VideoBlock'
+            - $ref: '#/components/schemas/ButtonBlock'
+        position:
+          $ref: '#/components/schemas/Position'
+        animation:
+          $ref: '#/components/schemas/AnimationConfig'
+
+    TextBlock:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          example: "The global SaaS market is expected to reach $716B by 2028"
+        formatting:
+          $ref: '#/components/schemas/TextStyle'
+
+    ImageBlock:
+      type: object
+      required:
+        - src
+        - alt
+      properties:
+        src:
+          type: string
+          format: uri
+          example: "https://cdn.ezedit.co/assets/market-chart.jpg"
+        alt:
+          type: string
+          example: "Market size growth chart showing 15% CAGR"
+        caption:
+          type: string
+          example: "Source: Gartner 2024 SaaS Market Analysis"
+
+    ChartBlock:
+      type: object
+      required:
+        - chartType
+        - data
+      properties:
+        chartType:
+          type: string
+          enum: [bar, line, pie, area, funnel]
+          example: "bar"
+        data:
+          type: object
+          description: Chart.js compatible data structure
+
+    VideoBlock:
+      type: object
+      required:
+        - src
+      properties:
+        src:
+          type: string
+          format: uri
+          example: "https://cdn.ezedit.co/videos/product-demo.mp4"
+        poster:
+          type: string
+          format: uri
+          example: "https://cdn.ezedit.co/images/video-poster.jpg"
+        autoplay:
+          type: boolean
+          default: false
+
+    ButtonBlock:
+      type: object
+      required:
+        - text
+        - action
+      properties:
+        text:
+          type: string
+          example: "Schedule Demo"
+        action:
+          $ref: '#/components/schemas/ActionConfig'
+
+    PresentationConfig:
+      type: object
+      required:
+        - theme
+        - navigation
+      properties:
+        theme:
+          $ref: '#/components/schemas/ThemeConfig'
+        navigation:
+          $ref: '#/components/schemas/NavigationConfig'
+        analytics:
+          $ref: '#/components/schemas/AnalyticsConfig'
+        seo:
+          $ref: '#/components/schemas/SEOConfig'
+
+    ThemeConfig:
+      type: object
+      required:
+        - primary
+        - secondary
+        - background
+        - text
+      properties:
+        primary:
+          type: string
+          example: "#2563eb"
+        secondary:
+          type: string
+          example: "#64748b"
+        background:
+          type: string
+          example: "#ffffff"
+        text:
+          type: string
+          example: "#1e293b"
+        fonts:
+          type: object
+          properties:
+            heading:
+              type: string
+              example: "Inter, sans-serif"
+            body:
+              type: string
+              example: "Inter, sans-serif"
+
+    NavigationConfig:
+      type: object
+      properties:
+        showProgress:
+          type: boolean
+          default: true
+        enableKeyboard:
+          type: boolean
+          default: true
+        autoAdvance:
+          type: boolean
+          default: false
+        showSlideNumbers:
+          type: boolean
+          default: true
+
+    AnalyticsEventRequest:
+      type: object
+      required:
+        - event
+        - timestamp
+      properties:
+        sessionId:
+          type: string
+          example: "sess_abc123def456"
+        event:
+          type: string
+          enum: [section_view, time_spent, navigation, contact_form, asset_download]
+          example: "section_view"
+        sectionId:
+          type: string
+          example: "market-analysis"
+        timestamp:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in milliseconds
+          example: 30000
+        metadata:
+          type: object
+          properties:
+            device:
+              type: string
+              example: "desktop"
+            referrer:
+              type: string
+              format: uri
+
+    ContactSubmissionRequest:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: "John Smith"
+        email:
+          type: string
+          format: email
+          example: "john.smith@ventures.com"
+        company:
+          type: string
+          maxLength: 100
+          example: "Smith Ventures"
+        investorType:
+          type: string
+          enum: [angel, vc, strategic, family_office, other]
+          example: "vc"
+        message:
+          type: string
+          maxLength: 2000
+          example: "Interested in learning more about your fundraising plans."
+        interestedSections:
+          type: array
+          items:
+            type: string
+          example: ["market-analysis", "financial-projections"]
+
+    BackgroundStyle:
+      type: object
+      properties:
+        color:
+          type: string
+          example: "#f8fafc"
+        gradient:
+          type: string
+          example: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+        image:
+          type: string
+          format: uri
+
+    Position:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+
+    AnimationConfig:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [fade, slide, zoom, none]
+          default: fade
+        duration:
+          type: number
+          default: 0.5
+        delay:
+          type: number
+          default: 0
+        easing:
+          type: string
+          default: "ease-in-out"
+
+    TextStyle:
+      type: object
+      properties:
+        fontSize:
+          type: string
+          example: "18px"
+        fontWeight:
+          type: string
+          example: "600"
+        color:
+          type: string
+          example: "#1e293b"
+        textAlign:
+          type: string
+          enum: [left, center, right, justify]
+          default: left
+
+    ActionConfig:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [navigate, external_link, contact_form, download]
+        target:
+          type: string
+          description: Navigation target or URL
+        params:
+          type: object
+          description: Additional action parameters
+
+    PitchSectionMetadata:
+      type: object
+      properties:
+        lastUpdated:
+          type: string
+          format: date-time
+        version:
+          type: integer
+        author:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    AnalyticsConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        trackingId:
+          type: string
+        retentionDays:
+          type: integer
+          default: 730
+
+    SEOConfig:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "EzEdit Investor Presentation"
+        description:
+          type: string
+          example: "Comprehensive investor pitch deck for EzEdit's file editing platform"
+        keywords:
+          type: array
+          items:
+            type: string
+        ogImage:
+          type: string
+          format: uri
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Invalid email format"
+        details:
+          type: object
+          properties:
+            field:
+              type: string
+              example: "email"
+            code:
+              type: string
+              example: "INVALID_FORMAT"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authenticated requests
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Pitch Deck
+    description: Core pitch deck content management
+  - name: Configuration
+    description: Presentation settings and theme
+  - name: Analytics
+    description: Viewer engagement tracking
+  - name: Contact
+    description: Investor contact and lead management
+  - name: Assets
+    description: Media and file management
