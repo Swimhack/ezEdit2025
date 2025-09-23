@@ -203,12 +203,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     // Log unexpected errors
+    const errorHeaders = await headers()
     await securityService.logEvent({
       eventType: 'login_failure',
       severityLevel: 'critical',
       description: `Unexpected error in signup endpoint: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      sourceIp: getClientIP(request, headers()),
-      userAgent: headers().get('user-agent') || undefined,
+      sourceIp: getClientIP(request, errorHeaders),
+      userAgent: errorHeaders.get('user-agent') || undefined,
       additionalContext: {
         error_type: 'unexpected_error',
         endpoint: '/api/auth/signup',
