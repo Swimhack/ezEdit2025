@@ -129,8 +129,6 @@ function SignUpForm() {
         })
       }, retryConfigWithFeedback)
 
-      setIsRetrying(false)
-
       const data = await response.json()
 
       if (!response.ok) {
@@ -138,6 +136,9 @@ function SignUpForm() {
         setError(errorMessage)
         return
       }
+
+      setError('')
+      setRetryAttempt(0)
 
       // Account created successfully
       if (selectedPlan === 'FREE') {
@@ -155,6 +156,7 @@ function SignUpForm() {
       // Log the actual error for debugging
       console.error('Signup error:', err)
     } finally {
+      setIsRetrying(false)
       setLoading(false)
     }
   }
@@ -459,3 +461,4 @@ function SignUpForm() {
 export default function SignUp() {
   return <SignUpForm />
 }
+
