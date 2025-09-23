@@ -71,6 +71,7 @@ export type SecurityEventType =
   | 'account_locked'
   | 'mfa_enabled'
   | 'failed_login'
+  | 'login_failure'
   | 'email_verification'
   | 'session_expired'
   | 'suspicious_activity'
