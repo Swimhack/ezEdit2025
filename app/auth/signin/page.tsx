@@ -99,7 +99,7 @@ function SignInForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        const errorMessage = data.error || data.message || 'Failed to sign in'
+        const errorMessage = data.message || data.error || 'Failed to sign in'
         setError(errorMessage)
         return
       }

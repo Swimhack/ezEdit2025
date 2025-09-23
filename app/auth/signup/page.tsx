@@ -132,7 +132,7 @@ function SignUpForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        const errorMessage = data.error || data.message || 'Failed to create account'
+        const errorMessage = data.message || data.error || 'Failed to create account'
         setError(errorMessage)
         return
       }
@@ -461,4 +461,5 @@ function SignUpForm() {
 export default function SignUp() {
   return <SignUpForm />
 }
+
 
