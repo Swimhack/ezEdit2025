@@ -17,24 +17,37 @@ export const dynamic = 'force-dynamic'
 // Rate limiting configuration
 const RATE_LIMIT_REQUESTS = 5
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
+
+
+async function safeSecurityLog(event: Parameters<typeof securityService.logEvent>[0]): Promise<void> {
+  try {
+    await securityService.logEvent(event)
+  } catch (error) {
+    console.error('Failed to log security event', error)
+  }
+}
 
 // Handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin') || undefined
+
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...getSecurityHeaders(),
+      ...getCorsHeaders(origin),
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
-      ...getSecurityHeaders()
+      'Access-Control-Max-Age': '86400'
     },
   })
 }
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
+  let corsHeaders = getCorsHeaders(request.headers.get('origin') || undefined)
 
   try {
     // Extract request metadata
@@ -42,14 +55,16 @@ export async function POST(request: NextRequest) {
     const metadata = {
       ipAddress: getClientIP(request, headersList),
       userAgent: headersList.get('user-agent') || undefined,
-      origin: headersList.get('origin') || undefined,
+      origin: headersList.get('origin') || request.headers.get('origin') || undefined,
       referer: headersList.get('referer') || undefined
     }
+
+    corsHeaders = getCorsHeaders(metadata.origin)
 
     // Apply rate limiting
     const rateLimitResult = checkRateLimit(metadata.ipAddress || 'unknown')
     if (!rateLimitResult.allowed) {
-      await securityService.logEvent({
+      await safeSecurityLog({
         eventType: 'suspicious_activity',
         severityLevel: 'medium',
         description: `Rate limit exceeded for signup attempt from ${metadata.ipAddress}`,
@@ -77,7 +92,8 @@ export async function POST(request: NextRequest) {
             'X-RateLimit-Limit': RATE_LIMIT_REQUESTS.toString(),
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': Math.ceil(rateLimitResult.resetAt / 1000).toString(),
-            ...getSecurityHeaders()
+            ...getSecurityHeaders(),
+            ...corsHeaders
           }
         }
       )
@@ -86,7 +102,7 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await parseRequestBody(request)
     if (!body.success) {
-      await securityService.logEvent({
+      await safeSecurityLog({
         eventType: 'login_attempt',
         severityLevel: 'low',
         description: `Invalid signup request: ${body.error}`,
@@ -106,7 +122,10 @@ export async function POST(request: NextRequest) {
         } satisfies AuthError,
         {
           status: 400,
-          headers: getSecurityHeaders()
+          headers: {
+            ...getSecurityHeaders(),
+            ...corsHeaders
+          }
         }
       )
     }
@@ -132,7 +151,8 @@ export async function POST(request: NextRequest) {
           status: statusCode,
           headers: {
             'X-Response-Time': `${Date.now() - startTime}ms`,
-            ...getSecurityHeaders()
+            ...getSecurityHeaders(),
+            ...corsHeaders
           }
         }
       )
@@ -196,7 +216,8 @@ export async function POST(request: NextRequest) {
           'X-RateLimit-Limit': RATE_LIMIT_REQUESTS.toString(),
           'X-RateLimit-Remaining': Math.max(0, RATE_LIMIT_REQUESTS - rateLimitResult.attempts - 1).toString(),
           'X-RateLimit-Reset': Math.ceil(rateLimitResult.resetAt / 1000).toString(),
-          ...getSecurityHeaders()
+          ...getSecurityHeaders(),
+          ...corsHeaders
         }
       }
     )
@@ -204,7 +225,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Log unexpected errors
     const errorHeaders = await headers()
-    await securityService.logEvent({
+    await safeSecurityLog({
       eventType: 'login_failure',
       severityLevel: 'critical',
       description: `Unexpected error in signup endpoint: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -227,7 +248,8 @@ export async function POST(request: NextRequest) {
         status: 500,
         headers: {
           'X-Response-Time': `${Date.now() - startTime}ms`,
-          ...getSecurityHeaders()
+          ...getSecurityHeaders(),
+          ...corsHeaders
         }
       }
     )
@@ -256,6 +278,15 @@ function getClientIP(request: NextRequest, headersList: Headers): string | undef
 
   // Fallback to request IP
   return request.ip || undefined
+}
+
+function getCorsHeaders(origin?: string): Record<string, string> {
+  const allowedOrigin = origin && origin !== 'null' ? origin : '*'
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Vary': 'Origin'
+  }
 }
 
 function getSecurityHeaders(): Record<string, string> {
@@ -398,3 +429,4 @@ function getErrorStatusCode(error: AuthError): number {
       return 400
   }
 }
+
