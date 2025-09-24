@@ -1,0 +1,422 @@
+openapi: 3.0.3
+info:
+  title: Clean Authentication API
+  description: Authentication API with proper Supabase integration and demo user removal
+  version: 1.0.0
+  contact:
+    name: EzEdit Support
+    url: https://ezedit.co/support
+
+servers:
+  - url: /api
+    description: API base path
+
+paths:
+  /auth/signin:
+    post:
+      summary: User authentication with clean error handling
+      description: Authenticate user with Supabase credentials only
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "password123"
+            examples:
+              valid_user:
+                summary: Valid user login
+                value:
+                  email: "user@example.com"
+                  password: "securepassword"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccess'
+              examples:
+                successful_login:
+                  summary: Successful user authentication
+                  value:
+                    user:
+                      id: "uuid-here"
+                      email: "user@example.com"
+                      role: "user"
+                      emailVerified: true
+                    session:
+                      accessToken: "jwt-token-here"
+                      refreshToken: "refresh-token-here"
+                      expiresAt: 1640995200000
+                    correlationId: "correlation-uuid"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                invalid_credentials:
+                  summary: Invalid email or password
+                  value:
+                    error: "Invalid email or password"
+                    errorCode: "INVALID_CREDENTIALS"
+                    category: "USER_ERROR"
+                    recoveryActions:
+                      - "Check your email and password"
+                      - "Use password reset if needed"
+                    correlationId: "correlation-uuid"
+                unverified_email:
+                  summary: Email not verified
+                  value:
+                    error: "Email address not verified"
+                    errorCode: "EMAIL_NOT_VERIFIED"
+                    category: "USER_ERROR"
+                    recoveryActions:
+                      - "Check your email for verification link"
+                      - "Request new verification email"
+                    correlationId: "correlation-uuid"
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+  /auth/signup:
+    post:
+      summary: User registration with proper validation
+      description: Register new user with email verification
+      operationId: signUp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "securepassword123"
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  example: "John Doe"
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupSuccess'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                weak_password:
+                  summary: Password too weak
+                  value:
+                    error: "Password does not meet requirements"
+                    errorCode: "WEAK_PASSWORD"
+                    category: "USER_ERROR"
+                    recoveryActions:
+                      - "Use at least 8 characters"
+                      - "Include letters and numbers"
+                    correlationId: "correlation-uuid"
+        '409':
+          description: Account already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                duplicate_email:
+                  summary: Email already registered
+                  value:
+                    error: "Account already exists"
+                    errorCode: "DUPLICATE_EMAIL"
+                    category: "USER_ERROR"
+                    recoveryActions:
+                      - "Try signing in instead"
+                      - "Use password reset if you forgot your password"
+                    correlationId: "correlation-uuid"
+
+  /auth/signout:
+    post:
+      summary: User logout and session cleanup
+      description: Invalidate user session and cleanup tokens
+      operationId: signOut
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+                  correlationId:
+                    type: string
+                    format: uuid
+        '401':
+          description: Invalid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+  /auth/me:
+    get:
+      summary: Get current user session
+      description: Validate session and return user information
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Valid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionValidation'
+        '401':
+          description: Invalid or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+  /auth/password/reset:
+    post:
+      summary: Request password reset
+      description: Send password reset email to user
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Reset email sent (always returns success for security)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "If an account exists, you will receive reset instructions"
+                  correlationId:
+                    type: string
+                    format: uuid
+
+components:
+  schemas:
+    AuthSuccess:
+      type: object
+      required:
+        - user
+        - session
+        - correlationId
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/Session'
+        correlationId:
+          type: string
+          format: uuid
+
+    SignupSuccess:
+      type: object
+      required:
+        - user
+        - message
+        - correlationId
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        message:
+          type: string
+          example: "Account created successfully. Please check your email to verify your account."
+        correlationId:
+          type: string
+          format: uuid
+
+    SessionValidation:
+      type: object
+      required:
+        - user
+        - session
+        - isValid
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/SessionInfo'
+        isValid:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - role
+        - emailVerified
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN, SUPER_ADMIN]
+        emailVerified:
+          type: boolean
+        isActive:
+          type: boolean
+          default: true
+        lastLoginAt:
+          type: string
+          format: date-time
+
+    Session:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresAt
+      properties:
+        accessToken:
+          type: string
+          description: Supabase JWT token
+        refreshToken:
+          type: string
+          description: Supabase refresh token
+        expiresAt:
+          type: integer
+          format: int64
+          description: Expiration timestamp (milliseconds)
+
+    SessionInfo:
+      type: object
+      required:
+        - id
+        - expiresAt
+        - isActive
+      properties:
+        id:
+          type: string
+          format: uuid
+        expiresAt:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+        deviceInfo:
+          type: string
+        lastAccessedAt:
+          type: string
+          format: date-time
+
+    AuthError:
+      type: object
+      required:
+        - error
+        - errorCode
+        - category
+        - correlationId
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        errorCode:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - INVALID_CREDENTIALS
+            - EMAIL_NOT_VERIFIED
+            - DUPLICATE_EMAIL
+            - WEAK_PASSWORD
+            - ACCOUNT_LOCKED
+            - RATE_LIMITED
+            - SYSTEM_ERROR
+            - EXTERNAL_ERROR
+        category:
+          type: string
+          enum: [USER_ERROR, SYSTEM_ERROR, EXTERNAL_ERROR]
+        recoveryActions:
+          type: array
+          items:
+            type: string
+          description: Suggested actions for user
+        retryable:
+          type: boolean
+          description: Whether operation can be retried
+        retryAfter:
+          type: integer
+          description: Suggested retry delay in seconds
+        correlationId:
+          type: string
+          format: uuid
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

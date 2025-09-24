@@ -1,0 +1,509 @@
+openapi: 3.0.3
+info:
+  title: Email Notification API
+  description: API for sending and managing email notifications using Resend
+  version: 1.0.0
+  contact:
+    name: EZEdit Development Team
+    email: dev@ezedit.co
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://ezeditapp.fly.dev/api
+    description: Production server
+
+paths:
+  /email/send:
+    post:
+      summary: Send a direct email
+      description: Send an email immediately without queuing
+      tags:
+        - Email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailRequest'
+      responses:
+        '200':
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEmailResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /email/status/{id}:
+    get:
+      summary: Get email delivery status
+      description: Check the delivery status of a sent email
+      tags:
+        - Email
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Email notification ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailStatusResponse'
+        '404':
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /email/test:
+    post:
+      summary: Preview email template
+      description: Test and preview an email template without sending
+      tags:
+        - Email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestEmailRequest'
+      responses:
+        '200':
+          description: Template preview generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestEmailResponse'
+        '400':
+          description: Invalid template or data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/trigger:
+    post:
+      summary: Trigger a notification event
+      description: Trigger a notification based on an event type
+      tags:
+        - Notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerNotificationRequest'
+      responses:
+        '202':
+          description: Notification queued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerNotificationResponse'
+        '400':
+          description: Invalid event or data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/preferences:
+    get:
+      summary: Get user notification preferences
+      description: Retrieve notification preferences for the authenticated user
+      tags:
+        - Notifications
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Preferences retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update notification preferences
+      description: Update notification preferences for the authenticated user
+      tags:
+        - Notifications
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePreferencesRequest'
+      responses:
+        '200':
+          description: Preferences updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesResponse'
+        '400':
+          description: Invalid preference data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/unsubscribe/{token}:
+    post:
+      summary: Unsubscribe from notifications
+      description: Unsubscribe using a unique token from email link
+      tags:
+        - Notifications
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: Unsubscribe token
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional unsubscribe reason
+                categories:
+                  type: array
+                  items:
+                    type: string
+                  description: Specific categories to unsubscribe from
+      responses:
+        '200':
+          description: Successfully unsubscribed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnsubscribeResponse'
+        '400':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /email/webhooks/resend:
+    post:
+      summary: Handle Resend webhook events
+      description: Endpoint for Resend to send delivery status updates
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendWebhookPayload'
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '400':
+          description: Invalid webhook data
+
+components:
+  schemas:
+    SendEmailRequest:
+      type: object
+      required:
+        - to
+        - subject
+        - templateId
+      properties:
+        to:
+          type: string
+          format: email
+          description: Recipient email address
+        subject:
+          type: string
+          description: Email subject line
+        templateId:
+          type: string
+          description: Email template identifier
+        templateData:
+          type: object
+          description: Variables for template rendering
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 3
+          default: 2
+          description: Delivery priority (1=high, 2=normal, 3=low)
+        scheduledFor:
+          type: string
+          format: date-time
+          description: Optional scheduled send time
+
+    SendEmailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Email notification ID
+        messageId:
+          type: string
+          description: Resend message ID
+        status:
+          type: string
+          enum: [queued, sent, failed]
+        queuedAt:
+          type: string
+          format: date-time
+        sentAt:
+          type: string
+          format: date-time
+
+    EmailStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [pending, queued, sending, sent, delivered, opened, clicked, failed, bounced]
+        recipientEmail:
+          type: string
+        subject:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        openedAt:
+          type: string
+          format: date-time
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailEvent'
+
+    EmailEvent:
+      type: object
+      properties:
+        type:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+
+    TestEmailRequest:
+      type: object
+      required:
+        - templateId
+        - templateData
+      properties:
+        templateId:
+          type: string
+        templateData:
+          type: object
+        to:
+          type: string
+          format: email
+          description: Optional test recipient
+
+    TestEmailResponse:
+      type: object
+      properties:
+        html:
+          type: string
+          description: Rendered HTML content
+        text:
+          type: string
+          description: Rendered plain text content
+        subject:
+          type: string
+          description: Rendered subject line
+
+    TriggerNotificationRequest:
+      type: object
+      required:
+        - event
+        - userId
+      properties:
+        event:
+          type: string
+          enum: [welcome, email_verification, password_reset, file_uploaded, security_alert]
+        userId:
+          type: string
+        data:
+          type: object
+          description: Event-specific data
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 3
+
+    TriggerNotificationResponse:
+      type: object
+      properties:
+        notificationId:
+          type: string
+        status:
+          type: string
+          enum: [queued, skipped, failed]
+        reason:
+          type: string
+          description: Reason if skipped or failed
+
+    NotificationPreferencesResponse:
+      type: object
+      properties:
+        emailEnabled:
+          type: boolean
+        categories:
+          type: object
+          properties:
+            transactional:
+              type: boolean
+            marketing:
+              type: boolean
+            alerts:
+              type: boolean
+            activity:
+              type: boolean
+        types:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              enabled:
+                type: boolean
+              frequency:
+                type: string
+                enum: [immediate, hourly, daily, weekly, never]
+        timezone:
+          type: string
+        locale:
+          type: string
+        unsubscribeToken:
+          type: string
+
+    UpdatePreferencesRequest:
+      type: object
+      properties:
+        emailEnabled:
+          type: boolean
+        categories:
+          type: object
+          properties:
+            marketing:
+              type: boolean
+            alerts:
+              type: boolean
+            activity:
+              type: boolean
+        types:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              enabled:
+                type: boolean
+              frequency:
+                type: string
+        timezone:
+          type: string
+        locale:
+          type: string
+
+    UnsubscribeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        unsubscribedFrom:
+          type: array
+          items:
+            type: string
+
+    ResendWebhookPayload:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [email.sent, email.delivered, email.opened, email.clicked, email.bounced, email.complained]
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          properties:
+            email_id:
+              type: string
+            from:
+              type: string
+            to:
+              type: array
+              items:
+                type: string
+            subject:
+              type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

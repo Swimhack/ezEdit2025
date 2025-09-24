@@ -1,0 +1,700 @@
+openapi: 3.0.3
+info:
+  title: Enhanced File Operations API
+  description: API for file content management with split screen editor and WYSIWYG support
+  version: 1.0.0
+  contact:
+    name: EZEdit Development Team
+    email: dev@ezedit.co
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://ezeditapp.fly.dev/api
+    description: Production server
+
+paths:
+  /files/content:
+    get:
+      summary: Get file content with metadata
+      description: Retrieve file content with processing metadata and caching information
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Full file path
+        - name: include_processed
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Include processed content for WYSIWYG display
+        - name: cache_control
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [fresh, cached, any]
+            default: any
+          description: Cache preference for content retrieval
+      responses:
+        '200':
+          description: File content retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileContentResponse'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: File format not supported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /files/preview:
+    post:
+      summary: Generate WYSIWYG preview
+      description: Process file content and generate WYSIWYG preview for supported formats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewRequest'
+      responses:
+        '200':
+          description: Preview generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResponse'
+        '400':
+          description: Invalid request or unsupported file type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Content too large for preview generation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /editor/state:
+    get:
+      summary: Get user editor state
+      description: Retrieve saved editor configuration and preferences
+      parameters:
+        - name: session_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Browser session identifier
+      responses:
+        '200':
+          description: Editor state retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EditorStateResponse'
+        '404':
+          description: No saved state found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Save editor state
+      description: Persist user editor configuration and preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditorStateRequest'
+      responses:
+        '200':
+          description: Editor state saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid state data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /files/types:
+    get:
+      summary: Get supported file types
+      description: Retrieve configuration for supported file types and their available view modes
+      responses:
+        '200':
+          description: File type configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileTypesResponse'
+
+  /files/validate:
+    post:
+      summary: Validate file for editor
+      description: Check if file can be safely loaded in editor with size and format validation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileValidationRequest'
+      responses:
+        '200':
+          description: File validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileValidationResponse'
+        '400':
+          description: Invalid file path or format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    FileContentResponse:
+      type: object
+      required:
+        - id
+        - path
+        - filename
+        - content
+        - encoding
+        - size
+        - hash
+        - mimeType
+        - language
+        - fileType
+        - isProcessed
+        - lastModified
+        - lastAccessed
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique file identifier
+        path:
+          type: string
+          description: Full file path
+        filename:
+          type: string
+          description: File name with extension
+        content:
+          type: string
+          description: Raw file content
+        encoding:
+          type: string
+          enum: [UTF-8, ASCII, UTF-16, BINARY, ISO-8859-1]
+          description: File encoding
+        size:
+          type: integer
+          minimum: 0
+          maximum: 10485760
+          description: File size in bytes
+        hash:
+          type: string
+          description: SHA-256 hash of content
+        mimeType:
+          type: string
+          description: MIME type
+        language:
+          type: string
+          description: Programming language for syntax highlighting
+        fileType:
+          type: string
+          enum: [CODE, MARKUP, STYLESHEET, DATA, DOCUMENT, CONFIG, BINARY, UNKNOWN]
+          description: Categorized file type
+        isProcessed:
+          type: boolean
+          description: Whether content has been processed for display
+        processedContent:
+          type: string
+          description: Processed content for WYSIWYG display
+        syntaxHighlighted:
+          type: string
+          description: Pre-processed syntax highlighted content
+        lastModified:
+          type: string
+          format: date-time
+          description: File last modification time
+        lastAccessed:
+          type: string
+          format: date-time
+          description: Last time file was accessed
+        cacheExpiry:
+          type: string
+          format: date-time
+          description: When cached content expires
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PreviewRequest:
+      type: object
+      required:
+        - content
+        - fileType
+        - language
+      properties:
+        content:
+          type: string
+          description: Raw file content to process
+        fileType:
+          type: string
+          enum: [CODE, MARKUP, STYLESHEET, DATA, DOCUMENT]
+          description: File type for processing
+        language:
+          type: string
+          description: Programming language
+        sanitizationLevel:
+          type: string
+          enum: [NONE, BASIC, STRICT, PARANOID]
+          default: BASIC
+          description: Required sanitization level
+
+    PreviewResponse:
+      type: object
+      required:
+        - processedContent
+        - sanitized
+        - processingTime
+      properties:
+        processedContent:
+          type: string
+          description: Processed content for WYSIWYG display
+        sanitized:
+          type: boolean
+          description: Whether content was sanitized
+        processingTime:
+          type: integer
+          description: Processing time in milliseconds
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Processing warnings
+
+    EditorStateResponse:
+      type: object
+      required:
+        - id
+        - userId
+        - sessionId
+        - currentMode
+        - splitRatio
+        - leftPaneMode
+        - rightPaneMode
+        - fontSize
+        - theme
+        - wordWrap
+        - lineNumbers
+        - minimap
+        - sidebarCollapsed
+        - panelHeight
+        - windowWidth
+        - windowHeight
+        - performanceMode
+        - maxFileSize
+        - syntaxHighlighting
+        - lastSaved
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique state identifier
+        userId:
+          type: string
+          description: Associated user ID
+        sessionId:
+          type: string
+          description: Browser session identifier
+        activeFileId:
+          type: string
+          description: Currently open file
+        openFiles:
+          type: array
+          items:
+            type: string
+          description: List of open file IDs
+        currentMode:
+          type: string
+          enum: [CODE, WYSIWYG, SPLIT]
+          description: Current view mode
+        splitRatio:
+          type: number
+          minimum: 0.1
+          maximum: 0.9
+          description: Split pane ratio
+        leftPaneMode:
+          type: string
+          enum: [CODE, WYSIWYG]
+          description: Left pane view mode
+        rightPaneMode:
+          type: string
+          enum: [CODE, WYSIWYG]
+          description: Right pane view mode
+        fontSize:
+          type: integer
+          minimum: 8
+          maximum: 72
+          description: Editor font size
+        theme:
+          type: string
+          enum: [LIGHT, DARK, HIGH_CONTRAST, AUTO]
+          description: Editor theme
+        wordWrap:
+          type: boolean
+          description: Enable word wrapping
+        lineNumbers:
+          type: boolean
+          description: Show line numbers
+        minimap:
+          type: boolean
+          description: Show minimap
+        sidebarCollapsed:
+          type: boolean
+          description: File tree sidebar state
+        panelHeight:
+          type: integer
+          description: Bottom panel height
+        windowWidth:
+          type: integer
+          description: Browser window width
+        windowHeight:
+          type: integer
+          description: Browser window height
+        performanceMode:
+          type: string
+          enum: [AUTO, ENHANCED, REDUCED]
+          description: Performance mode
+        maxFileSize:
+          type: integer
+          minimum: 1048576
+          maximum: 10485760
+          description: Max file size preference
+        syntaxHighlighting:
+          type: boolean
+          description: Enable syntax highlighting
+        lastSaved:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EditorStateRequest:
+      type: object
+      required:
+        - sessionId
+        - currentMode
+      properties:
+        sessionId:
+          type: string
+          description: Browser session identifier
+        activeFileId:
+          type: string
+          description: Currently open file
+        openFiles:
+          type: array
+          items:
+            type: string
+          description: List of open file IDs
+        currentMode:
+          type: string
+          enum: [CODE, WYSIWYG, SPLIT]
+          description: Current view mode
+        splitRatio:
+          type: number
+          minimum: 0.1
+          maximum: 0.9
+          description: Split pane ratio
+        leftPaneMode:
+          type: string
+          enum: [CODE, WYSIWYG]
+          description: Left pane view mode
+        rightPaneMode:
+          type: string
+          enum: [CODE, WYSIWYG]
+          description: Right pane view mode
+        fontSize:
+          type: integer
+          minimum: 8
+          maximum: 72
+          description: Editor font size
+        theme:
+          type: string
+          enum: [LIGHT, DARK, HIGH_CONTRAST, AUTO]
+          description: Editor theme
+        wordWrap:
+          type: boolean
+          description: Enable word wrapping
+        lineNumbers:
+          type: boolean
+          description: Show line numbers
+        minimap:
+          type: boolean
+          description: Show minimap
+        sidebarCollapsed:
+          type: boolean
+          description: File tree sidebar state
+        panelHeight:
+          type: integer
+          description: Bottom panel height
+        windowWidth:
+          type: integer
+          description: Browser window width
+        windowHeight:
+          type: integer
+          description: Browser window height
+        performanceMode:
+          type: string
+          enum: [AUTO, ENHANCED, REDUCED]
+          description: Performance mode
+        maxFileSize:
+          type: integer
+          minimum: 1048576
+          maximum: 10485760
+          description: Max file size preference
+        syntaxHighlighting:
+          type: boolean
+          description: Enable syntax highlighting
+
+    FileTypesResponse:
+      type: object
+      required:
+        - fileTypes
+      properties:
+        fileTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileTypeConfiguration'
+
+    FileTypeConfiguration:
+      type: object
+      required:
+        - id
+        - extension
+        - mimeType
+        - displayName
+        - icon
+        - category
+        - supportedModes
+        - defaultMode
+        - syntaxHighlighting
+        - wysiwyggPreview
+        - sanitization
+        - maxFileSize
+        - language
+        - languageFeatures
+        - isEnabled
+        - priority
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique configuration ID
+        extension:
+          type: string
+          description: File extension
+        mimeType:
+          type: string
+          description: Associated MIME type
+        displayName:
+          type: string
+          description: Human-readable name
+        icon:
+          type: string
+          description: Icon identifier or path
+        category:
+          type: string
+          enum: [CODE, DOCUMENT, MARKUP, DATA, CONFIG, STYLE, MEDIA, ARCHIVE]
+          description: File category
+        supportedModes:
+          type: array
+          items:
+            type: string
+            enum: [CODE, WYSIWYG, SPLIT]
+          description: Available view modes
+        defaultMode:
+          type: string
+          enum: [CODE, WYSIWYG, SPLIT]
+          description: Default view mode
+        syntaxHighlighting:
+          type: boolean
+          description: Supports syntax highlighting
+        wysiwyggPreview:
+          type: boolean
+          description: Supports WYSIWYG preview
+        preprocessor:
+          type: string
+          description: Preprocessor for content
+        sanitization:
+          type: string
+          enum: [NONE, BASIC, STRICT, PARANOID]
+          description: Required sanitization level
+        maxFileSize:
+          type: integer
+          description: Max size for this file type
+        language:
+          type: string
+          description: Programming language identifier
+        languageFeatures:
+          type: array
+          items:
+            type: string
+            enum: [SYNTAX_HIGHLIGHTING, AUTO_COMPLETION, ERROR_CHECKING, CODE_FOLDING, BRACKET_MATCHING, INDENTATION]
+          description: Supported language features
+        isEnabled:
+          type: boolean
+          description: Whether this type is enabled
+        priority:
+          type: integer
+          description: Display priority
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FileValidationRequest:
+      type: object
+      required:
+        - path
+      properties:
+        path:
+          type: string
+          description: File path to validate
+        maxSize:
+          type: integer
+          description: Maximum allowed file size
+
+    FileValidationResponse:
+      type: object
+      required:
+        - valid
+        - fileType
+        - size
+        - supportedModes
+      properties:
+        valid:
+          type: boolean
+          description: Whether file can be loaded
+        fileType:
+          type: string
+          description: Detected file type
+        size:
+          type: integer
+          description: File size in bytes
+        encoding:
+          type: string
+          description: Detected encoding
+        supportedModes:
+          type: array
+          items:
+            type: string
+            enum: [CODE, WYSIWYG, SPLIT]
+          description: Available view modes for this file
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Validation warnings
+        errors:
+          type: array
+          items:
+            type: string
+          description: Validation errors
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: string
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        requestId:
+          type: string
+          description: Request identifier for tracking
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Operation success status
+        message:
+          type: string
+          description: Success message
+        timestamp:
+          type: string
+          format: date-time
+          description: Response timestamp
+        data:
+          type: object
+          description: Additional response data
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

@@ -1,4 +1,4 @@
-﻿# Contract Comparison Tool - Project Instructions
+# Contract Comparison Tool - Project Instructions
 
 ## Project Overview
 This is a Contract Comparison Tool built with Next.js 14, TypeScript, Tailwind CSS, and Supabase authentication. The application allows users to upload two contracts, verify if they are identical, detect changes, and provide AI-powered analysis with implications.
@@ -47,7 +47,7 @@ This is a Contract Comparison Tool built with Next.js 14, TypeScript, Tailwind C
 ## Supabase Configuration
 
 ### Database Connection Details
-- **URL:** https://sctzykgcfkhadowyqcrj.supabase.co
+- **URL:** https://sctsykgcfkhadowygcrj.supabase.co
 - **Anon Key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1OTE5MDUsImV4cCI6MjA2NzE2NzkwNX0.8cpoEx0MXO0kkTqDrpkbYRhXQHVQ0bmjHA0xI2rUWqY`
 - **Service Role Key:** `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHN5a2djZmtoYWRvd3lnY3JqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTU5MTkwNSwiZXhwIjoyMDY3MTY3OTA1fQ.LZO9ckLrpeSFGf1Av0v9bFqpSP8dcQllrFJ-yHGAZdo`
 
@@ -249,10 +249,103 @@ The application uses a multi-agent orchestration system with specialized agents:
 - `POST /api/webhooks/resend` - Resend delivery webhooks
 - `POST /api/webhooks/twilio` - Twilio SMS status webhooks
 
-## Recent Changes (Last 3 Updates)
-1. **2025-09-16**: Added comprehensive logging, notifications, and email system (Feature 003)
-2. **2025-09-16**: Added fluid sign-in with email validation and dashboard state persistence (Feature 002)
-3. **2025-01-15**: Added authentication and website connection system specification (Feature 001)
+## Enhanced File Display & Split Screen Editor System (NEW)
+**Status**: In Development (Feature 014)
+**Branch**: `014-please-fix-the`
+
+### File Display Enhancement Features
+- **Fixed Middle Pane Display**: Resolves current file display issues with proper content loading
+- **Split Screen Editor**: Side-by-side WYSIWYG and code view with resizable panes
+- **Multi-Format Support**: HTML, Markdown, CSS, JSON with appropriate preview modes
+- **Performance Optimization**: <200ms file load, 60fps editing, 5MB file size limits
+- **User Preferences**: Per-file-type view mode preferences with persistence
+
+### Technical Implementation (Feature 014)
+- **Editor Core**: Monaco Editor with custom WYSIWYG preview components
+- **File Processing**: Client-side content processing with server-side caching
+- **State Management**: React Context + useReducer for editor state persistence
+- **Split Screen**: CSS Grid with resizable panes and synchronized content
+- **Content Security**: DOMPurify sanitization and style isolation
+
+### Data Model Extensions (Feature 014)
+- `file_content`: Enhanced file entity with caching and processing metadata
+- `editor_state`: User editor configuration and session state management
+- `file_type_configuration`: Supported file types and view mode definitions
+- `user_preferences`: Personalized editor settings and accessibility options
+
+### API Contracts (Feature 014)
+- **File Operations API**: `/api/files/content` - Enhanced file content with metadata
+- **Preview API**: `/api/files/preview` - WYSIWYG content processing
+- **Editor State API**: `/api/editor/state` - User preference management
+- **File Types API**: `/api/files/types` - Supported format configuration
+- **Validation API**: `/api/files/validate` - File safety and size validation
+
+### View Mode Architecture
+- **CODE Mode**: Monaco Editor with syntax highlighting and language features
+- **WYSIWYG Mode**: Live preview with sanitized HTML rendering and style isolation
+- **SPLIT Mode**: Resizable dual-pane with independent mode control per pane
+- **Performance Management**: Progressive enhancement with graceful degradation
+
+### File Type Support Matrix
+- **HTML Files**: Full WYSIWYG preview with iframe/shadow DOM rendering
+- **Markdown Files**: Parsed markdown with live formatting preview
+- **JavaScript/TypeScript**: Code-only with advanced syntax highlighting
+- **CSS Files**: Code view with color swatches and formatted rules preview
+- **JSON Files**: Code and tree view with validation and collapsible sections
+
+## Email Notification System with Resend API (NEW)
+**Status**: In Development (Feature 015)
+**Branch**: `015-enable-email-notification`
+
+### Core Email Features
+- **Resend API Integration**: Production-ready email service with `re_37YYP2iE_KbLqkdskcjngf9XqFMJZv1xG` API key
+- **Template System**: React Email components for all notification types
+- **Queue Processing**: Bull queue with Redis for reliable delivery
+- **User Preferences**: Granular notification control per category and type
+- **Delivery Tracking**: Webhook-based status updates with audit logging
+
+### Notification Types
+- **Transactional**: Registration, email verification, password reset (Priority 1)
+- **System Alerts**: Security events, errors, downtime notifications (Priority 1)
+- **Activity**: File uploads, edits, collaboration invites (Priority 2, opt-in)
+- **Digests**: Weekly summaries, monthly reports (Priority 3, batched)
+
+### Technical Implementation (Feature 015)
+- **Email Service**: `lib/email/resend.ts` - Resend API client wrapper
+- **Templates**: `lib/email/templates/` - React Email TSX components
+- **Queue Processor**: `lib/email/queue.ts` - Priority-based processing
+- **Rate Limiting**: 10 emails/user/hour, 100/hour total (Resend limit)
+- **Retry Logic**: Exponential backoff with 3 max attempts
+
+### Data Model (Feature 015)
+- `EmailNotification`: Core notification entity with status tracking
+- `NotificationTemplate`: React Email template definitions
+- `NotificationPreference`: User-specific settings and unsubscribe tokens
+- `EmailDeliveryLog`: Comprehensive audit trail for compliance
+- `EmailQueue`: Reliable queue processing with priority levels
+
+### API Endpoints (Feature 015)
+- `POST /api/email/send` - Direct email sending with templates
+- `POST /api/notifications/trigger` - Event-based notification dispatch
+- `GET/PUT /api/notifications/preferences` - User preference management
+- `GET /api/email/status/{id}` - Delivery status tracking
+- `POST /api/email/test` - Template preview and testing
+- `POST /api/notifications/unsubscribe/{token}` - One-click unsubscribe
+
+### Performance & Reliability
+- **Send Latency**: <2s average for priority 1 emails
+- **Delivery Rate**: >98% target with bounce handling
+- **Queue Processing**: <30s for immediate priority
+- **Template Rendering**: <100ms with caching
+- **Retry Strategy**: 5min, 15min, 1hr backoff intervals
+
+## Recent Changes (Last 5 Updates)
+1. **2025-09-20**: Added email notification system with Resend API (Feature 015)
+2. **2025-09-20**: Added enhanced file display and split screen editor system (Feature 014)
+3. **2025-09-16**: Added comprehensive logging, notifications, and email system (Feature 003)
+4. **2025-09-16**: Added fluid sign-in with email validation and dashboard state persistence (Feature 002)
+5. **2025-01-15**: Added authentication and website connection system specification (Feature 001)
+
 
 
 

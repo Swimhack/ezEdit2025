@@ -1,0 +1,454 @@
+openapi: 3.0.3
+info:
+  title: Enhanced Authentication API
+  description: Authentication API with migration support and improved error handling
+  version: 1.0.0
+  contact:
+    name: EzEdit Support
+    url: https://ezedit.co/support
+
+servers:
+  - url: /api
+    description: API base path
+
+paths:
+  /auth/signin:
+    post:
+      summary: User authentication with migration support
+      description: Authenticate user with automatic migration from demo to Supabase
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+            examples:
+              demo_user:
+                summary: Demo user login
+                value:
+                  email: "demo@example.com"
+                  password: "demo123"
+              real_user:
+                summary: Real user login
+                value:
+                  email: "user@example.com"
+                  password: "securepassword"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccess'
+              examples:
+                migrated_user:
+                  summary: Demo user migrated to Supabase
+                  value:
+                    user:
+                      id: "uuid-here"
+                      email: "demo@example.com"
+                      role: "user"
+                      migrationStatus: "COMPLETED"
+                    session:
+                      accessToken: "jwt-token-here"
+                      refreshToken: "refresh-token-here"
+                      expiresAt: 1640995200000
+                    migration:
+                      wasMigrated: true
+                      fromProvider: "DEMO"
+                      toProvider: "SUPABASE"
+                    correlationId: "correlation-uuid"
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                invalid_credentials:
+                  summary: Invalid email or password
+                  value:
+                    error: "Invalid email or password"
+                    errorCode: "INVALID_CREDENTIALS"
+                    category: "USER_ERROR"
+                    recoveryActions:
+                      - "Check your email and password"
+                      - "Use password reset if needed"
+                    correlationId: "correlation-uuid"
+                migration_failed:
+                  summary: Migration failed
+                  value:
+                    error: "Account migration failed"
+                    errorCode: "MIGRATION_FAILED"
+                    category: "SYSTEM_ERROR"
+                    recoveryActions:
+                      - "Try again in a few minutes"
+                      - "Contact support if problem persists"
+                    correlationId: "correlation-uuid"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+  /auth/signup:
+    post:
+      summary: User registration with conflict resolution
+      description: Register new user with handling for existing demo accounts
+      operationId: signUp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "securepassword123"
+                name:
+                  type: string
+                  minLength: 1
+                  example: "John Doe"
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupSuccess'
+        '409':
+          description: Account already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+              examples:
+                demo_account_exists:
+                  summary: Demo account exists for email
+                  value:
+                    error: "Account exists as demo user"
+                    errorCode: "DEMO_ACCOUNT_EXISTS"
+                    category: "USER_ERROR"
+                    recoveryActions:
+                      - "Try signing in instead"
+                      - "Your account will be automatically upgraded"
+                    correlationId: "correlation-uuid"
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+  /auth/migrate:
+    post:
+      summary: Manual user account migration
+      description: Manually trigger migration from demo to Supabase account
+      operationId: migrateAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Demo account email
+                password:
+                  type: string
+                  description: Demo account password
+                newPassword:
+                  type: string
+                  minLength: 6
+                  description: New password for Supabase account (optional)
+      responses:
+        '200':
+          description: Migration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationSuccess'
+        '404':
+          description: Demo account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '409':
+          description: Migration conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+  /auth/session/validate:
+    post:
+      summary: Validate authentication session
+      description: Validate session token and return user information
+      operationId: validateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Session token (demo or Supabase format)
+      responses:
+        '200':
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionValidation'
+        '401':
+          description: Session invalid or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+
+components:
+  schemas:
+    AuthSuccess:
+      type: object
+      required:
+        - user
+        - session
+        - correlationId
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/Session'
+        migration:
+          $ref: '#/components/schemas/MigrationInfo'
+        correlationId:
+          type: string
+          format: uuid
+
+    SignupSuccess:
+      type: object
+      required:
+        - user
+        - message
+        - correlationId
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        message:
+          type: string
+          example: "Account created successfully"
+        correlationId:
+          type: string
+          format: uuid
+
+    MigrationSuccess:
+      type: object
+      required:
+        - user
+        - migration
+        - correlationId
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        migration:
+          $ref: '#/components/schemas/MigrationInfo'
+        correlationId:
+          type: string
+          format: uuid
+
+    SessionValidation:
+      type: object
+      required:
+        - user
+        - session
+        - isValid
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/SessionInfo'
+        isValid:
+          type: boolean
+        correlationId:
+          type: string
+          format: uuid
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [USER, ADMIN, SUPER_ADMIN]
+        authProvider:
+          type: string
+          enum: [DEMO, SUPABASE, GOOGLE, GITHUB, MICROSOFT]
+        migrationStatus:
+          type: string
+          enum: [PENDING, IN_PROGRESS, COMPLETED, FAILED, CANCELLED]
+        isEmailVerified:
+          type: boolean
+        lastLoginAt:
+          type: string
+          format: date-time
+
+    Session:
+      type: object
+      required:
+        - accessToken
+        - expiresAt
+      properties:
+        accessToken:
+          type: string
+          description: JWT token or demo token
+        refreshToken:
+          type: string
+          description: Refresh token (Supabase only)
+        expiresAt:
+          type: integer
+          format: int64
+          description: Expiration timestamp (milliseconds)
+        sessionType:
+          type: string
+          enum: [DEMO, SUPABASE, HYBRID]
+
+    SessionInfo:
+      type: object
+      required:
+        - id
+        - sessionType
+        - expiresAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionType:
+          type: string
+          enum: [DEMO, SUPABASE, HYBRID]
+        expiresAt:
+          type: string
+          format: date-time
+        deviceInfo:
+          type: string
+        ipAddress:
+          type: string
+        lastAccessedAt:
+          type: string
+          format: date-time
+
+    MigrationInfo:
+      type: object
+      properties:
+        wasMigrated:
+          type: boolean
+        fromProvider:
+          type: string
+          enum: [DEMO, SUPABASE, GOOGLE, GITHUB, MICROSOFT]
+        toProvider:
+          type: string
+          enum: [DEMO, SUPABASE, GOOGLE, GITHUB, MICROSOFT]
+        migratedAt:
+          type: string
+          format: date-time
+        migrationTrigger:
+          type: string
+          enum: [LOGIN_ATTEMPT, MANUAL, BATCH, ADMIN, SYSTEM]
+
+    AuthError:
+      type: object
+      required:
+        - error
+        - errorCode
+        - category
+        - correlationId
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        errorCode:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - INVALID_CREDENTIALS
+            - MIGRATION_FAILED
+            - SESSION_EXPIRED
+            - ACCOUNT_LOCKED
+            - EMAIL_NOT_VERIFIED
+            - PROVIDER_ERROR
+            - RATE_LIMITED
+            - SYSTEM_ERROR
+            - DEMO_ACCOUNT_EXISTS
+            - MIGRATION_CONFLICT
+        category:
+          type: string
+          enum: [USER_ERROR, SYSTEM_ERROR, CONFIGURATION_ERROR, EXTERNAL_ERROR]
+        recoveryActions:
+          type: array
+          items:
+            type: string
+          description: Suggested actions for user
+        retryable:
+          type: boolean
+          description: Whether operation can be retried
+        retryAfter:
+          type: integer
+          description: Suggested retry delay in seconds
+        correlationId:
+          type: string
+          format: uuid
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

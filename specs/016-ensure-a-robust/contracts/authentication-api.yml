@@ -1,0 +1,528 @@
+openapi: 3.0.3
+info:
+  title: Enterprise Authentication API
+  description: Robust authentication system with Supabase integration for ezEdit platform
+  version: 1.0.0
+  contact:
+    name: ezEdit Development Team
+    url: https://github.com/Swimhack/ezEdit2025
+
+servers:
+  - url: https://localhost:3000/api
+    description: Development server
+  - url: https://ezedit.fly.dev/api
+    description: Production server
+
+paths:
+  /auth/signup:
+    post:
+      summary: Create new user account
+      description: Register a new user with email and password validation
+      operationId: signupUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                  example: "user@example.com"
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 128
+                  pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]"
+                  example: "SecurePass123!"
+                confirmPassword:
+                  type: string
+                  example: "SecurePass123!"
+                acceptTerms:
+                  type: boolean
+                  example: true
+      responses:
+        '201':
+          description: User account created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Account created successfully. Please check your email for verification."
+                  user:
+                    $ref: '#/components/schemas/User'
+                  requiresVerification:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidEmail:
+                  value:
+                    error: "INVALID_EMAIL"
+                    message: "Please provide a valid email address"
+                    details: { field: "email" }
+                weakPassword:
+                  value:
+                    error: "WEAK_PASSWORD"
+                    message: "Password must contain at least 8 characters with uppercase, lowercase, number, and special character"
+                    details: { field: "password" }
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "EMAIL_EXISTS"
+                message: "An account with this email already exists"
+                details: { field: "email" }
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "RATE_LIMIT_EXCEEDED"
+                message: "Too many signup attempts. Please try again later."
+                details: { retryAfter: 300 }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "INTERNAL_ERROR"
+                message: "An unexpected error occurred. Please try again."
+
+  /auth/signin:
+    post:
+      summary: Authenticate user
+      description: Authenticate user with email and password
+      operationId: signinUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "SecurePass123!"
+                rememberMe:
+                  type: boolean
+                  example: false
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Login successful"
+                  user:
+                    $ref: '#/components/schemas/User'
+                  session:
+                    $ref: '#/components/schemas/Session'
+                  requiresMfa:
+                    type: boolean
+                    example: false
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidCredentials:
+                  value:
+                    error: "INVALID_CREDENTIALS"
+                    message: "Invalid email or password"
+                    details: { attemptsRemaining: 4 }
+                accountLocked:
+                  value:
+                    error: "ACCOUNT_LOCKED"
+                    message: "Account temporarily locked due to multiple failed attempts"
+                    details: { lockedUntil: "2025-09-22T15:30:00Z" }
+        '403':
+          description: Account not verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "EMAIL_NOT_VERIFIED"
+                message: "Please verify your email address before signing in"
+                details: { canResendVerification: true }
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/signout:
+    post:
+      summary: Sign out user
+      description: Terminate user session and invalidate tokens
+      operationId: signoutUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sign out successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Signed out successfully"
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/verify-email:
+    post:
+      summary: Verify email address
+      description: Verify user email with token from verification email
+      operationId: verifyEmail
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Email verified successfully"
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/resend-verification:
+    post:
+      summary: Resend verification email
+      description: Send new verification email to user
+      operationId: resendVerification
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Verification email sent"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/reset-password:
+    post:
+      summary: Request password reset
+      description: Send password reset email to user
+      operationId: requestPasswordReset
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        '200':
+          description: Password reset email sent (if email exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "If an account with that email exists, a password reset link has been sent"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/reset-password/confirm:
+    post:
+      summary: Confirm password reset
+      description: Reset password with token from reset email
+      operationId: confirmPasswordReset
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - password
+                - confirmPassword
+              properties:
+                token:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                password:
+                  type: string
+                  minLength: 8
+                  example: "NewSecurePass123!"
+                confirmPassword:
+                  type: string
+                  example: "NewSecurePass123!"
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Password reset successfully"
+        '400':
+          description: Invalid token or passwords don't match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/session:
+    get:
+      summary: Get current session
+      description: Retrieve current user session information
+      operationId: getCurrentSession
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Session information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  session:
+                    $ref: '#/components/schemas/Session'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        verificationStatus:
+          type: string
+          enum: [unverified, verified, pending]
+          example: "verified"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-09-22T10:30:00Z"
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: "2025-09-22T14:15:00Z"
+        mfaEnabled:
+          type: boolean
+          example: false
+      required:
+        - id
+        - email
+        - verificationStatus
+        - createdAt
+        - mfaEnabled
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "456e7890-e89b-12d3-a456-426614174000"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-09-23T10:30:00Z"
+        deviceInfo:
+          type: object
+          properties:
+            browser:
+              type: string
+              example: "Chrome"
+            os:
+              type: string
+              example: "Windows 11"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-09-22T10:30:00Z"
+        lastActivityAt:
+          type: string
+          format: date-time
+          example: "2025-09-22T14:15:00Z"
+      required:
+        - id
+        - expiresAt
+        - createdAt
+        - lastActivityAt
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          example: "Invalid input provided"
+        details:
+          type: object
+          additionalProperties: true
+          example: { field: "email" }
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-09-22T10:30:00Z"
+        correlationId:
+          type: string
+          format: uuid
+          example: "789e0123-e89b-12d3-a456-426614174000"
+      required:
+        - error
+        - message
+        - timestamp
+        - correlationId

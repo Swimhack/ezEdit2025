@@ -24,7 +24,7 @@
 5. Number tasks sequentially (T001, T002...)
 6. Generate dependency graph ✓
 7. Validate task completeness ✓
-8. Return: SUCCESS (30 tasks ready for execution)
+8. Return: SUCCESS (36 tasks ready for execution)
 ```
 
 ## Format: `[ID] [P?] Description`
@@ -38,9 +38,9 @@
 
 ## Phase 3.1: Setup & Dependencies
 
-- [ ] T001 [P] Install enhanced logging dependencies (pino, pino-pretty, compression libraries) in ezedit/package.json
-- [ ] T002 [P] Create enhanced logging configuration types in ezedit/lib/logging/types.ts
-- [ ] T003 [P] Set up database migration for logging tables in ezedit/supabase/migrations/002_enhanced_logging.sql
+- [ ] T001 [P] Install enhanced logging dependencies (pino-pretty@10.3.1, zlib, lz-string@1.5.0) in ezedit/package.json
+- [ ] T002 [P] Create logging type definitions in ezedit/lib/logging/types.ts (LogLevel, LogCategory, LogSource, FTPOperation, EditorOperation enums)
+- [ ] T003 [P] Set up database migration for enhanced logging tables in ezedit/supabase/migrations/002_enhanced_logging.sql
 
 ## Phase 3.2: Tests First (TDD) ⚠️ MUST COMPLETE BEFORE 3.3
 **CRITICAL: These tests MUST be written and MUST FAIL before ANY implementation**
@@ -48,150 +48,134 @@
 ### Contract Tests (API Endpoints)
 - [ ] T004 [P] Contract test GET /api/logs with advanced filtering in ezedit/tests/contract/logs-get.test.ts
 - [ ] T005 [P] Contract test GET /api/logs/stream (SSE) in ezedit/tests/contract/logs-stream.test.ts
-- [ ] T006 [P] Contract test POST /api/logs/export in ezedit/tests/contract/logs-export.test.ts
-- [ ] T007 [P] Contract test GET /api/logs/stats in ezedit/tests/contract/logs-stats.test.ts
+- [ ] T006 [P] Contract test POST /api/logs/export with format options in ezedit/tests/contract/logs-export.test.ts
+- [ ] T007 [P] Contract test DELETE /api/logs/{id} with authorization in ezedit/tests/contract/logs-delete.test.ts
 
-### Integration Tests (Cross-Component)
-- [ ] T008 [P] Integration test FTP operation logging workflow in ezedit/tests/integration/ftp-logging.test.ts
-- [ ] T009 [P] Integration test editor operation logging workflow in ezedit/tests/integration/editor-logging.test.ts
-- [ ] T010 [P] Integration test correlation ID tracking across components in ezedit/tests/integration/correlation-tracking.test.ts
-- [ ] T011 [P] Integration test log tier migration and cleanup in ezedit/tests/integration/log-lifecycle.test.ts
+### Integration Tests (User Scenarios)
+- [ ] T008 [P] Integration test for Scenario 1: FTP connection troubleshooting workflow in ezedit/tests/integration/ftp-connection-troubleshooting.test.ts
+- [ ] T009 [P] Integration test for Scenario 2: FTP file operations logging in ezedit/tests/integration/ftp-file-operations.test.ts
+- [ ] T010 [P] Integration test for Scenario 3: Editor operation troubleshooting in ezedit/tests/integration/editor-operations.test.ts
+- [ ] T011 [P] Integration test for Scenario 4: Real-time log streaming in ezedit/tests/integration/log-streaming.test.ts
+- [ ] T012 [P] Integration test for Scenario 5: Advanced filtering and search in ezedit/tests/integration/log-filtering.test.ts
+- [ ] T013 [P] Integration test for Scenario 6: Log export and data recovery in ezedit/tests/integration/log-export.test.ts
 
-## Phase 3.3: Core Implementation (ONLY after tests are failing)
+## Phase 3.3: Core Implementation (Data Models & Services)
 
-### Data Models & Types
-- [ ] T012 [P] Enhanced ApplicationLog interface in ezedit/lib/logging/models/application-log.ts
-- [ ] T013 [P] FTPOperationLog specialized model in ezedit/lib/logging/models/ftp-operation-log.ts
-- [ ] T014 [P] EditorOperationLog specialized model in ezedit/lib/logging/models/editor-operation-log.ts
-- [ ] T015 [P] ErrorEvent model with categorization in ezedit/lib/logging/models/error-event.ts
-- [ ] T016 [P] PerformanceMetrics model in ezedit/lib/logging/models/performance-metrics.ts
+### Data Model Implementation
+- [ ] T014 Create ApplicationLog entity and database schema in ezedit/lib/logging/models/ApplicationLog.ts
+- [ ] T015 Create FTPOperationLog entity extending ApplicationLog in ezedit/lib/logging/models/FTPOperationLog.ts
+- [ ] T016 Create EditorOperationLog entity extending ApplicationLog in ezedit/lib/logging/models/EditorOperationLog.ts
+- [ ] T017 Create ErrorEvent entity with error categorization in ezedit/lib/logging/models/ErrorEvent.ts
+- [ ] T018 Create PerformanceMetrics entity for quantitative measurements in ezedit/lib/logging/models/PerformanceMetrics.ts
 
-### Core Logging Services
-- [ ] T017 Enhanced Logger class with FTP/Editor context in ezedit/lib/logging/enhanced-logger.ts
-- [ ] T018 [P] Data sanitization service for sensitive information in ezedit/lib/logging/sanitizer.ts
-- [ ] T019 [P] Correlation ID manager for operation tracking in ezedit/lib/logging/correlation-manager.ts
-- [ ] T020 Tiered storage manager (hot/warm/cold) in ezedit/lib/logging/storage-manager.ts
+### Core Logging Service
+- [ ] T019 Enhance existing logger service with tiered storage support in ezedit/lib/logging/logger.ts
+- [ ] T020 Create log sanitization service for credential redaction in ezedit/lib/logging/sanitizer.ts
+- [ ] T021 Implement correlation ID tracking service in ezedit/lib/logging/correlation.ts
+- [ ] T022 Create log storage tier management service in ezedit/lib/logging/storage-tiers.ts
+- [ ] T023 Implement PostgreSQL full-text search indexing in ezedit/lib/logging/search-indexer.ts
 
-### API Endpoints
-- [ ] T021 Enhanced GET /api/logs with advanced filtering in ezedit/app/api/logs/route.ts
-- [ ] T022 GET /api/logs/stream SSE endpoint in ezedit/app/api/logs/stream/route.ts
-- [ ] T023 POST /api/logs/export endpoint in ezedit/app/api/logs/export/route.ts
-- [ ] T024 GET /api/logs/stats aggregation endpoint in ezedit/app/api/logs/stats/route.ts
+## Phase 3.4: API Implementation
 
-## Phase 3.4: Integration & Component Enhancement
+- [ ] T024 Enhance GET /api/logs endpoint with advanced filtering in ezedit/app/api/logs/route.ts
+- [ ] T025 Create GET /api/logs/stream endpoint for SSE streaming in ezedit/app/api/logs/stream/route.ts
+- [ ] T026 Create POST /api/logs/export endpoint for data export in ezedit/app/api/logs/export/route.ts
+- [ ] T027 Create DELETE /api/logs/{id} endpoint for log deletion in ezedit/app/api/logs/[id]/route.ts
 
-### FTP Client Integration
-- [ ] T025 Enhance FTP client with comprehensive operation logging in ezedit/lib/ftp-client.ts
-- [ ] T026 [P] FTP connection pool logging integration in ezedit/lib/ftp-connections.ts
+## Phase 3.5: Integration with FTP & Editor
+
+### FTP Integration
+- [ ] T028 Enhance FTP client with comprehensive operation logging in ezedit/lib/ftp-client.ts
+- [ ] T029 Add FTP connection pool logging and monitoring in ezedit/lib/ftp-connections.ts
+- [ ] T030 Integrate FTP error handling with ErrorEvent logging in ezedit/app/api/ftp/list/route.ts
 
 ### Editor Integration
-- [ ] T027 [P] Editor state change logging in ezedit/lib/editor-state.ts
-- [ ] T028 [P] Three-pane editor operation logging in ezedit/components/editor/ThreePaneEditor.tsx
+- [ ] T031 Add editor operation logging to three-pane editor in ezedit/components/editor/ThreePaneEditor.tsx
+- [ ] T032 Integrate editor state change tracking in ezedit/lib/editor-state.tsx
+- [ ] T033 Add performance metrics to editor file operations in ezedit/app/api/ftp/editor/file/route.ts
 
-### Real-time Features
-- [ ] T029 Real-time log streaming service with SSE in ezedit/lib/logging/log-stream.ts
+## Phase 3.6: Polish & Documentation
 
-## Phase 3.5: Polish & Optimization
+- [ ] T034 [P] Create log viewer UI enhancements with filtering controls in ezedit/app/logs/page.tsx
+- [ ] T035 [P] Add performance monitoring dashboard widget in ezedit/components/dashboard/PerformanceWidget.tsx
+- [ ] T036 [P] Update CLAUDE.md with enhanced logging documentation in ezedit/CLAUDE.md
 
-- [ ] T030 [P] Performance optimization and memory management in ezedit/lib/logging/performance-optimizer.ts
-- [ ] T031 [P] Log retention and cleanup jobs in ezedit/lib/logging/cleanup-service.ts
-- [ ] T032 [P] Enhanced logs UI with filtering and search in ezedit/app/logs/page.tsx
-- [ ] T033 [P] Unit tests for sanitization service in ezedit/tests/unit/sanitizer.test.ts
-- [ ] T034 [P] Unit tests for correlation manager in ezedit/tests/unit/correlation-manager.test.ts
-- [ ] T035 Performance tests for high-volume logging in ezedit/tests/performance/logging-load.test.ts
-- [ ] T036 [P] Update CLAUDE.md with enhanced logging documentation
-- [ ] T037 Validate quickstart scenarios and fix any issues
-
-## Dependencies
-
-### Sequential Dependencies (Must Complete in Order)
-- **Setup Phase**: T001 → T002 → T003
-- **Core Models**: T012 → T013, T014, T015, T016 (base model before specialized)
-- **Logging Service**: T017 depends on T012-T016 (models before service)
-- **Storage Manager**: T020 depends on T017 (logger before storage)
-- **API Endpoints**: T021-T024 depend on T017, T020 (services before endpoints)
-- **Integrations**: T025-T029 depend on T017 (enhanced logger before integrations)
-
-### Parallel Blocks (Can Run Simultaneously)
-- **Contract Tests**: T004-T007 (different test files)
-- **Integration Tests**: T008-T011 (different test files)
-- **Specialized Models**: T013-T016 (different model files, after T012)
-- **Support Services**: T018, T019 (different service files)
-- **FTP Integration**: T025, T026 (different FTP files)
-- **Editor Integration**: T027, T028 (different editor files)
-- **Polish Tasks**: T030-T036 (different files and concerns)
+## Dependency Graph
+```
+Setup (T001-T003) ──┐
+                     ├──> Tests (T004-T013) ──┐
+                     │                         ├──> Core (T014-T023) ──┐
+                     │                         │                        ├──> API (T024-T027) ──┐
+                     │                         │                        │                      ├──> Integration (T028-T033) ──┐
+                     │                         │                        │                      │                               ├──> Polish (T034-T036)
+```
 
 ## Parallel Execution Examples
 
-### Block 1: Contract Tests (After T003)
+### Example 1: Running all setup tasks in parallel
 ```bash
-# Launch T004-T007 together:
-Task: "Contract test GET /api/logs with advanced filtering in ezedit/tests/contract/logs-get.test.ts"
-Task: "Contract test GET /api/logs/stream (SSE) in ezedit/tests/contract/logs-stream.test.ts"
-Task: "Contract test POST /api/logs/export in ezedit/tests/contract/logs-export.test.ts"
-Task: "Contract test GET /api/logs/stats in ezedit/tests/contract/logs-stats.test.ts"
+# These can all run simultaneously as they touch different files
+Task agent --parallel T001 T002 T003
 ```
 
-### Block 2: Integration Tests (After T007)
+### Example 2: Running all contract tests in parallel (after setup)
 ```bash
-# Launch T008-T011 together:
-Task: "Integration test FTP operation logging workflow in ezedit/tests/integration/ftp-logging.test.ts"
-Task: "Integration test editor operation logging workflow in ezedit/tests/integration/editor-logging.test.ts"
-Task: "Integration test correlation ID tracking across components in ezedit/tests/integration/correlation-tracking.test.ts"
-Task: "Integration test log tier migration and cleanup in ezedit/tests/integration/log-lifecycle.test.ts"
+# All contract tests can run in parallel as they're in different files
+Task agent --parallel T004 T005 T006 T007
 ```
 
-### Block 3: Specialized Models (After T012)
+### Example 3: Running all integration tests in parallel (after setup)
 ```bash
-# Launch T013-T016 together:
-Task: "FTPOperationLog specialized model in ezedit/lib/logging/models/ftp-operation-log.ts"
-Task: "EditorOperationLog specialized model in ezedit/lib/logging/models/editor-operation-log.ts"
-Task: "ErrorEvent model with categorization in ezedit/lib/logging/models/error-event.ts"
-Task: "PerformanceMetrics model in ezedit/lib/logging/models/performance-metrics.ts"
+# Integration tests in separate files can run concurrently
+Task agent --parallel T008 T009 T010 T011 T012 T013
 ```
 
-## Critical Success Factors
+### Example 4: Running polish tasks in parallel (after all implementation)
+```bash
+# UI enhancements and documentation can be done simultaneously
+Task agent --parallel T034 T035 T036
+```
 
-### TDD Compliance ⚠️
-1. **ALL** contract tests (T004-T007) MUST be written and MUST FAIL
-2. **ALL** integration tests (T008-T011) MUST be written and MUST FAIL
-3. No implementation code until tests are failing
-4. Each implementation task must make corresponding tests pass
+## Critical Path (Sequential Dependencies)
+1. **Setup must complete first**: T001-T003
+2. **Tests before implementation**: T004-T013 before T014-T033
+3. **Core models before services**: T014-T018 before T019-T023
+4. **Services before API**: T019-T023 before T024-T027
+5. **API before integration**: T024-T027 before T028-T033
+6. **Everything before polish**: All before T034-T036
 
-### Performance Requirements
-- Log write latency: < 100ms (T017, T020)
-- Query response time: < 500ms for recent logs (T021)
-- Stream latency: < 2 seconds (T022, T029)
-- Memory usage: < 100MB additional overhead (T030)
+## Task Execution Notes
 
-### Security Requirements
-- Sensitive data sanitization: 100% coverage (T018)
-- Authentication: All log endpoints protected (T021-T024)
-- Data privacy: PII redaction implemented (T018)
-- Access control: Role-based permissions (T021)
+### For Task Executors
+- Each task includes specific file paths - create them if they don't exist
+- Follow TDD strictly - tests MUST fail before implementation
+- Use existing patterns from current codebase
+- Maintain backward compatibility with existing /logs endpoint
+- All sensitive data must be sanitized before logging
 
-## Validation Checklist
-*GATE: Checked before task execution*
-
-- [x] All contracts have corresponding tests (T004-T007 → T021-T024)
-- [x] All entities have model tasks (T012-T016 from data-model.md)
-- [x] All tests come before implementation (T004-T011 before T012+)
-- [x] Parallel tasks truly independent (different files, no shared state)
-- [x] Each task specifies exact file path
-- [x] No task modifies same file as another [P] task
-- [x] Integration points identified (FTP client, editor, streaming)
-- [x] Performance and security requirements specified
+### Quality Checklist Per Task
+- [ ] Unit tests written (where applicable)
+- [ ] TypeScript types properly defined
+- [ ] Error handling implemented
+- [ ] Performance considerations addressed
+- [ ] Documentation/comments added
 
 ## Estimated Timeline
-- **Phase 3.1 (Setup)**: 1-2 days
-- **Phase 3.2 (Tests)**: 3-4 days
-- **Phase 3.3 (Core)**: 5-7 days
-- **Phase 3.4 (Integration)**: 3-4 days
-- **Phase 3.5 (Polish)**: 2-3 days
-- **Total**: 14-20 days for complete implementation
+- **Phase 3.1 (Setup)**: 30 minutes
+- **Phase 3.2 (Tests)**: 2 hours
+- **Phase 3.3 (Core)**: 3 hours
+- **Phase 3.4 (API)**: 2 hours
+- **Phase 3.5 (Integration)**: 3 hours
+- **Phase 3.6 (Polish)**: 1 hour
+- **Total Estimate**: 11.5 hours
 
-## Risk Mitigation
-- **Performance Risk**: Load testing in T035 before production
-- **Security Risk**: Comprehensive sanitization testing in T033
-- **Integration Risk**: Cross-component tests in T008-T011
-- **Data Risk**: Backup/restore procedures in cleanup service T031
+## Success Metrics
+- All 36 tasks completed
+- All tests passing (100% coverage on new code)
+- Performance goals met (<100ms write, <500ms query)
+- No regression in existing functionality
+- Documentation complete and accurate
+
+---
+*Generated from feature specification 011-make-sure-logs*
+*Template: .specify/templates/tasks-template.md*
