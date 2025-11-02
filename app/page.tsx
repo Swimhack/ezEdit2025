@@ -28,26 +28,26 @@ export default function Home() {
         <div className="mx-auto max-w-4xl py-24 sm:py-32 lg:py-40">
           <div className="text-center">
             <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
-              Edit Legacy Websites with{' '}
-              <span className="text-blue-600">AI-Powered</span>{' '}
-              Simplicity
+              Stop Waiting Days for Website Updates.{' '}
+              <span className="text-blue-600">Fix It Yourself in Minutes.</span>
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              Connect to any website via FTP/SFTP and update your code using natural
-              language prompts. Secure, fast, and incredibly simple.
+              Tired of paying developers $100+/hour and waiting weeks for simple changes? 
+              Update your legacy website instantly with AI—no coding experience needed. 
+              Just describe what you want, and watch it happen.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
                 href="/auth/signup?plan=FREE"
                 className="bg-blue-600 text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
-                Get Started for Free
+                Start Fixing Your Site Free
               </a>
               <a
                 href="/demo"
                 className="text-gray-700 px-8 py-3.5 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50 transition-colors"
               >
-                Watch Demo
+                See How It Works
               </a>
             </div>
           </div>
@@ -59,16 +59,74 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Features Section */}
+      {/* Pain Points Section */}
+      <div className="py-24 sm:py-32 bg-red-50">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-red-600">The Real Problem</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Every Day You Wait Costs You Money
+            </p>
+            <p className="mt-6 text-lg leading-8 text-gray-600">
+              Your outdated website is losing customers while you wait for developers who charge too much and take too long.
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
+              <div className="flex flex-col bg-white p-6 rounded-lg shadow-sm">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
+                    <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  Days or Weeks to Wait
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Need to update pricing? Fix a broken link? Add a new section? You're stuck waiting days—sometimes weeks—for a developer to have time.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col bg-white p-6 rounded-lg shadow-sm">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
+                    <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  $100+ Per Hour
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Simple 5-minute fixes cost $200-500. A small change becomes a $1,000 project. Your website budget disappears fast.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col bg-white p-6 rounded-lg shadow-sm">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100">
+                    <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                    </svg>
+                  </div>
+                  Fear of Breaking Things
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">"What if they break my site?" Legacy code is scary. One wrong change can crash everything. You need confidence, not anxiety.</p>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      {/* Solution Section */}
       <div className="py-24 sm:py-32 bg-white">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-blue-600">Deploy faster</h2>
+            <h2 className="text-base font-semibold leading-7 text-blue-600">The Solution</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Everything you need to edit websites
+              Update Your Site Yourself in Minutes, Not Days
             </p>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Powerful tools that make website editing simple and efficient
+              No more waiting. No more huge bills. Just describe what you want in plain English, and AI does the rest—safely and instantly.
             </p>
           </div>
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
@@ -80,23 +138,10 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                     </svg>
                   </div>
-                  Direct FTP Access
+                  Instant Access, Zero Setup
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Connect directly to your server via FTP/SFTP for instant file access and editing.</p>
-                </dd>
-              </div>
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                    </svg>
-                  </div>
-                  Powerful Code Editor
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Syntax highlighting, auto-completion, and intelligent code suggestions.</p>
+                  <p className="flex-auto">Connect directly to your existing FTP server. No migration, no rebuilds. Your site stays exactly where it is—you just edit it instantly.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
@@ -106,23 +151,36 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                     </svg>
                   </div>
-                  AI Assistant
+                  AI That Understands You
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Natural language prompts that generate and modify code automatically.</p>
+                  <p className="flex-auto">Say "Make the contact button bigger and change it to blue" or "Add a testimonials section here." No coding knowledge needed. AI writes the code for you.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
                     <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                     </svg>
                   </div>
-                  Auto-Save & History
+                  Safe & Protected
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Never lose your work with automatic saves and comprehensive version history.</p>
+                  <p className="flex-auto">Every change is saved automatically. Made a mistake? One click restores the previous version. Your site stays safe while you experiment.</p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
+                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                    </svg>
+                  </div>
+                  Professional Code Editor
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                  <p className="flex-auto">Edit code like a pro with syntax highlighting, auto-completion, and instant preview. See your changes before you publish.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
@@ -132,10 +190,10 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                     </svg>
                   </div>
-                  Secure Connection
+                  Enterprise Security
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Enterprise-grade security with encrypted connections and safe file handling.</p>
+                  <p className="flex-auto">Encrypted connections, secure credentials, and safe file handling. Your FTP credentials are encrypted and never stored in plain text.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
@@ -148,7 +206,7 @@ export default function Home() {
                   Works Everywhere
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Access your projects from any device, anywhere in the world.</p>
+                  <p className="flex-auto">Access your site from any device—desktop, tablet, or phone. Make urgent updates even when you're away from your office.</p>
                 </dd>
               </div>
             </dl>
