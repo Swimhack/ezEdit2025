@@ -55,21 +55,21 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-wrap gap-4 justify-center"
           >
-            <Link href="/editor">
+            <Link href="/services">
               <Button 
                 size="lg" 
                 className="px-8 py-6 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                Get started
+                View Services
               </Button>
             </Link>
-            <Link href="#features">
+            <Link href="/editor">
               <Button 
                 size="lg" 
                 variant="outline"
                 className="px-8 py-6 text-base font-semibold border-2"
               >
-                Talk to sales
+                Try Editor Free
               </Button>
             </Link>
           </motion.div>

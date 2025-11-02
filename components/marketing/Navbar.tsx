@@ -11,9 +11,9 @@ export function Navbar() {
           <span className="font-semibold">EzEdit</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm">
+          <Link href="/services" className="text-muted-foreground hover:text-foreground">Services</Link>
           <Link href="/pricing" className="text-muted-foreground hover:text-foreground">Pricing</Link>
           <Link href="#features" className="text-muted-foreground hover:text-foreground">Features</Link>
-          <Link href="#how-it-works" className="text-muted-foreground hover:text-foreground">How it works</Link>
         </nav>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline">
