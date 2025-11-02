@@ -30,10 +30,10 @@ export function Hero() {
             transition={{ duration: 0.5 }}
             className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight"
           >
-            Your Website Updates,
+            Easy Website Updates,
             <br />
             <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Done For You
+              Handled For You
             </span>
           </motion.h1>
 
@@ -44,8 +44,8 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto"
           >
-            Professional web design, hosting, and update services—all in one platform. 
-            Start with our powerful editor, or let us handle everything for you.
+            Cost-effective website updates and maintenance at scale. We handle the small changes so you can focus on your business.
+            <span className="block mt-2 text-base">Powered by smart workflows, soon upgraded to AI automation.</span>
           </motion.p>
 
           {/* CTA Buttons */}
@@ -83,15 +83,15 @@ export function Hero() {
           >
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
-              <span>Lightning-fast editor</span>
+              <span>Fast turnaround</span>
             </div>
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-primary" />
-              <span>Bank-level security</span>
+              <span>Affordable pricing</span>
             </div>
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span>AI-powered</span>
+              <span>AI-ready platform</span>
             </div>
           </motion.div>
         </div>
