@@ -219,15 +219,28 @@ export async function ensureConnectionActive(connection: FTPConnection): Promise
     console.log(`[FTP] Testing connection with queued directory listing: ${connection.id}`)
 
     // Queue the connection test to prevent conflicts
+    // Use a simple command like PWD to verify connection
     await queueFTPOperation(connection, async () => {
-      await connection.client.list('/')
-      return true
+      try {
+        // Try PWD first (print working directory) - simpler and more reliable than LIST
+        await connection.client.pwd()
+        console.log(`[FTP] PWD test successful: ${connection.id}`)
+        return true
+      } catch (pwdError: any) {
+        console.warn(`[FTP] PWD test failed, trying LIST: ${connection.id}`, pwdError.message)
+        // Fallback to LIST if PWD fails
+        await connection.client.list('/')
+        console.log(`[FTP] LIST test successful: ${connection.id}`)
+        return true
+      }
     })
 
     console.log(`[FTP] Connection test successful: ${connection.id} (${Date.now() - startTime}ms)`)
+    connection.connected = true
+    connection.lastActivity = Date.now()
     return true
-  } catch (error) {
-    console.error(`[FTP] Connection test failed: ${connection.id}`, error)
+  } catch (error: any) {
+    console.error(`[FTP] Connection test failed: ${connection.id}`, error.message || error)
 
     // Try to reconnect
     if (connection.isReconnecting) {
@@ -280,8 +293,8 @@ export async function ensureConnectionActive(connection: FTPConnection): Promise
       const reconnectDuration = Date.now() - reconnectStartTime
       console.log(`[FTP] Successfully reconnected to ${connection.host}: ${connection.id} (${reconnectDuration}ms)`)
       return true
-    } catch (reconnectError) {
-      console.error(`[FTP] Reconnection attempt failed: ${connection.id}`, reconnectError)
+    } catch (reconnectError: any) {
+      console.error(`[FTP] Reconnection attempt failed: ${connection.id}`, reconnectError.message || reconnectError)
       connection.connected = false
       connection.isReconnecting = false
 

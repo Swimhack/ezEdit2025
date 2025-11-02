@@ -270,8 +270,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     }
 
     dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: 'SET_ERROR', payload: null });
 
     try {
+      console.log(`[Editor] Loading file tree for website: ${websiteId}, attempt ${retryCount + 1}`);
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
@@ -284,47 +287,78 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
 
       clearTimeout(timeoutId);
 
+      console.log(`[Editor] FTP list response status: ${response.status}`);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        const errorDetails = errorData.details || '';
+        const errorCode = errorData.errorCode || '';
+
+        console.error(`[Editor] FTP list error:`, {
+          status: response.status,
+          error: errorMessage,
+          details: errorDetails,
+          errorCode: errorCode
+        });
 
         // Provide specific user-friendly error messages
         if (response.status === 404) {
           throw new Error('Website not found. Please check your connection settings.');
-        } else if (response.status === 401) {
-          throw new Error('Authentication failed. Please verify your FTP username and password.');
+        } else if (response.status === 401 || errorCode === '530') {
+          // Authentication errors - provide actionable guidance
+          const authError = errorMessage + (errorDetails ? ` ${errorDetails}` : '');
+          throw new Error(authError + ' You can update your credentials in the website settings.');
         } else if (response.status === 503) {
           throw new Error('Cannot connect to FTP server. Please check if the server is available.');
         } else if (response.status === 429) {
           // For rate limiting, suggest a longer wait
           throw new Error('Too many requests. The server is busy. Please wait 30 seconds and try again.');
         } else {
-          throw new Error(`Failed to connect: ${errorMessage}`);
+          throw new Error(`Failed to connect: ${errorMessage}${errorDetails ? ` ${errorDetails}` : ''}`);
         }
       }
 
       const result = await response.json();
 
+      console.log(`[Editor] FTP list response:`, {
+        success: result.success,
+        fileCount: result.files?.length || 0,
+        path: result.path,
+        connectionId: result.connectionId
+      });
+
       // Check if the response has the expected structure
       if (!result.success || !Array.isArray(result.files)) {
+        console.error(`[Editor] Invalid response structure:`, result);
         throw new Error('Invalid response from server. Please try again.');
       }
 
-      const fileTree: FTPFileNode[] = result.files.map((item: any) => ({
-        path: item.path,
-        name: item.name,
-        type: item.type === 'directory' ? 'directory' : 'file',
-        size: Number(item.size) || 0,
-        modified: new Date(item.modified || Date.now()),
-        permissions: item.permissions || '',
-        isExpanded: false,
-        isLoaded: item.type === 'directory' ? false : true,
-        children: item.type === 'directory' ? [] : undefined
-      }));
+      const fileTree: FTPFileNode[] = result.files
+        .filter((item: any) => item && item.name && item.path) // Filter out invalid items
+        .map((item: any) => ({
+          path: item.path,
+          name: item.name || 'unknown',
+          type: item.type === 'directory' ? 'directory' : 'file',
+          size: Number(item.size) || 0,
+          modified: new Date(item.modified || Date.now()),
+          permissions: item.permissions || '',
+          isExpanded: false,
+          isLoaded: item.type === 'directory' ? false : true,
+          children: item.type === 'directory' ? [] : undefined
+        }));
+
+      console.log(`[Editor] File tree loaded successfully:`, {
+        itemCount: fileTree.length,
+        directories: fileTree.filter(f => f.type === 'directory').length,
+        files: fileTree.filter(f => f.type === 'file').length
+      });
 
       dispatch({ type: 'SET_FILE_TREE', payload: fileTree });
+      dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
-      console.error('Failed to load file tree:', error);
+      console.error('[Editor] Failed to load file tree:', error);
+      dispatch({ type: 'SET_LOADING', payload: false });
 
       if (error instanceof Error && error.name === 'AbortError') {
         dispatch({
@@ -332,53 +366,114 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           payload: 'Connection timed out. The server may be busy or unavailable.'
         });
       } else {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load file tree';
+        
+        // Retry if not authentication error
+        if (retryCount < MAX_RETRIES && !errorMessage.includes('Authentication')) {
+          console.log(`[Editor] Retrying file tree load (attempt ${retryCount + 2}/${MAX_RETRIES + 1})`);
+          setTimeout(() => {
+            loadFileTree(websiteId, retryCount + 1);
+          }, 2000 * (retryCount + 1)); // Exponential backoff
+          return;
+        }
+        
         dispatch({
           type: 'SET_ERROR',
-          payload: error instanceof Error ? error.message : 'Failed to load file tree'
+          payload: errorMessage
         });
       }
     }
   }, []);
 
   /**
-   * Expand directory and load children
+   * Expand directory and load children with retry logic
    */
   const expandDirectory = useCallback(async (path: string) => {
     if (!state.connectionId) return;
 
     dispatch({ type: 'SET_LOADING', payload: true });
 
-    try {
-      const response = await fetch('/api/ftp/list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ websiteId: state.connectionId, path })
-      });
+    const MAX_RETRIES = 3;
+    let retries = MAX_RETRIES;
+    let lastError: Error | null = null;
 
-      if (!response.ok) {
-        throw new Error(`Failed to load directory: ${response.statusText}`);
+    while (retries > 0) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        const response = await fetch('/api/ftp/list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ websiteId: state.connectionId, path }),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+          
+          // Don't retry on certain errors
+          if (response.status === 401 || response.status === 403 || response.status === 404) {
+            throw new Error(errorMessage);
+          }
+          
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+
+        // Check if the response has the expected structure
+        if (!result.success || !Array.isArray(result.files)) {
+          throw new Error('Invalid response from server. Please try again.');
+        }
+
+        const children: FTPFileNode[] = (result.files || []).map((item: any) => ({
+          path: item.path,
+          name: item.name,
+          type: item.type === 'directory' ? 'directory' : 'file',
+          size: Number(item.size) || 0,
+          modified: new Date(item.modified || Date.now()),
+          permissions: item.permissions || '',
+          isExpanded: false,
+          isLoaded: item.type === 'directory' ? false : true,
+          children: item.type === 'directory' ? [] : undefined
+        }));
+        
+        dispatch({
+          type: 'EXPAND_DIRECTORY',
+          payload: { path, children }
+        });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return; // Success
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        retries--;
+
+        if (retries > 0 && !(error instanceof Error && error.name === 'AbortError')) {
+          // Wait before retry (exponential backoff)
+          const delay = (MAX_RETRIES - retries) * 500;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          break;
+        }
       }
+    }
 
-      const result = await response.json();
-      const children: FTPFileNode[] = (result.files || []).map((item: any) => ({
-        path: item.path,
-        name: item.name,
-        type: item.type === 'directory' ? 'directory' : 'file',
-        size: Number(item.size) || 0,
-        modified: new Date(item.modified || Date.now()),
-        permissions: item.permissions || '',
-        isExpanded: false,
-        isLoaded: item.type === 'directory' ? false : true,
-        children: item.type === 'directory' ? [] : undefined
-      }));
-      dispatch({
-        type: 'EXPAND_DIRECTORY',
-        payload: { path, children }
-      });
-    } catch (error) {
+    // All retries failed
+    dispatch({ type: 'SET_LOADING', payload: false });
+    
+    if (lastError instanceof Error && lastError.name === 'AbortError') {
       dispatch({
         type: 'SET_ERROR',
-        payload: error instanceof Error ? error.message : 'Failed to expand directory'
+        payload: 'Connection timed out while loading directory. Please try again.'
+      });
+    } else {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: lastError instanceof Error ? lastError.message : 'Failed to expand directory'
       });
     }
   }, [state.connectionId]);

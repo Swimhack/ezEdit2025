@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Extract request metadata
     const requestMetadata = {
-      ipAddress: request.ip ||
+      ipAddress: (request as any).ip ||
                 request.headers.get('x-forwarded-for')?.split(',')[0] ||
                 request.headers.get('x-real-ip') ||
                 'unknown',

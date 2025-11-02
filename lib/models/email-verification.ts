@@ -4,7 +4,25 @@
  */
 
 import { z } from 'zod'
-import { EmailVerificationToken, VerificationStatus } from '../types/auth'
+import { EmailVerificationToken, EmailVerificationStatus } from '../types/auth'
+
+/**
+ * Constants for email verification management
+ */
+export const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+export const VERIFICATION_MAX_ATTEMPTS = 5
+export const MAX_VERIFICATIONS_PER_USER = 3
+export const MAX_VERIFICATIONS_PER_HOUR = 5
+export const MAX_RESEND_ATTEMPTS = 3
+export const RESEND_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+export const VERIFICATION_RATE_LIMIT_MS = 15 * 60 * 1000 // 15 minutes
+export const VERIFICATION_RETENTION_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
+export const CLEANUP_INTERVAL_MS = 4 * 60 * 60 * 1000 // 4 hours
+
+
+
+
+
 
 /**
  * Email Verification Token Entity with expiration and security tracking
@@ -631,18 +649,6 @@ export class EmailVerificationUtils {
   }
 }
 
-/**
- * Constants for email verification management
- */
-export const VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
-export const VERIFICATION_MAX_ATTEMPTS = 5
-export const MAX_VERIFICATIONS_PER_USER = 3
-export const MAX_VERIFICATIONS_PER_HOUR = 5
-export const MAX_RESEND_ATTEMPTS = 3
-export const RESEND_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
-export const VERIFICATION_RATE_LIMIT_MS = 15 * 60 * 1000 // 15 minutes
-export const VERIFICATION_RETENTION_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
-export const CLEANUP_INTERVAL_MS = 4 * 60 * 60 * 1000 // 4 hours
 
 /**
  * Type definitions
@@ -651,7 +657,7 @@ interface EmailVerificationApiResponse {
   id: string
   user_id: string
   email: string
-  status: VerificationStatus
+  status: EmailVerificationStatus | 'revoked'
   created_at: string
   expires_at: string
   attempts_remaining: number

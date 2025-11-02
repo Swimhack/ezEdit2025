@@ -149,7 +149,7 @@ interface FileInfoTabProps {
 }
 
 function FileInfoTab({ fileNode, filePreview }: FileInfoTabProps) {
-  if (!fileNode) return null;
+  if (!fileNode || !fileNode.name) return null;
 
   const mimeType = getMimeType(fileNode.name);
   const language = getLanguageFromFilename(fileNode.name);
@@ -250,7 +250,7 @@ interface FilePreviewTabProps {
 }
 
 function FilePreviewTab({ fileNode, filePreview }: FilePreviewTabProps) {
-  if (!fileNode) return null;
+  if (!fileNode || !fileNode.name) return null;
 
   if (fileNode.type === 'directory') {
     return (
@@ -294,7 +294,7 @@ function FilePreviewTab({ fileNode, filePreview }: FilePreviewTabProps) {
     );
   }
 
-  const mimeType = getMimeType(fileNode.name);
+  const mimeType = getMimeType(fileNode.name || '');
   const isImage = mimeType.startsWith('image/');
 
   return (
@@ -322,7 +322,7 @@ function FilePreviewTab({ fileNode, filePreview }: FilePreviewTabProps) {
           <div className="flex items-center justify-between">
             <h5 className="font-medium text-gray-900">Content Preview</h5>
             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {getLanguageFromFilename(fileNode.name).toUpperCase()}
+              {(fileNode?.name ? getLanguageFromFilename(fileNode.name) : 'plaintext').toUpperCase()}
             </span>
           </div>
           <div className="border rounded-lg overflow-hidden">

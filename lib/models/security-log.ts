@@ -664,7 +664,7 @@ interface SecurityLogApiResponse {
   severity_level: SecurityLevel
   event_description: string
   created_at: string
-  source_ip: string | null
+  source_ip: string | null | undefined
   user_id: string | null
   is_critical: boolean
   is_recent: boolean
@@ -675,8 +675,8 @@ interface SecurityLogApiResponse {
 
 interface SecurityLogDetailedResponse extends SecurityLogApiResponse {
   session_id: string | null
-  additional_context: string | null
-  correlation_ids: string | null
+  additional_context: string | null | undefined
+  correlation_ids: string | null | undefined
   updated_at: string
 }
 
@@ -705,3 +705,4 @@ interface SecurityAnomaly {
   affected_entity: string
   detection_time: string
 }
+

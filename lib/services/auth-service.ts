@@ -15,7 +15,7 @@ import {
   SigninRequest,
   UserAccount,
   AuthenticationSession,
-  SecurityEventLog,
+  SecurityEventInput,
   PasswordResetToken,
   EmailVerificationToken,
   AuthError
@@ -728,7 +728,7 @@ export class AuthService {
       .eq('id', verificationModel.verification.id)
   }
 
-  private async logSecurityEvent(event: Omit<SecurityEventLog, 'id' | 'created_at' | 'updated_at'>): Promise<void> {
+  private async logSecurityEvent(event: Omit<SecurityEventInput, 'id' | 'created_at' | 'updated_at'>): Promise<void> {
     try {
       const securityLog = SecurityLogFactory.create({
         event_type: event.event_type,

@@ -7,6 +7,17 @@ import { z } from 'zod'
 import { PasswordResetToken, TokenStatus } from '../types/auth'
 
 /**
+ * Constants for token management
+ */
+export const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
+export const TOKEN_MAX_ATTEMPTS = 3
+export const MAX_TOKENS_PER_USER = 5
+export const MAX_TOKENS_PER_HOUR = 3
+export const RATE_LIMIT_DURATION_MS = 15 * 60 * 1000 // 15 minutes
+export const CLEANUP_INTERVAL_MS = 60 * 60 * 1000 // 1 hour
+
+
+/**
  * Password Reset Token Entity with expiration and security tracking
  */
 export class ResetTokenModel {
@@ -524,15 +535,6 @@ export class ResetTokenUtils {
   }
 }
 
-/**
- * Constants for token management
- */
-export const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000 // 24 hours
-export const TOKEN_MAX_ATTEMPTS = 3
-export const MAX_TOKENS_PER_USER = 5
-export const MAX_TOKENS_PER_HOUR = 3
-export const RATE_LIMIT_DURATION_MS = 15 * 60 * 1000 // 15 minutes
-export const CLEANUP_INTERVAL_MS = 60 * 60 * 1000 // 1 hour
 
 /**
  * Type definitions

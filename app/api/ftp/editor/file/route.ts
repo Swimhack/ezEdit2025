@@ -8,7 +8,20 @@ import { getConnection, ensureConnectionActive, queueFTPOperation } from '@/lib/
 import { createRequestLogger } from '@/lib/logger';
 import { extractErrorContext, createErrorResponse } from '@/lib/api-error-handler';
 import { getWebsite } from '@/lib/websites-memory-store';
+import { getFTPConfig } from '@/lib/ftp-config';
 import { randomUUID } from 'crypto';
+
+// Helper to normalize and validate paths
+function normalizePath(path: string): string {
+  if (!path) return '/'
+  // Remove trailing slashes except for root
+  path = path.replace(/\/+$/, '') || '/'
+  // Ensure starts with /
+  if (!path.startsWith('/')) path = '/' + path
+  // Normalize double slashes
+  path = path.replace(/\/+/g, '/')
+  return path
+}
 
 interface FileRequest {
   websiteId: string;
@@ -37,7 +50,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: FileRequest = await request.json();
-    const { websiteId, filePath } = body;
+    const { websiteId, filePath: rawFilePath } = body;
+    
+    // Normalize file path
+    const filePath = normalizePath(rawFilePath || '')
 
     // Temporary user
     const userId = 'demo-user';
@@ -181,10 +197,49 @@ export async function POST(request: NextRequest) {
 
       let fileSize;
       const fileSizeStart = Date.now()
-      try {
-        fileSize = await queueFTPOperation(connection, async () => {
-          return await connection.client.size(filePath);
-        });
+      
+      // Retry logic for file size check
+      let retries = 3
+      let sizeError: any = null
+      
+      while (retries > 0) {
+        try {
+          fileSize = await queueFTPOperation(connection, async () => {
+            // Ensure we're in the correct directory
+            if (website.path && website.path !== '/') {
+              try {
+                await connection.client.cd(website.path)
+              } catch (cdError) {
+                logger.warn('Could not change to working directory during file size check', {
+                  path: website.path,
+                  connectionId
+                })
+              }
+            }
+            return await connection.client.size(filePath);
+          });
+          sizeError = null
+          break
+        } catch (error) {
+          sizeError = error
+          retries--
+          
+          if (retries > 0) {
+            const delay = (4 - retries) * 500 // Exponential backoff
+            logger.info('Retrying file size check', {
+              connectionId,
+              filePath,
+              retries,
+              delay
+            })
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      }
+      
+      if (sizeError) {
+        throw sizeError
+      }
         const fileSizeDuration = Date.now() - fileSizeStart
 
         logger.info('FTP Editor file size retrieved', {
@@ -234,82 +289,167 @@ export async function POST(request: NextRequest) {
       let content = '';
       const downloadStart = Date.now()
 
-      await queueFTPOperation(connection, async () => {
-        return new Promise((resolve, reject) => {
-          const { Writable } = require('stream');
-          let chunks: Buffer[] = [];
-          let bytesReceived = 0;
+      // Retry logic for file download
+      let downloadRetries = 3
+      let downloadError: any = null
+      
+      while (downloadRetries > 0) {
+        try {
+          await queueFTPOperation(connection, async () => {
+            return new Promise((resolve, reject) => {
+              const { Writable } = require('stream');
+              let chunks: Buffer[] = [];
+              let bytesReceived = 0;
 
-          const bufferStream = new Writable({
-            write(chunk: Buffer, _encoding: string, callback: () => void) {
-              chunks.push(chunk);
-              bytesReceived += chunk.length;
-              callback();
-            }
-          });
+              const bufferStream = new Writable({
+                write(chunk: Buffer, _encoding: string, callback: () => void) {
+                  chunks.push(chunk);
+                  bytesReceived += chunk.length;
+                  callback();
+                }
+              });
 
-          bufferStream.on('finish', () => {
-            const buffer = Buffer.concat(chunks);
-            content = buffer.toString('utf-8');
-            const downloadDuration = Date.now() - downloadStart
+              const timeout = setTimeout(() => {
+                bufferStream.destroy();
+                reject(new Error('Download timeout'));
+              }, getFTPConfig().dataTimeout);
 
-            logger.info('FTP Editor file download completed', {
-              correlationId,
-              filePath,
-              bytesReceived,
-              expectedSize: fileSize,
-              downloadDuration,
-              contentLength: content.length,
-              operation: 'ftp_editor_file_download_completed',
-              timestamp: new Date().toISOString()
-            })
-            resolve(content);
-          });
+              bufferStream.on('finish', () => {
+                clearTimeout(timeout);
+                const buffer = Buffer.concat(chunks);
+                
+                // Try to detect encoding
+                let textContent = ''
+                try {
+                  textContent = buffer.toString('utf-8')
+                } catch (e) {
+                  // Fallback to latin1 if UTF-8 fails
+                  try {
+                    textContent = buffer.toString('latin1')
+                  } catch (e2) {
+                    textContent = buffer.toString('utf-8', 0, buffer.length)
+                  }
+                }
+                
+                content = textContent;
+                const downloadDuration = Date.now() - downloadStart
 
-          bufferStream.on('error', (error: Error) => {
-            const downloadDuration = Date.now() - downloadStart
-            logger.error('FTP Editor file download stream error', {
-              error,
-              correlationId,
-              filePath,
-              bytesReceived,
-              downloadDuration,
-              operation: 'ftp_editor_file_download_stream_error',
-              errorType: 'DOWNLOAD_STREAM_ERROR'
-            }, 'ftp_editor_download_stream_error')
-            reject(error);
-          });
+                logger.info('FTP Editor file download completed', {
+                  correlationId,
+                  filePath,
+                  bytesReceived,
+                  expectedSize: fileSize,
+                  downloadDuration,
+                  contentLength: content.length,
+                  operation: 'ftp_editor_file_download_completed',
+                  timestamp: new Date().toISOString()
+                })
+                resolve(content);
+              });
 
-          connection.client.downloadTo(bufferStream, filePath)
-            .then(() => bufferStream.end())
-            .catch((error: Error) => {
-              const downloadDuration = Date.now() - downloadStart
-              logger.error('FTP Editor file download client error', {
-                error,
-                correlationId,
-                filePath,
-                downloadDuration,
-                operation: 'ftp_editor_file_download_client_error',
-                errorType: 'DOWNLOAD_CLIENT_ERROR',
-                ftpErrorMessage: error.message
-              }, 'ftp_editor_download_client_error')
-              reject(error);
+              bufferStream.on('error', (error: Error) => {
+                clearTimeout(timeout);
+                const downloadDuration = Date.now() - downloadStart
+                logger.error('FTP Editor file download stream error', {
+                  error,
+                  correlationId,
+                  filePath,
+                  bytesReceived,
+                  downloadDuration,
+                  operation: 'ftp_editor_file_download_stream_error',
+                  errorType: 'DOWNLOAD_STREAM_ERROR'
+                }, 'ftp_editor_download_stream_error')
+                reject(error);
+              });
+
+              // Ensure we're in the correct directory before download
+              Promise.resolve().then(async () => {
+                if (website.path && website.path !== '/') {
+                  try {
+                    await connection.client.cd(website.path)
+                  } catch (cdError) {
+                    logger.warn('Could not change to working directory before download', {
+                      path: website.path,
+                      connectionId
+                    })
+                  }
+                }
+                
+                return connection.client.downloadTo(bufferStream, filePath)
+              })
+                .then(() => bufferStream.end())
+                .catch((error: Error) => {
+                  clearTimeout(timeout);
+                  const downloadDuration = Date.now() - downloadStart
+                  logger.error('FTP Editor file download client error', {
+                    error,
+                    correlationId,
+                    filePath,
+                    downloadDuration,
+                    operation: 'ftp_editor_file_download_client_error',
+                    errorType: 'DOWNLOAD_CLIENT_ERROR',
+                    ftpErrorMessage: error.message
+                  }, 'ftp_editor_download_client_error')
+                  reject(error);
+                });
             });
-        });
-      });
+          });
+          
+          downloadError = null
+          break
+        } catch (error) {
+          downloadError = error
+          downloadRetries--
+          
+          if (downloadRetries > 0) {
+            const delay = (4 - downloadRetries) * 500 // Exponential backoff
+            logger.info('Retrying file download', {
+              connectionId,
+              filePath,
+              retries: downloadRetries,
+              delay
+            })
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      }
+      
+      if (downloadError) {
+        throw downloadError
+      }
 
       // Get file modification time from directory listing
-      const parentDir = filePath.split('/').slice(0, -1).join('/') || '/';
+      const parentDir = normalizePath(filePath.split('/').slice(0, -1).join('/') || '/');
       const fileName = filePath.split('/').pop();
 
-      const fileList = await queueFTPOperation(connection, async () => {
-        return await connection.client.list(parentDir);
-      });
+      let fileEntry: any = null
+      try {
+        const fileList = await queueFTPOperation(connection, async () => {
+          // Ensure we're in the correct directory
+          if (website.path && website.path !== '/') {
+            try {
+              await connection.client.cd(website.path)
+            } catch (cdError) {
+              logger.warn('Could not change to working directory for file listing', {
+                path: website.path,
+                connectionId
+              })
+            }
+          }
+          return await connection.client.list(parentDir);
+        });
 
-      const fileEntry = fileList.find((entry: any) => entry.name === fileName);
+        fileEntry = fileList.find((entry: any) => entry.name === fileName);
+      } catch (listError) {
+        logger.warn('Could not get file metadata from directory listing', {
+          error: listError instanceof Error ? listError.message : 'Unknown error',
+          filePath,
+          parentDir
+        })
+      }
 
       const response = {
-        path: filePath,
+        path: filePath, // Already normalized
         content,
         encoding: 'utf-8' as const,
         size: fileSize,
@@ -436,38 +576,114 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Normalize file path
+    const normalizedFilePath = normalizePath(filePath || '')
+
     try {
-      // Create buffer from content
+      // Create buffer from content with UTF-8 encoding
       const buffer = Buffer.from(content, 'utf-8');
 
-      // Upload file using a stream approach
-      await queueFTPOperation(connection, async () => {
-        return new Promise((resolve, reject) => {
-          const { Readable } = require('stream');
-          const stream = new Readable({
-            read() {} // Required but can be empty
-          });
-          stream.push(buffer);
-          stream.push(null); // Signal end of stream
+      // Retry logic for file upload
+      let uploadRetries = 3
+      let uploadError: any = null
+      
+      while (uploadRetries > 0) {
+        try {
+          await queueFTPOperation(connection, async () => {
+            return new Promise((resolve, reject) => {
+              const { Readable } = require('stream');
+              const stream = new Readable({
+                read() {} // Required but can be empty
+              });
+              stream.push(buffer);
+              stream.push(null); // Signal end of stream
 
-          connection.client.uploadFrom(stream, filePath)
-            .then(resolve)
-            .catch(reject);
-        });
-      });
+              const timeout = setTimeout(() => {
+                stream.destroy();
+                reject(new Error('Upload timeout'));
+              }, getFTPConfig().dataTimeout);
+
+              // Ensure we're in the correct directory before upload
+              Promise.resolve().then(async () => {
+                if (website.path && website.path !== '/') {
+                  try {
+                    await connection.client.cd(website.path)
+                  } catch (cdError) {
+                    logger.warn('Could not change to working directory before upload', {
+                      path: website.path,
+                      connectionId
+                    })
+                  }
+                }
+                
+                return connection.client.uploadFrom(stream, normalizedFilePath)
+              })
+                .then(() => {
+                  clearTimeout(timeout);
+                  resolve(undefined);
+                })
+                .catch((error: Error) => {
+                  clearTimeout(timeout);
+                  reject(error);
+                });
+            });
+          });
+          
+          uploadError = null
+          break
+        } catch (error) {
+          uploadError = error
+          uploadRetries--
+          
+          if (uploadRetries > 0) {
+            const delay = (4 - uploadRetries) * 500 // Exponential backoff
+            logger.info('Retrying file upload', {
+              connectionId,
+              filePath: normalizedFilePath,
+              retries: uploadRetries,
+              delay
+            })
+            await new Promise(resolve => setTimeout(resolve, delay))
+          }
+        }
+      }
+      
+      if (uploadError) {
+        throw uploadError
+      }
 
       // Get updated file info
-      const parentDir = filePath.split('/').slice(0, -1).join('/') || '/';
-      const fileName = filePath.split('/').pop();
+      const parentDir = normalizePath(normalizedFilePath.split('/').slice(0, -1).join('/') || '/');
+      const fileName = normalizedFilePath.split('/').pop();
 
-      const fileList = await queueFTPOperation(connection, async () => {
-        return await connection.client.list(parentDir);
-      });
+      let fileEntry: any = null
+      try {
+        const fileList = await queueFTPOperation(connection, async () => {
+          // Ensure we're in the correct directory
+          if (website.path && website.path !== '/') {
+            try {
+              await connection.client.cd(website.path)
+            } catch (cdError) {
+              logger.warn('Could not change to working directory for file listing after upload', {
+                path: website.path,
+                connectionId
+              })
+            }
+          }
+          return await connection.client.list(parentDir);
+        });
 
-      const fileEntry = fileList.find((entry: any) => entry.name === fileName);
+        fileEntry = fileList.find((entry: any) => entry.name === fileName);
+      } catch (listError) {
+        logger.warn('Could not get file metadata from directory listing after upload', {
+          error: listError instanceof Error ? listError.message : 'Unknown error',
+          filePath: normalizedFilePath,
+          parentDir
+        })
+      }
 
       const response = {
-        path: filePath,
+        path: normalizedFilePath,
         size: buffer.length,
         lastModified: fileEntry?.modifiedAt || new Date().toISOString(),
         success: true
@@ -476,7 +692,7 @@ export async function PUT(request: NextRequest) {
       logger.info('File saved successfully', {
         correlationId,
         websiteId,
-        filePath,
+        filePath: normalizedFilePath,
         size: buffer.length,
         operation: 'file_save_success'
       });

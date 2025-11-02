@@ -59,7 +59,7 @@ function checkRateLimit(ip: string): { allowed: boolean; resetTime?: number } {
 export async function POST(request: NextRequest) {
   try {
     // Extract IP address for rate limiting
-    const ip = request.ip ||
+    const ip = (request as any).ip ||
               request.headers.get('x-forwarded-for')?.split(',')[0] ||
               request.headers.get('x-real-ip') ||
               'unknown'

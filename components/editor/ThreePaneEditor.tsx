@@ -1,6 +1,6 @@
 /**
  * ThreePaneEditor - Main three-pane editor component
- * Orchestrates the file tree, editor, and preview panes with responsive layout
+ * VS Code/Cursor-style UI with activity bar, sidebar, editor, and secondary sidebar
  */
 
 'use client';
@@ -33,23 +33,17 @@ export default function ThreePaneEditor({
     startWidth: number;
   } | null>(null);
 
-  // Responsive breakpoints
-  const [viewportWidth, setViewportWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  const isDesktop = viewportWidth >= 1200;
-  const isTablet = viewportWidth >= 768 && viewportWidth < 1200;
-  const isMobile = viewportWidth < 768;
+  const [activeView, setActiveView] = useState<'explorer' | 'search' | 'settings'>('explorer');
 
   // Track if we've already initialized to prevent duplicate calls
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize connection and load file tree
   useEffect(() => {
-    // Prevent duplicate initialization
     if (!connectionId || !connectionConfig || isInitialized) {
       return;
     }
 
-    // Mark as initialized immediately
     setIsInitialized(true);
 
     if (connectionId && connectionConfig) {
@@ -71,44 +65,97 @@ export default function ThreePaneEditor({
         lastActivity: new Date()
       });
 
-      // Load initial file tree with timeout
+      // Load initial file tree with timeout and retry logic
       const loadFileTreeWithTimeout = async () => {
+        // First, test the connection to diagnose issues
         try {
-          await Promise.race([
-            actions.loadFileTree(connectionId),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Connection timeout. The FTP server may be unavailable or the credentials may be incorrect.')), 30000)
-            )
-          ]);
-        } catch (error) {
-          actions.setError(error instanceof Error ? error.message : 'Connection failed');
+          console.log('[Editor] Testing FTP connection...')
+          const testResponse = await fetch('/api/ftp/test-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ websiteId: connectionId }),
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+          })
+          
+          if (testResponse.ok) {
+            const testData = await testResponse.json()
+            console.log('[Editor] Connection test results:', testData)
+            
+            if (testData.recommendation) {
+              console.log('[Editor] Recommended protocol:', testData.recommendation)
+            } else {
+              console.warn('[Editor] No successful connection method found. Results:', testData.results)
+              // Show error with diagnostic info
+              const failedMethods = testData.results.filter((r: any) => !r.success)
+              if (failedMethods.length > 0) {
+                const errorDetails = failedMethods.map((r: any) => `${r.method}: ${r.error || 'Unknown error'}`).join('; ')
+                const authErrors = failedMethods.filter((r: any) => r.error?.includes('530') || r.error?.includes('Authentication'))
+                if (authErrors.length > 0) {
+                  actions.setError(`Authentication failed. ${errorDetails} Please update your FTP credentials in the website settings.`)
+                } else {
+                  actions.setError(`Connection test failed. ${errorDetails}`)
+                }
+                return
+              }
+            }
+          } else {
+            // Test endpoint returned an error
+            const testError = await testResponse.json().catch(() => ({ error: 'Connection test failed' }))
+            console.warn('[Editor] Connection test endpoint error:', testError)
+            // Continue anyway - let the normal load attempt happen
+          }
+        } catch (testError: any) {
+          console.warn('[Editor] Connection test failed, continuing anyway:', testError)
+          // Continue anyway - connection test is optional
         }
-      };
 
+        let retries = 3
+        let lastError: Error | null = null
+        
+        while (retries > 0) {
+          try {
+            await Promise.race([
+              actions.loadFileTree(connectionId),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Connection timeout. The FTP server may be unavailable or the credentials may be incorrect.')), 30000)
+              )
+            ])
+            // Success - exit retry loop
+            return
+          } catch (error) {
+            lastError = error instanceof Error ? error : new Error('Unknown error')
+            retries--
+            
+            // Don't retry on authentication errors
+            if (lastError.message.includes('Authentication failed') || lastError.message.includes('credentials')) {
+              actions.setError(lastError.message)
+              return
+            }
+            
+            if (retries > 0) {
+              // Wait before retry (exponential backoff)
+              const delay = (4 - retries) * 1000 // 1s, 2s, 3s
+              await new Promise(resolve => setTimeout(resolve, delay))
+            }
+          }
+        }
+        
+        // All retries failed
+        if (lastError) {
+          actions.setError(lastError.message)
+        }
+      }
+      
       // Add a small delay to prevent race conditions
       const timer = setTimeout(() => {
-        loadFileTreeWithTimeout();
-      }, 100);
+        loadFileTreeWithTimeout()
+      }, 100)
 
-      // Load saved layout (disabled to prevent infinite retries)
-      // actions.loadLayoutFromSession();
-
-      // Cleanup function
       return () => {
         clearTimeout(timer);
       };
     }
-  }, [connectionId, connectionConfig]); // Remove actions from dependencies to prevent re-runs
-
-  // Handle window resize
-  useEffect(() => {
-    const handleResize = () => {
-      setViewportWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [connectionId, connectionConfig]);
 
   // Handle mouse move for resizing
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -177,38 +224,65 @@ export default function ThreePaneEditor({
 
   // Error display
   if (state.error) {
+    const isAuthError = state.error.includes('Authentication') || state.error.includes('530') || state.error.includes('username and password');
+    
     return (
       <div
-        className={`flex items-center justify-center h-full bg-red-50 text-red-800 ${className}`}
+        className={`flex items-center justify-center h-full bg-[#1e1e1e] text-[#cccccc] ${className}`}
         data-testid="editor-error"
       >
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold mb-2">Connection Failed</h3>
-          <p className="mb-6 text-sm leading-relaxed">{state.error}</p>
-          <div className="space-x-3">
-            <button
-              onClick={() => {
-                actions.clearError();
-                if (connectionId) {
-                  actions.loadFileTree(connectionId);
-                }
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => actions.clearError()}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-            >
-              Dismiss
-            </button>
+          <div className="text-center max-w-md">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-lg font-semibold mb-2 text-[#f48771]">
+              {isAuthError ? 'Authentication Failed' : 'Connection Failed'}
+            </h3>
+            <p className="mb-4 text-sm leading-relaxed">{state.error}</p>
+            
+            {/* Show actionable suggestions for authentication errors */}
+            {isAuthError && (
+              <div className="mb-4 p-3 bg-[#3c3c3c] rounded text-left text-xs">
+                <p className="font-semibold mb-2">Troubleshooting Steps:</p>
+                <ol className="list-decimal list-inside space-y-1 text-[#cccccc]">
+                  <li>Verify your FTP username and password are correct</li>
+                  <li>Check if your FTP account is active and not locked</li>
+                  <li>Ensure the FTP server allows connections from your IP address</li>
+                  <li>Try connecting with an FTP client (FileZilla, WinSCP) to verify credentials</li>
+                  <li>Update your website credentials in the settings if they've changed</li>
+                </ol>
+                <div className="mt-3 pt-3 border-t border-[#4a4a4a]">
+                  <button
+                    onClick={() => {
+                      actions.clearError()
+                      window.location.href = '/websites'
+                    }}
+                    className="text-[#0e639c] hover:text-[#1177bb] text-sm font-medium"
+                  >
+                    → Go to Website Settings
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-x-3">
+              <button
+                onClick={() => {
+                  actions.clearError();
+                  if (connectionId) {
+                    actions.loadFileTree(connectionId);
+                  }
+                }}
+                className="px-4 py-2 bg-[#0e639c] text-white rounded hover:bg-[#1177bb] transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => actions.clearError()}
+                className="px-4 py-2 bg-[#3c3c3c] text-[#cccccc] rounded hover:bg-[#4a4a4a] transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
-          <p className="mt-4 text-xs text-gray-600">
-            Check your FTP connection settings if the problem persists
-          </p>
-        </div>
       </div>
     );
   }
@@ -217,92 +291,70 @@ export default function ThreePaneEditor({
   if (state.isLoading && state.fileTree.length === 0) {
     return (
       <div
-        className={`flex items-center justify-center h-full ${className}`}
+        className={`flex items-center justify-center h-full bg-[#1e1e1e] ${className}`}
         data-testid="editor-loading"
       >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading editor...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
+          <p className="text-[#cccccc]">Loading editor...</p>
         </div>
       </div>
     );
   }
 
-  // Mobile layout
-  if (isMobile) {
-    return (
-      <div
-        className={`h-full flex flex-col bg-gray-100 ${className}`}
-        data-testid="three-pane-editor"
-      >
-        <MobilePaneSelector />
-        <div className="flex-1 overflow-hidden">
-          {paneVisibility.tree && <FileTreePane />}
-          {paneVisibility.editor && <EditorPane />}
-          {paneVisibility.preview && <PreviewPane />}
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop and tablet layout
+  // VS Code-style layout
   return (
     <div
-      className={`h-full flex bg-gray-100 ${className}`}
+      className={`h-full flex bg-[#1e1e1e] ${className}`}
       data-testid="three-pane-editor"
-      style={{
-        gridTemplateColumns: isDesktop
-          ? `${paneVisibility.tree ? layout.treeWidth : 0}px 1fr ${paneVisibility.preview ? layout.previewWidth : 0}px`
-          : 'auto 1fr auto'
-      }}
     >
-      {/* File Tree Pane */}
+      {/* Activity Bar (VS Code style) */}
+      <ActivityBar activeView={activeView} setActiveView={setActiveView} />
+
+      {/* Sidebar */}
       {paneVisibility.tree && (
         <>
           <div
-            className={`border-r border-gray-300 ${isTablet ? 'absolute left-0 top-0 bottom-0 z-10 bg-white shadow-lg' : ''}`}
-            style={{ width: isDesktop ? layout.treeWidth : 300 }}
+            className="bg-[#252526] border-r border-[#3e3e42] flex flex-col"
+            style={{ width: layout.treeWidth }}
             data-testid="file-tree-pane"
           >
-            <FileTreePane />
+            {activeView === 'explorer' && <FileTreePane />}
+            {activeView === 'search' && <SearchPane />}
+            {activeView === 'settings' && <SettingsPane />}
           </div>
 
-          {/* Tree Resize Handle */}
-          {isDesktop && (
-            <div
-              className="w-1 bg-gray-300 hover:bg-blue-400 cursor-col-resize transition-colors"
-              onMouseDown={(e) => startResize('tree', e)}
-              data-testid="tree-resize-handle"
-            />
-          )}
+          {/* Resize Handle */}
+          <div
+            className="w-1 bg-[#1e1e1e] hover:bg-[#007acc] cursor-col-resize transition-colors group"
+            onMouseDown={(e) => startResize('tree', e)}
+            data-testid="tree-resize-handle"
+          >
+            <div className="w-full h-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </>
       )}
 
-      {/* Editor Pane */}
-      {paneVisibility.editor && (
-        <div
-          className="flex-1 border-r border-gray-300"
-          data-testid="editor-pane"
-        >
-          <EditorPane />
-        </div>
-      )}
+      {/* Editor Area */}
+      <div className="flex-1 flex flex-col bg-[#1e1e1e]" data-testid="editor-pane">
+        <EditorPane />
+      </div>
 
-      {/* Preview Pane */}
+      {/* Secondary Sidebar (Preview) */}
       {paneVisibility.preview && (
         <>
-          {/* Preview Resize Handle */}
-          {isDesktop && (
-            <div
-              className="w-1 bg-gray-300 hover:bg-blue-400 cursor-col-resize transition-colors"
-              onMouseDown={(e) => startResize('preview', e)}
-              data-testid="preview-resize-handle"
-            />
-          )}
+          {/* Resize Handle */}
+          <div
+            className="w-1 bg-[#1e1e1e] hover:bg-[#007acc] cursor-col-resize transition-colors group"
+            onMouseDown={(e) => startResize('preview', e)}
+            data-testid="preview-resize-handle"
+          >
+            <div className="w-full h-full opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
 
           <div
-            className="border-l border-gray-300"
-            style={{ width: isDesktop ? layout.previewWidth : 350 }}
+            className="bg-[#252526] border-l border-[#3e3e42] flex flex-col"
+            style={{ width: layout.previewWidth }}
             data-testid="preview-pane"
           >
             <PreviewPane />
@@ -317,38 +369,36 @@ export default function ThreePaneEditor({
 }
 
 /**
- * Mobile pane selector component
+ * Activity Bar (VS Code style) - Vertical icon bar on the far left
  */
-function MobilePaneSelector() {
-  const { paneVisibility, updatePaneVisibility } = useLayout();
-
-  const tabs = [
-    { key: 'tree', label: 'Files', icon: '📁' },
-    { key: 'editor', label: 'Editor', icon: '📝' },
-    { key: 'preview', label: 'Preview', icon: '👁️' }
+function ActivityBar({ 
+  activeView, 
+  setActiveView 
+}: { 
+  activeView: string; 
+  setActiveView: (view: 'explorer' | 'search' | 'settings') => void;
+}) {
+  const activities = [
+    { id: 'explorer', icon: '📁', label: 'Explorer' },
+    { id: 'search', icon: '🔍', label: 'Search' },
+    { id: 'settings', icon: '⚙️', label: 'Settings' }
   ] as const;
 
-  const activeTab = tabs.find(tab => paneVisibility[tab.key]) || tabs[1];
-
   return (
-    <div className="flex border-b border-gray-300 bg-white" data-testid="pane-toggle-menu">
-      {tabs.map(tab => (
+    <div className="w-12 bg-[#2d2d30] flex flex-col items-center py-2 border-r border-[#3e3e42]">
+      {activities.map((activity) => (
         <button
-          key={tab.key}
-          onClick={() => {
-            const newVisibility = { tree: false, editor: false, preview: false };
-            newVisibility[tab.key] = true;
-            updatePaneVisibility(newVisibility);
-          }}
-          className={`flex-1 py-2 px-4 text-sm font-medium transition-colors ${
-            paneVisibility[tab.key]
-              ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-700'
-              : 'text-gray-600 hover:text-gray-900'
+          key={activity.id}
+          onClick={() => setActiveView(activity.id as any)}
+          className={`w-10 h-10 mb-1 flex items-center justify-center rounded transition-colors ${
+            activeView === activity.id
+              ? 'bg-[#37373d] text-[#ffffff]'
+              : 'text-[#cccccc] hover:bg-[#37373d]'
           }`}
-          data-testid={`mobile-tab-${tab.key}`}
+          title={activity.label}
+          data-testid={`activity-${activity.id}`}
         >
-          <span className="mr-2">{tab.icon}</span>
-          {tab.label}
+          <span className="text-xl">{activity.icon}</span>
         </button>
       ))}
     </div>
@@ -356,44 +406,80 @@ function MobilePaneSelector() {
 }
 
 /**
- * Status bar component
+ * Search Pane Placeholder
+ */
+function SearchPane() {
+  return (
+    <div className="flex-1 flex flex-col bg-[#252526] text-[#cccccc]">
+      <div className="p-4 border-b border-[#3e3e42]">
+        <h3 className="text-sm font-semibold uppercase text-[#858585]">Search</h3>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-[#858585]">Search functionality coming soon</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Settings Pane Placeholder
+ */
+function SettingsPane() {
+  return (
+    <div className="flex-1 flex flex-col bg-[#252526] text-[#cccccc]">
+      <div className="p-4 border-b border-[#3e3e42]">
+        <h3 className="text-sm font-semibold uppercase text-[#858585]">Settings</h3>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-[#858585]">Settings panel coming soon</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Status Bar (VS Code style) - Bottom bar
  */
 function StatusBar() {
   const { state } = useEditor();
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 h-6 bg-blue-600 text-white text-xs flex items-center px-4 space-x-4"
+      className="absolute bottom-0 left-0 right-0 h-6 bg-[#007acc] text-white text-xs flex items-center px-4 z-50"
       data-testid="status-bar"
     >
       <div className="flex items-center space-x-2">
         <div
-          className={`w-2 h-2 rounded-full ${state.connectionId ? 'bg-green-400' : 'bg-red-400'}`}
+          className={`w-2 h-2 rounded-full ${state.connectionId ? 'bg-[#4ec9b0]' : 'bg-[#f48771]'}`}
           data-testid="connection-status"
         />
-        <span>
+        <span className="font-medium">
           {state.connectionId ? 'Connected' : 'Disconnected'}
         </span>
       </div>
 
       {state.currentFile && (
         <>
-          <span>|</span>
-          <span data-testid="current-file">{state.currentFile}</span>
+          <span className="mx-2 text-[#ffffff80]">|</span>
+          <span data-testid="current-file" className="font-medium">
+            {state.currentFile.split('/').pop()}
+          </span>
         </>
       )}
 
       {state.isDirty && (
         <>
-          <span>|</span>
-          <span data-testid="dirty-indicator">● Unsaved changes</span>
+          <span className="mx-2 text-[#ffffff80]">|</span>
+          <span data-testid="dirty-indicator" className="text-[#ffcc00]">
+            ● Unsaved
+          </span>
         </>
       )}
 
       {state.lastSaved && (
         <>
-          <span>|</span>
-          <span data-testid="last-saved">
+          <span className="mx-2 text-[#ffffff80]">|</span>
+          <span data-testid="last-saved" className="text-[#ffffff80]">
             Saved {state.lastSaved.toLocaleTimeString()}
           </span>
         </>

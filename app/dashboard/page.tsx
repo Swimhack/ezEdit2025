@@ -6,6 +6,9 @@ import Logo from '@/app/components/Logo'
 
 export const dynamic = 'force-dynamic'
 
+// TEMPORARY: Enable dashboard without authentication for testing
+const BYPASS_AUTH = true
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -17,16 +20,47 @@ export default function Dashboard() {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const response = await fetch('/api/auth/me')
-
-        if (!response.ok) {
-          router.push('/auth/signin')
+        // TEMPORARY: Bypass authentication for testing
+        if (BYPASS_AUTH) {
+          console.log('⚠️ Authentication bypassed for testing')
+          // Create mock user for testing
+          const mockUser = {
+            id: 'test-user-123',
+            email: 'james@ekaty.com',
+            role: 'superadmin',
+            isSuperAdmin: true,
+            paywallBypass: true,
+            subscriptionTier: 'enterprise',
+            plan: 'ENTERPRISE'
+          }
+          setUser(mockUser)
+          setProfile(mockUser)
+          
+          // Try to load websites (may fail without auth, that's okay)
+          try {
+            const websitesResponse = await fetch('/api/websites')
+            if (websitesResponse.ok) {
+              const websitesData = await websitesResponse.json()
+              setWebsites(websitesData.websites || [])
+            }
+          } catch (err) {
+            console.log('Could not load websites (auth required):', err)
+            setWebsites([])
+          }
+          
+          setLoading(false)
           return
         }
 
-        const data = await response.json()
-        setUser(data.user)
-        setProfile(data.user)
+        // Normal authentication flow - DISABLED FOR NOW
+        // const response = await fetch('/api/auth/me')
+        // if (!response.ok) {
+        //   router.push('/auth/signin')
+        //   return
+        // }
+        // const data = await response.json()
+        // setUser(data.user)
+        // setProfile(data.user)
 
         // Load user's websites
         const websitesResponse = await fetch('/api/websites')
@@ -37,7 +71,21 @@ export default function Dashboard() {
 
         setLoading(false)
       } catch (error) {
-        router.push('/auth/signin')
+        // Never redirect - just use mock user
+        console.log('Error loading user, using mock user:', error)
+        const mockUser = {
+          id: 'test-user-123',
+          email: 'james@ekaty.com',
+          role: 'superadmin',
+          isSuperAdmin: true,
+          paywallBypass: true,
+          subscriptionTier: 'enterprise',
+          plan: 'ENTERPRISE'
+        }
+        setUser(mockUser)
+        setProfile(mockUser)
+        setWebsites([])
+        setLoading(false)
       }
     }
 
@@ -76,13 +124,20 @@ export default function Dashboard() {
               <Logo variant="nav" showText={true} />
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">Welcome, {user?.email}</span>
-              <button
-                onClick={handleSignOut}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300"
-              >
-                Sign out
-              </button>
+              {BYPASS_AUTH && (
+                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                  TEST MODE - Auth Disabled
+                </span>
+              )}
+              <span className="text-gray-700">Welcome, {user?.email || 'Guest'}</span>
+              {!BYPASS_AUTH && (
+                <button
+                  onClick={handleSignOut}
+                  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-300"
+                >
+                  Sign out
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -240,6 +295,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
-
-

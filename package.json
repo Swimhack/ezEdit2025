@@ -20,6 +20,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.16.1",
     "@monaco-editor/react": "^4.7.0",
+    "@scalekit-sdk/node": "^2.1.5",
     "@simplewebauthn/browser": "^13.2.0",
     "@simplewebauthn/server": "^13.2.1",
     "@simplewebauthn/typescript-types": "^8.3.4",
@@ -62,6 +63,8 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@types/ssh2-sftp-client": "^9.0.5",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "autoprefixer": "^10.4.17",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.0",

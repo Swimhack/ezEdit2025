@@ -24,18 +24,24 @@ export type VerificationStatus = 'unverified' | 'verified' | 'pending'
 
 // === Authentication Session Types ===
 
+export type SessionStatus = 'active' | 'expired' | 'revoked'
+
 export interface AuthenticationSession {
   id: string
   user_id: string
   session_token: string
-  device_info: DeviceInfo
-  ip_address: string
-  user_agent: string
+  status: SessionStatus
   created_at: string
+  updated_at: string
   expires_at: string
-  last_activity_at: string
-  is_active: boolean
-  logout_reason: LogoutReason | null
+  last_activity_at: string | null
+  revoked_at: string | null
+  revocation_reason: string | null
+  ip_address: string | null
+  ip_changed_at: string | null
+  user_agent_hash: string | null
+  device_fingerprint: string | null
+  mfa_verified_at: string | null
 }
 
 export interface DeviceInfo {
@@ -49,64 +55,107 @@ export type LogoutReason = 'user_logout' | 'timeout' | 'security_logout' | 'admi
 
 // === Security Event Log Types ===
 
+export type SecurityLevel = 'low' | 'medium' | 'high' | 'critical'
+
+export type SecurityEventType =
+  | 'login_attempt'
+  | 'login_success'
+  | 'login_failure'
+  | 'password_reset_request'
+  | 'password_reset_success'
+  | 'email_verification'
+  | 'account_locked'
+  | 'account_unlocked'
+  | 'mfa_enabled'
+  | 'mfa_disabled'
+  | 'suspicious_activity'
+  | 'session_created'
+  | 'session_expired'
+  | 'session_revoked'
+  | 'permission_denied'
+  | 'data_access'
+  | 'configuration_change'
+  | 'security_policy_violation'
+
+export type EventOutcome = 'success' | 'failure' | 'blocked'
+
+export interface SecurityEventInput {
+  event_type: SecurityEventType
+  severity_level: SecurityLevel
+  event_description: string
+  user_id?: string
+  session_id?: string
+  source_ip?: string
+  user_agent?: string
+  additional_context?: Record<string, any>
+  correlation_ids?: Record<string, string>
+}
+
+
 export interface SecurityEventLog {
   id: string
   user_id: string | null
   session_id: string | null
   event_type: SecurityEventType
-  event_outcome: EventOutcome
-  ip_address: string
-  user_agent: string
-  event_details: Record<string, any>
-  risk_score: number
-  timestamp: string
-  correlation_id: string
+  severity_level: SecurityLevel
+  event_description: string
+  source_ip?: string | null
+  user_agent?: string | null
+  ip_address?: string | null
+  created_at: string
+  updated_at: string
+  additional_context?: string | null
+  correlation_ids?: string | null
+  correlation_id?: string | null
+  event_outcome?: EventOutcome
+  risk_score?: number
 }
-
-export type SecurityEventType =
-  | 'login'
-  | 'logout'
-  | 'signup'
-  | 'password_reset'
-  | 'account_locked'
-  | 'mfa_enabled'
-  | 'failed_login'
-  | 'login_failure'
-  | 'email_verification'
-  | 'session_expired'
-  | 'suspicious_activity'
-  | 'login_attempt'
-
-export type EventOutcome = 'success' | 'failure' | 'blocked'
-
 // === Password Reset Token Types ===
+
+export type TokenStatus = 'active' | 'used' | 'revoked'
 
 export interface PasswordResetToken {
   id: string
   user_id: string
-  token_hash: string
+  reset_token: string
+  status: TokenStatus
   created_at: string
+  updated_at: string
   expires_at: string
+  attempts_remaining: number
+  created_ip: string | null
+  used_ip: string | null
+  last_attempted_at: string | null
   used_at: string | null
-  ip_address: string
-  is_used: boolean
-  email_sent_at: string
+  revoked_at: string | null
+  revocation_reason: string | null
+  rate_limited_until: string | null
 }
 
 // === Email Verification Types ===
 
-export interface EmailVerification {
+export interface EmailVerificationToken {
   id: string
   user_id: string
   email: string
-  token_hash: string
+  verification_token: string
+  status: EmailVerificationStatus | 'revoked'
   created_at: string
+  updated_at: string
   expires_at: string
+  attempts_remaining: number
+  resent_count: number
+  last_attempted_at: string | null
+  last_resent_at: string | null
+  created_ip: string | null
+  verified_ip: string | null
   verified_at: string | null
-  attempts: number
-  status: EmailVerificationStatus
+  failed_at: string | null
+  failure_reason: string | null
+  revoked_at: string | null
+  revocation_reason: string | null
+  rate_limited_until: string | null
 }
-
 export type EmailVerificationStatus = 'pending' | 'verified' | 'expired' | 'failed'
 
 // === API Request/Response Types ===
@@ -159,6 +208,27 @@ export interface ResendVerificationRequest {
 
 // === Error Types ===
 
+export interface AuthSessionPayload {
+  access_token: string
+  refresh_token: string
+  expires_at: number
+  user: any
+}
+
+export interface AuthSuccessData {
+  user: any
+  session: AuthSessionPayload | null
+  verification_required?: boolean
+  verification_token?: string | null
+  next_step?: string
+}
+
+export interface AuthResult {
+  success: boolean
+  data?: AuthSuccessData
+  error?: AuthError
+}
+
 export interface AuthError {
   error: string
   message: string
@@ -178,7 +248,6 @@ export type AuthErrorCode =
   | 'RATE_LIMITED'
   | 'NETWORK_ERROR'
   | 'SERVER_ERROR'
-
 // === Validation Schemas ===
 
 export const emailSchema = z.string()
@@ -240,7 +309,7 @@ export const resendVerificationSchema = z.object({
 // === Utility Types ===
 
 export interface AuthContextType {
-  user: UserAccount | null
+  user: any | null
   session: AuthenticationSession | null
   loading: boolean
   error: AuthError | null
@@ -317,3 +386,29 @@ export const AUTH_CONSTANTS = {
 } as const
 
 export type AuthConstants = typeof AUTH_CONSTANTS
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

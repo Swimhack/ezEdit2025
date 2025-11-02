@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
-import { supabase } from '@/lib/supabase'
 import { fetchWithRetry, getAuthErrorMessage, AUTH_RETRY_CONFIG, checkNetworkConnectivity } from '@/lib/retry-logic'
 
 export const dynamic = 'force-dynamic'
@@ -29,9 +28,8 @@ function SignInForm() {
   }, [])
 
   const handleEmailChange = (value: string) => {
-    // Basic input sanitization
-    const sanitized = value.trim()
-    setEmail(sanitized)
+    // Don't trim during typing - only trim on submit
+    setEmail(value)
   }
 
   const handlePasswordChange = (value: string) => {
@@ -53,10 +51,6 @@ function SignInForm() {
       validationErrors.email = ['Email is required']
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       validationErrors.email = ['Invalid email format']
-    }
-
-    if (!password) {
-      validationErrors.password = ['Password is required']
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -90,7 +84,7 @@ function SignInForm() {
         },
         body: JSON.stringify({
           email: email.trim(),
-          password: password
+          redirectTo: `${window.location.origin}/auth/callback`
         })
       }, retryConfigWithFeedback)
 
@@ -99,14 +93,45 @@ function SignInForm() {
       const data = await response.json()
 
       if (!response.ok) {
-        const errorMessage = data.message || data.error || 'Failed to sign in'
+        // Use the detailed error from the API response if available
+        const errorMessage = data.error || data.message || data.details || 'Failed to sign in'
         setError(errorMessage)
+        
+        // Log full error details for debugging
+        console.error('Signin API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: data.error,
+          details: data.details,
+          type: data.type
+        })
         return
       }
 
-      // Sign in successful
+      // ScaleKit returns a redirect URL - redirect to ScaleKit hosted login page
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+        return
+      }
+
+      // Fallback: redirect to dashboard if no redirect URL
       router.push('/dashboard')
     } catch (err: any) {
+      setIsRetrying(false)
+      
+      // Try to get detailed error from response if available
+      if (err.response) {
+        try {
+          const errorData = await err.response.json()
+          const errorMessage = errorData.error || errorData.message || errorData.details || getAuthErrorMessage(err)
+          setError(errorMessage)
+          console.error('Signin error details:', errorData)
+          return
+        } catch {
+          // If we can't parse the error response, fall back to generic message
+        }
+      }
+      
       // Use the enhanced error message handler
       const userFriendlyMessage = getAuthErrorMessage(err)
       setError(userFriendlyMessage)
@@ -123,17 +148,31 @@ function SignInForm() {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
+      // Redirect to ScaleKit hosted login page for social login
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          socialLogin: true,
           redirectTo: `${window.location.origin}/auth/callback`
-        }
+        })
       })
 
-      if (error) {
-        setError(error.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        const errorMessage = data.error || data.message || 'Failed to initiate Google sign in'
+        setError(errorMessage)
+        return
       }
-      // If successful, the user will be redirected to Google
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+      } else {
+        setError('Failed to initiate Google sign in')
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to initiate Google sign in')
     } finally {

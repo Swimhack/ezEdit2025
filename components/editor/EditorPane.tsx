@@ -1,5 +1,5 @@
 /**
- * EditorPane - Center pane component for Monaco Editor code editing
+ * EditorPane - VS Code-style editor with tabs
  * Integrates Monaco Editor with file content and provides editing features
  */
 
@@ -95,21 +95,6 @@ export default function EditorPane() {
     return getLanguageFromFilename(currentFile);
   }, [currentFile]);
 
-  // Get editor theme based on preferences
-  const getEditorTheme = useCallback(() => {
-    const theme = state.session?.preferences.theme || 'dark';
-    switch (theme) {
-      case 'light':
-        return 'light';
-      case 'dark':
-        return 'vs-dark';
-      case 'auto':
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'vs-dark' : 'light';
-      default:
-        return 'vs-dark';
-    }
-  }, [state.session?.preferences.theme]);
-
   // Handle save shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -128,10 +113,10 @@ export default function EditorPane() {
   // Show loading state
   if (isLoading && !currentFile) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50" data-testid="editor-loading">
+      <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-loading">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading editor...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
+          <p className="text-[#cccccc]">Loading editor...</p>
         </div>
       </div>
     );
@@ -140,12 +125,12 @@ export default function EditorPane() {
   // Show no file selected state
   if (!currentFile) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50" data-testid="editor-no-file">
+      <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-no-file">
         <div className="text-center">
           <div className="text-6xl mb-4">📝</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No File Selected</h3>
-          <p className="text-gray-600 mb-4">Select a file from the file tree to start editing</p>
-          <div className="text-sm text-gray-500">
+          <h3 className="text-lg font-semibold text-[#cccccc] mb-2">No File Selected</h3>
+          <p className="text-[#858585] mb-4">Select a file from the file tree to start editing</p>
+          <div className="text-sm text-[#858585]">
             <p>Tip: Double-click a file to open it for editing</p>
           </div>
         </div>
@@ -160,12 +145,12 @@ export default function EditorPane() {
 
   if (fileNode && !isEditableFile(fileNode)) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50" data-testid="editor-non-editable">
+      <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-non-editable">
         <div className="text-center">
           <div className="text-6xl mb-4">🚫</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">File Not Editable</h3>
-          <p className="text-gray-600 mb-4">This file type cannot be edited in the text editor</p>
-          <div className="text-sm text-gray-500">
+          <h3 className="text-lg font-semibold text-[#cccccc] mb-2">File Not Editable</h3>
+          <p className="text-[#858585] mb-4">This file type cannot be edited in the text editor</p>
+          <div className="text-sm text-[#858585]">
             <p>Supported formats: Text files, code files, configuration files</p>
           </div>
         </div>
@@ -176,42 +161,38 @@ export default function EditorPane() {
   // Show Monaco loading state
   if (!monacoLoaded || !Editor) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50" data-testid="monaco-loading">
+      <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="monaco-loading">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading code editor...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
+          <p className="text-[#cccccc]">Loading code editor...</p>
         </div>
       </div>
     );
   }
 
+  const fileName = currentFile.split('/').pop() || 'Untitled';
+
   return (
-    <div className="h-full flex flex-col bg-white" data-testid="editor-pane">
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center space-x-3">
-          <h3 className="font-semibold text-gray-900 truncate" title={currentFile}>
-            {currentFile.split('/').pop()}
-          </h3>
-          {isDirty && (
-            <span className="text-orange-600 text-sm" title="Unsaved changes">
-              ● Modified
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <div className="text-xs text-gray-500">
-            {getEditorLanguage().toUpperCase()}
+    <div className="h-full flex flex-col bg-[#1e1e1e]" data-testid="editor-pane">
+      {/* Tab Bar (VS Code style) */}
+      <div className="flex items-center bg-[#2d2d30] border-b border-[#3e3e42]">
+        <div className="flex-1 flex items-center overflow-x-auto">
+          <div className="flex items-center px-3 py-1.5 bg-[#1e1e1e] border-r border-[#3e3e42] text-sm text-[#cccccc] cursor-pointer hover:bg-[#2d2d30] transition-colors">
+            <span className="mr-2">{getFileIcon(fileName)}</span>
+            <span className="truncate max-w-[200px]">{fileName}</span>
+            {isDirty && (
+              <span className="ml-2 text-[#ffcc00]" title="Unsaved changes">●</span>
+            )}
           </div>
-
+        </div>
+        <div className="flex items-center px-2 border-l border-[#3e3e42]">
           <button
             onClick={saveFile}
             disabled={!isDirty || isLoading}
-            className={`px-3 py-1 text-xs rounded ${
+            className={`px-3 py-1 text-xs rounded transition-colors ${
               isDirty && !isLoading
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                ? 'bg-[#0e639c] text-white hover:bg-[#1177bb]'
+                : 'bg-[#3c3c3c] text-[#858585] cursor-not-allowed'
             }`}
             title="Save file (Ctrl+S)"
             data-testid="save-button"
@@ -226,7 +207,7 @@ export default function EditorPane() {
         <Editor
           height="100%"
           language={getEditorLanguage()}
-          theme={getEditorTheme()}
+          theme="vs-dark"
           value={fileContent}
           onChange={handleEditorChange}
           onMount={handleEditorDidMount}
@@ -252,13 +233,14 @@ export default function EditorPane() {
               enabled: true
             },
             formatOnPaste: true,
-            formatOnType: true
+            formatOnType: true,
+            'semanticHighlighting.enabled': true
           }}
         />
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between p-2 border-t border-gray-200 bg-gray-50 text-xs text-gray-500">
+      {/* Footer (Editor Info) */}
+      <div className="flex items-center justify-between px-4 py-1 border-t border-[#3e3e42] bg-[#252526] text-xs text-[#858585]">
         <div className="flex items-center space-x-4">
           <span>Line {editorRef.current?.getPosition()?.lineNumber || 1}</span>
           <span>Column {editorRef.current?.getPosition()?.column || 1}</span>
@@ -266,7 +248,7 @@ export default function EditorPane() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <span>{getEditorLanguage()}</span>
+          <span className="uppercase">{getEditorLanguage()}</span>
           <span>UTF-8</span>
           {state.lastSaved && (
             <span title="Last saved">
@@ -296,41 +278,31 @@ function findFileInTree(node: any, targetPath: string): any {
 }
 
 /**
- * Editor status indicator component
+ * Helper function to get file icon
  */
-interface EditorStatusProps {
-  isDirty: boolean;
-  isLoading: boolean;
-  lastSaved: Date | null;
-}
-
-export function EditorStatus({ isDirty, isLoading, lastSaved }: EditorStatusProps) {
-  if (isLoading) {
-    return (
-      <div className="flex items-center space-x-2 text-blue-600">
-        <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600" />
-        <span className="text-xs">Saving...</span>
-      </div>
-    );
-  }
-
-  if (isDirty) {
-    return (
-      <div className="flex items-center space-x-2 text-orange-600">
-        <span className="text-xs">●</span>
-        <span className="text-xs">Unsaved changes</span>
-      </div>
-    );
-  }
-
-  if (lastSaved) {
-    return (
-      <div className="flex items-center space-x-2 text-green-600">
-        <span className="text-xs">✓</span>
-        <span className="text-xs">Saved {lastSaved.toLocaleTimeString()}</span>
-      </div>
-    );
-  }
-
-  return null;
+function getFileIcon(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  const iconMap: Record<string, string> = {
+    'js': '📄',
+    'ts': '📘',
+    'jsx': '⚛️',
+    'tsx': '⚛️',
+    'html': '🌐',
+    'css': '🎨',
+    'json': '📋',
+    'md': '📝',
+    'py': '🐍',
+    'java': '☕',
+    'cpp': '⚙️',
+    'php': '🐘',
+    'go': '🐹',
+    'rs': '🦀',
+    'rb': '💎',
+    'sh': '💻',
+    'yml': '⚙️',
+    'yaml': '⚙️',
+    'xml': '📄',
+    'txt': '📄'
+  };
+  return iconMap[ext || ''] || '📄';
 }

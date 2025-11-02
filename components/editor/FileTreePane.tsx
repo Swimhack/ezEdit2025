@@ -1,5 +1,5 @@
 /**
- * FileTreePane - Left pane component for FTP file tree navigation
+ * FileTreePane - VS Code-style file explorer sidebar
  * Displays hierarchical file tree with expand/collapse and file selection
  */
 
@@ -79,39 +79,43 @@ export default function FileTreePane() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col bg-white" data-testid="file-tree-pane">
+    <div className="h-full flex flex-col bg-[#252526] text-[#cccccc]" data-testid="file-tree-pane">
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900">Files</h3>
-        <div className="flex items-center space-x-2">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#3e3e42]">
+        <h3 className="text-xs font-semibold uppercase text-[#858585] tracking-wider">Explorer</h3>
+        <div className="flex items-center space-x-1">
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="p-1 rounded hover:bg-gray-100"
+            className="p-1.5 rounded hover:bg-[#37373d] text-[#cccccc] transition-colors"
             title="Search files"
             data-testid="search-toggle"
           >
-            🔍
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="p-1 rounded hover:bg-gray-100"
+            className="p-1.5 rounded hover:bg-[#37373d] text-[#cccccc] transition-colors"
             title="Refresh"
             data-testid="refresh-button"
           >
-            🔄
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
           </button>
         </div>
       </div>
 
       {/* Search Bar */}
       {showSearch && (
-        <div className="p-3 border-b border-gray-200">
+        <div className="px-3 py-2 border-b border-[#3e3e42]">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search files..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-2 py-1.5 bg-[#3c3c3c] border border-[#3e3e42] rounded text-sm text-[#cccccc] placeholder-[#858585] focus:outline-none focus:border-[#007acc]"
             data-testid="search-input"
           />
         </div>
@@ -122,13 +126,13 @@ export default function FileTreePane() {
         {isLoading && fileTree.length === 0 ? (
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Loading files...</p>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#007acc] mx-auto mb-2"></div>
+              <p className="text-sm text-[#858585]">Loading files...</p>
             </div>
           </div>
         ) : filteredFileTree.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[#858585]">
               {searchTerm ? 'No files match your search' : 'No files found'}
             </p>
           </div>
@@ -143,12 +147,6 @@ export default function FileTreePane() {
             currentFile={currentFile}
           />
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="p-2 border-t border-gray-200 text-xs text-gray-500">
-        {filteredFileTree.length} items
-        {searchTerm && ` (filtered)`}
       </div>
     </div>
   );
@@ -195,7 +193,7 @@ function FileTreeNodeList({
 }
 
 /**
- * Individual file tree node component
+ * Individual file tree node component - VS Code style
  */
 interface FileTreeNodeProps {
   node: FTPFileNode;
@@ -227,9 +225,11 @@ function FileTreeNode({
     <div data-testid={`file-node-${node.type}-${node.name}`}>
       {/* Node itself */}
       <div
-        className={`flex items-center py-1 px-2 text-sm cursor-pointer hover:bg-gray-100 ${
-          isSelected ? 'bg-blue-100 text-blue-900' : ''
-        } ${isCurrent ? 'font-semibold' : ''}`}
+        className={`flex items-center py-0.5 px-2 text-sm cursor-pointer transition-colors ${
+          isSelected || isCurrent
+            ? 'bg-[#37373d] text-[#ffffff]'
+            : 'hover:bg-[#2a2d2e] text-[#cccccc]'
+        }`}
         style={{ paddingLeft: `${8 + indent}px` }}
         onClick={(e) => onNodeClick(node, e)}
         onKeyDown={(e) => onKeyDown(e, node)}
@@ -246,31 +246,24 @@ function FileTreeNode({
       >
         {/* Expand/collapse icon for directories */}
         {node.type === 'directory' && (
-          <span className="w-4 h-4 flex items-center justify-center mr-1 text-gray-500">
+          <span className="w-4 h-4 flex items-center justify-center mr-1 text-[#858585] text-xs">
             {node.isExpanded ? '▼' : '▶'}
           </span>
         )}
 
         {/* File/directory icon */}
-        <span className="mr-2" role="img" aria-label={node.type}>
+        <span className="mr-1.5 text-base" role="img" aria-label={node.type}>
           {icon}
         </span>
 
         {/* File/directory name */}
-        <span className={`flex-1 truncate ${!isEditable && node.type === 'file' ? 'text-gray-500' : ''}`}>
+        <span className={`flex-1 truncate ${!isEditable && node.type === 'file' ? 'text-[#858585]' : ''}`}>
           {node.name}
         </span>
 
-        {/* File size (for files only) */}
-        {node.type === 'file' && (
-          <span className="text-xs text-gray-400 ml-2">
-            {formatFileSize(node.size)}
-          </span>
-        )}
-
         {/* Current file indicator */}
         {isCurrent && (
-          <span className="ml-2 text-blue-600" title="Currently editing">
+          <span className="ml-2 text-[#007acc]" title="Currently editing">
             ●
           </span>
         )}
@@ -290,37 +283,6 @@ function FileTreeNode({
           />
         </div>
       )}
-    </div>
-  );
-}
-
-/**
- * File tree breadcrumb navigation
- */
-interface BreadcrumbProps {
-  currentPath: string;
-  onNavigate: (path: string) => void;
-}
-
-export function FileTreeBreadcrumb({ currentPath, onNavigate }: BreadcrumbProps) {
-  const breadcrumbs = getBreadcrumbs(currentPath);
-
-  return (
-    <div className="flex items-center space-x-1 text-sm text-gray-600 p-2 border-b border-gray-200">
-      {breadcrumbs.map((crumb, index) => (
-        <React.Fragment key={crumb.path}>
-          {index > 0 && <span className="text-gray-400">/</span>}
-          <button
-            onClick={() => onNavigate(crumb.path)}
-            className={`hover:text-blue-600 ${
-              index === breadcrumbs.length - 1 ? 'font-semibold' : ''
-            }`}
-            data-testid={`breadcrumb-${index}`}
-          >
-            {crumb.name}
-          </button>
-        </React.Fragment>
-      ))}
     </div>
   );
 }

@@ -1,62 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Client as FTPClient } from 'basic-ftp'
-import { addConnection, getConnection, ensureConnectionActive, queueFTPOperation, type FTPConnection } from '@/lib/ftp-connections'
+import { addConnection, getConnection, ensureConnectionActive, queueFTPOperation, removeConnection, type FTPConnection } from '@/lib/ftp-connections'
 import { createRequestLogger } from '@/lib/logger'
 import { extractErrorContext, createErrorResponse } from '@/lib/api-error-handler'
 import { getWebsite } from '@/lib/websites-memory-store'
+import { getFTPConfig } from '@/lib/ftp-config'
 import { randomUUID } from 'crypto'
 
-// Helper to format file info
+// Helper to normalize and validate paths
+function normalizePath(path: string): string {
+  if (!path) return '/'
+  // Remove trailing slashes except for root
+  path = path.replace(/\/+$/, '') || '/'
+  // Ensure starts with /
+  if (!path.startsWith('/')) path = '/' + path
+  // Normalize double slashes
+  path = path.replace(/\/+/g, '/')
+  return path
+}
+
+// Helper to format file info with improved type detection
 function formatFileInfo(item: any, path: string): any {
-  const id = `${path}/${item.name}`.replace(/\/+/g, '/')
-  const fullPath = path === '/' ? `/${item.name}` : `${path}/${item.name}`
+  // Ensure item has a name
+  if (!item || !item.name) {
+    console.warn('FTP item missing name property:', item)
+    return null
+  }
 
-  // Debug: Log raw FTP response for analysis
-  console.log(`[FTP] Raw item data for ${item.name}:`, {
-    name: item.name,
-    type: item.type,
-    isDirectory: item.isDirectory,
-    isFile: item.isFile,
-    size: item.size
-  })
+  const normalizedPath = normalizePath(path)
+  const id = `${normalizedPath}/${item.name}`.replace(/\/+/g, '/')
+  const fullPath = normalizedPath === '/' ? `/${item.name}` : `${normalizedPath}/${item.name}`
 
-  // CRITICAL: File extension detection is ABSOLUTE authority
-  const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(item.name)
-
+  // Improved file type detection
   let fileType: string
-  if (hasFileExtension) {
-    // Files with extensions are ALWAYS files, regardless of FTP metadata
-    fileType = 'file'
-    console.log(`[FTP] ${item.name} forced to 'file' due to extension`)
+  
+  // Check FTP metadata first
+  if (item.isDirectory !== undefined) {
+    fileType = item.isDirectory ? 'directory' : 'file'
+  } else if (item.type !== undefined) {
+    // Type 1 = directory, Type 0 = file
+    fileType = item.type === 1 ? 'directory' : 'file'
   } else {
-    // Only for items without extensions, check FTP metadata
-    if (item.isDirectory || item.type === 1) {
-      fileType = 'directory'
-    } else {
+    // Fallback: use file extension
+    const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(item.name)
+    if (hasFileExtension) {
       fileType = 'file'
+    } else {
+      // Items without extensions are likely directories
+      fileType = 'directory'
     }
   }
 
-
   return {
     id,
-    name: item.name,
+    name: item.name || 'unknown',
     path: fullPath,
     type: fileType,
-    size: item.size || 0,
-    modified: item.modifiedAt ? item.modifiedAt.toISOString() : new Date().toISOString()
+    size: fileType === 'file' ? (item.size || 0) : 0,
+    modified: item.modifiedAt ? item.modifiedAt.toISOString() : new Date().toISOString(),
+    permissions: item.permissions || undefined
   }
 }
 
-
-// Rate limiting and circuit breaker - use per-client ID for better granularity
+// Rate limiting and circuit breaker
 const requestCounts = new Map<string, { count: number, resetTime: number }>()
 const failureCounts = new Map<string, { count: number, resetTime: number }>()
-const RATE_LIMIT = 10 // increased back to 10 requests per minute (should be enough with proper client fixes)
-const FAILURE_THRESHOLD = 5 // increased back to 5 failures before circuit breaker opens
-const CIRCUIT_BREAKER_TIMEOUT = 60000 // reduced back to 1 minute
+const RATE_LIMIT = 30 // Increased for better user experience
+const FAILURE_THRESHOLD = 5
+const CIRCUIT_BREAKER_TIMEOUT = 60000
 
-// Clean up old entries periodically to prevent memory leaks
+// Clean up old entries periodically
 setInterval(() => {
   const now = Date.now()
   for (const [key, value] of requestCounts.entries()) {
@@ -69,7 +82,7 @@ setInterval(() => {
       failureCounts.delete(key)
     }
   }
-}, 60000) // Clean up every minute
+}, 60000)
 
 function checkRateLimit(clientId: string): boolean {
   const now = Date.now()
@@ -79,13 +92,6 @@ function checkRateLimit(clientId: string): boolean {
   const current = requestCounts.get(key) || { count: 0, resetTime: now + 60000 }
   current.count++
   requestCounts.set(key, current)
-
-  // Clean old entries
-  for (const [k, v] of requestCounts.entries()) {
-    if (now > v.resetTime) {
-      requestCounts.delete(k)
-    }
-  }
 
   return current.count <= RATE_LIMIT
 }
@@ -112,7 +118,12 @@ function recordFailure(websiteId: string) {
   failureCounts.set(websiteId, failures)
 }
 
-// GET: List files in a directory
+function recordSuccess(websiteId: string) {
+  // Reset failure count on success
+  failureCounts.delete(websiteId)
+}
+
+// POST: List files in a directory
 export async function POST(request: NextRequest) {
   const correlationId = randomUUID()
   const logger = createRequestLogger(request)
@@ -125,7 +136,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     websiteId = body.websiteId
-    path = body.path || '/'
+    path = normalizePath(body.path || '/')
   } catch (error) {
     logger.error('Invalid JSON request body', error as Error, 'ftp_list_parse_error')
     return createErrorResponse(
@@ -157,7 +168,7 @@ export async function POST(request: NextRequest) {
       websiteId,
       correlationId,
       operation: 'ftp_list_circuit_breaker_open'
-    });
+    })
 
     return NextResponse.json(
       { error: 'Service temporarily unavailable due to repeated failures. Please wait 1 minute and try again.' },
@@ -166,48 +177,198 @@ export async function POST(request: NextRequest) {
   }
 
   const website = getWebsite(userId, websiteId)
-  if (!website) return NextResponse.json({ error: 'Website not found' }, { status: 404 })
+  if (!website) {
+    return NextResponse.json({ error: 'Website not found' }, { status: 404 })
+  }
 
-  // All websites must use real FTP connections
-
-  // Find or create connection for this website
+  // Validate website has required credentials
+  if (!website.username || !website.password) {
+    logger.error('Website missing credentials', {
+      websiteId,
+      hasUsername: !!website.username,
+      hasPassword: !!website.password,
+      correlationId,
+      operation: 'ftp_list_missing_credentials'
+    })
+    return NextResponse.json(
+      { error: 'Website FTP credentials are missing. Please update your website settings.' },
+      { status: 400 }
+    )
+  }
   let connectionId = `${website.host}:${website.port}:${website.username}`
   let connection = getConnection(connectionId)
+  
+  const ftpConfig = getFTPConfig()
+  
   if (!connection) {
     const client = new FTPClient()
+    
+    // Configure client with best practices
+    client.ftp.verbose = ftpConfig.verbose
+    client.ftp.timeout = ftpConfig.connectionTimeout
+    client.timeout = ftpConfig.dataTimeout
+    client.ftp.pasvTimeout = ftpConfig.pasvTimeout
+    
     try {
-      await client.access({
+      logger.info('Attempting FTP connection', {
+        host: website.host.trim(),
+        port: parseInt(website.port, 10) || 21,
+        username: website.username,
+        hasPassword: !!website.password,
+        passwordLength: website.password?.length || 0,
+        path: website.path,
+        connectionId,
+        correlationId,
+        operation: 'ftp_connection_attempt'
+      })
+      
+      // Determine if we need secure connection based on website type
+      const isSecure = website.type?.toLowerCase() === 'ftps' || website.type?.toLowerCase() === 'sftp'
+      
+      // Try connection with appropriate protocol
+      const accessOptions: any = {
         host: website.host.trim(),
         port: parseInt(website.port, 10) || 21,
         user: website.username,
         password: website.password,
-        secure: false
+        secure: isSecure,
+        connTimeout: ftpConfig.connectionTimeout,
+        pasvTimeout: ftpConfig.pasvTimeout,
+        keepalive: ftpConfig.keepaliveInterval
+      }
+      
+      // For FTPS, configure secure options
+      if (isSecure) {
+        accessOptions.secureOptions = undefined // Let basic-ftp handle TLS
+      }
+      
+      logger.info('FTP connection options', {
+        ...accessOptions,
+        password: '***',
+        correlationId,
+        operation: 'ftp_connection_options'
       })
+      
+      await client.access(accessOptions)
+      
+      logger.info('FTP connection established successfully', {
+        connectionId,
+        correlationId,
+        operation: 'ftp_connection_success'
+      })
+      
+      // Test connection with PWD command
+      try {
+        const currentDir = await client.pwd()
+        logger.info('FTP connection verified with PWD', {
+          connectionId,
+          currentDir,
+          correlationId,
+          operation: 'ftp_connection_verified'
+        })
+      } catch (pwdError: any) {
+        logger.warn('PWD test failed but connection established', {
+          connectionId,
+          error: pwdError.message,
+          correlationId,
+          operation: 'ftp_pwd_warning'
+        })
+      }
+      
+      // Navigate to working directory if specified
+      if (website.path && website.path !== '/') {
+        try {
+          await client.cd(website.path)
+          logger.info('Changed to working directory', {
+            path: website.path,
+            connectionId,
+            correlationId,
+            operation: 'ftp_cd_success'
+          })
+        } catch (cdError: any) {
+          logger.warn('Could not change to working directory', {
+            path: website.path,
+            connectionId,
+            correlationId,
+            error: cdError instanceof Error ? cdError.message : 'Unknown error',
+            operation: 'ftp_cd_warning'
+          })
+          // Don't fail the connection if CD fails - some servers don't support it
+        }
+      }
+      
       const conn: FTPConnection = {
         id: connectionId,
         host: website.host.trim(),
         port: parseInt(website.port, 10) || 21,
         username: website.username,
         password: website.password,
-        protocol: 'ftp',
+        protocol: website.type?.toLowerCase() === 'ftps' ? 'ftps' : 'ftp',
         name: connectionId,
         connected: true,
         lastConnected: new Date().toISOString(),
         client,
         lastActivity: Date.now(),
-        taskQueue: Promise.resolve()
+        taskQueue: Promise.resolve(),
+        ftpConfig
       }
       addConnection(conn)
       connection = conn
     } catch (err: any) {
       const msg = err?.message || 'Failed to connect'
-      if (msg.includes('530')) {
-        return NextResponse.json({ error: 'Authentication failed (530). Verify FTP username/password.' }, { status: 401 })
+      recordFailure(websiteId)
+      
+      logger.error('FTP connection failed', {
+        error: err,
+        connectionId,
+        correlationId,
+        host: website.host,
+        port: website.port,
+        username: website.username,
+        errorMessage: msg,
+        errorCode: err.code,
+        operation: 'ftp_connection_failed'
+      }, 'ftp_connection_error')
+      
+      // Provide detailed error messages based on error code
+      if (msg.includes('530') || msg.includes('User cannot log in') || msg.includes('Login incorrect') || msg.includes('Authentication failed')) {
+        return NextResponse.json(
+          { 
+            error: 'Authentication failed. Please verify your FTP username and password.',
+            details: 'The FTP server rejected the credentials. Please check your username and password in the website settings.',
+            errorCode: '530'
+          },
+          { status: 401 }
+        )
       }
-      if (msg.includes('ENOTFOUND')) {
-        return NextResponse.json({ error: `Host not found: ${website.host}` }, { status: 404 })
+      if (msg.includes('ENOTFOUND') || msg.includes('ECONNREFUSED')) {
+        return NextResponse.json(
+          { 
+            error: `Cannot connect to FTP server: ${website.host}`,
+            details: 'The server may be down or the host address is incorrect.',
+            errorCode: err.code
+          },
+          { status: 404 }
+        )
       }
-      return NextResponse.json({ error: `Connection failed: ${msg}` }, { status: 400 })
+      if (msg.includes('ETIMEDOUT')) {
+        return NextResponse.json(
+          { 
+            error: 'Connection timeout. The FTP server may be unreachable.',
+            details: 'Please check your network connection and server status.',
+            errorCode: err.code
+          },
+          { status: 504 }
+        )
+      }
+      return NextResponse.json(
+        { 
+          error: `Connection failed: ${msg}`,
+          details: 'Please verify your FTP settings and try again.',
+          errorCode: err.code
+        },
+        { status: 400 }
+      )
     }
   }
 
@@ -218,16 +379,15 @@ export async function POST(request: NextRequest) {
     operation: 'ftp_list_start'
   })
 
-  // CRITICAL: Server-side validation to prevent listing files as directories
-  const commonFileExtensions = ['.php', '.html', '.htm', '.js', '.css', '.txt', '.json', '.xml', '.py', '.rb', '.go', '.java', '.cpp', '.c', '.cs', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf'];
-  const hasFileExtension = commonFileExtensions.some(ext => path.endsWith(ext));
+  // Validate path is not a file
+  const commonFileExtensions = ['.php', '.html', '.htm', '.js', '.css', '.txt', '.json', '.xml', '.py', '.rb', '.go', '.java', '.cpp', '.c', '.cs', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf', '.zip', '.tar', '.gz']
+  const hasFileExtension = commonFileExtensions.some(ext => path.toLowerCase().endsWith(ext))
 
-  if (hasFileExtension) {
+  if (hasFileExtension && path !== '/') {
     logger.warn('Blocked attempt to list file as directory', {
       path,
       connectionId,
       correlationId,
-      detectedExtension: commonFileExtensions.find(ext => path.endsWith(ext)),
       operation: 'ftp_list_validation_error'
     })
 
@@ -237,144 +397,293 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Use the connection we have (created above or existing in pool)
   if (!connection) {
     return NextResponse.json(
-      { error: `Connection not found: ${connectionId}. Please reconnect to your FTP server.` },
+      { error: `Connection not found: ${connectionId}. Please reconnect.` },
       { status: 404 }
     )
   }
 
-  // Ensure connection is still active
+  // Ensure connection is still active - test with actual FTP command
   try {
+    logger.info('Testing FTP connection before listing', {
+      connectionId,
+      path,
+      correlationId,
+      operation: 'ftp_connection_test_start'
+    })
+
     const isActive = await ensureConnectionActive(connection)
+    
     if (!isActive) {
-      logger.warn('FTP connection inactive', {
+      logger.warn('FTP connection inactive after test', {
         connectionId,
         path,
         correlationId,
         operation: 'ftp_connection_inactive'
       })
+      
+      // Remove the inactive connection from pool
+      removeConnection(connectionId)
+      
       return NextResponse.json(
-        { error: 'FTP connection is not active. Please reconnect to your FTP server.' },
+        { 
+          error: 'FTP connection is not active. Please reconnect.',
+          details: 'The connection was lost. Please try again.'
+        },
         { status: 503 }
       )
     }
+
+    logger.info('FTP connection verified as active', {
+      connectionId,
+      path,
+      correlationId,
+      operation: 'ftp_connection_active_confirmed'
+    })
   } catch (error: any) {
     logger.error('Connection validation failed', error, 'ftp_connection_validation_error')
 
-    // Handle ECONNRESET during validation
     if (error.message?.includes('ECONNRESET') || error.message?.includes('read ECONNRESET')) {
       return NextResponse.json(
-        { error: 'Connection to FTP server was lost (ECONNRESET). Please reconnect.' },
+        { 
+          error: 'Connection to FTP server was lost. Please reconnect.',
+          details: 'The FTP connection was reset. Please try again.'
+        },
         { status: 503 }
       )
     }
 
     return NextResponse.json(
-      { error: 'Failed to validate FTP connection. Please reconnect.' },
+      { 
+        error: 'Failed to validate FTP connection. Please reconnect.',
+        details: error.message || 'Connection test failed'
+      },
       { status: 503 }
     )
   }
 
   const listStartTime = Date.now()
 
-  try {
-    logger.info('Starting FTP list operation', {
-      connectionId,
-      path,
-      correlationId,
-      operation: 'ftp_list_operation'
-    })
+  // Retry logic for listing
+  let retries = 3
+  let lastError: any = null
 
-    // Queue the FTP operation to prevent concurrent access
-    const contents = await queueFTPOperation(connection, async () => {
-      return await connection.client.list(path)
-    })
-    console.log("folderContents for", path, contents)
+  while (retries > 0) {
+    try {
+      logger.info('Starting FTP list operation', {
+        connectionId,
+        path,
+        correlationId,
+        retries,
+        operation: 'ftp_list_operation'
+      })
 
-    const list = contents
-    const duration = Date.now() - listStartTime
-
-    logger.performance('FTP list operation', duration, {
-      connectionId,
-      path,
-      correlationId,
-      itemCount: list.length,
-      operation: 'ftp_list_performance'
-    })
-
-    const files = list.map((item: any) => formatFileInfo(item, path))
-
-    logger.info('FTP list operation completed successfully', {
-      connectionId,
-      path,
-      correlationId,
-      fileCount: files.length,
-      duration,
-      operation: 'ftp_list_success'
-    })
-
-    return NextResponse.json({
-      success: true,
-      files,
-      path,
-      connectionId
-    })
-
-  } catch (err: any) {
-    console.error("FTP .list error:", err)
-    const duration = Date.now() - listStartTime
-
-    logger.error('FTP list operation failed', err, 'ftp_list_error')
-
-    // Record failure for circuit breaker
-    recordFailure(websiteId)
-
-    let errorMessage = err?.message || 'Unknown error'
-    let statusCode = 500
-
-    // Handle specific connection errors
-    if (err.message?.includes('ECONNRESET') || err.message?.includes('read ECONNRESET')) {
-      errorMessage = 'Connection to FTP server was lost (ECONNRESET). Please reconnect.'
-      statusCode = 503
-    } else if (err.message?.includes('Client is closed')) {
-      errorMessage = 'FTP client connection is closed. Please reconnect.'
-      statusCode = 503
-    } else if (err.message?.includes('530')) {
-      errorMessage = 'Authentication failed (530). Verify FTP username/password.'
-      statusCode = 401
-    } else if (err.message?.includes('None of the available transfer strategies work')) {
-      errorMessage = 'FTP transfer failed - connection may be unstable. Please reconnect.'
-      statusCode = 503
-    } else if (err.message?.includes('EACCES') || err.message?.includes('permission denied')) {
-      errorMessage = 'File system permission denied. This service requires proper configuration.'
-      statusCode = 500
-    } else {
-      // Extract FTP error codes if available
-      const ftpCodeMatch = err.message?.match(/(\d{3})/);
-      const ftpCode = ftpCodeMatch ? ftpCodeMatch[1] : undefined;
-      if (ftpCode) {
-        if (ftpCode.startsWith('55')) {
-          errorMessage = `Access denied to directory: ${path}`
-          statusCode = 403
-        } else if (ftpCode.startsWith('45')) {
-          errorMessage = `Directory not found: ${path}`
-          statusCode = 404
+      // Queue the FTP operation to prevent concurrent access
+      const contents = await queueFTPOperation(connection, async () => {
+        // Ensure we're in the correct directory before listing
+        try {
+          // If website has a working directory, change to it first
+          if (website.path && website.path !== '/') {
+            try {
+              await connection.client.cd(website.path)
+              logger.info('Changed to working directory for list operation', {
+                path: website.path,
+                connectionId,
+                correlationId,
+                operation: 'ftp_cd_for_list'
+              })
+            } catch (cdError) {
+              logger.warn('Could not change to working directory during operation', {
+                path: website.path,
+                connectionId,
+                correlationId,
+                error: cdError instanceof Error ? cdError.message : 'Unknown error'
+              })
+              // Continue anyway - some servers don't require CD
+            }
+          }
+          
+          // If listing root, use working directory or root
+          // If path is '/', list the working directory if set, otherwise root
+          const listPath = path === '/' 
+            ? (website.path && website.path !== '/' ? website.path : '/')
+            : path
+          
+          logger.info('Listing directory', {
+            path: listPath,
+            originalPath: path,
+            websitePath: website.path,
+            connectionId,
+            correlationId,
+            operation: 'ftp_list_directory'
+          })
+          
+          // Perform the actual LIST command
+          const listing = await connection.client.list(listPath)
+          
+          logger.info('FTP LIST command completed', {
+            path: listPath,
+            itemCount: listing?.length || 0,
+            connectionId,
+            correlationId,
+            operation: 'ftp_list_command_success'
+          })
+          
+          return listing || []
+        } catch (listError: any) {
+          logger.error('FTP list operation failed', {
+            error: listError,
+            path,
+            connectionId,
+            correlationId,
+            errorMessage: listError.message,
+            errorCode: listError.code,
+            operation: 'ftp_list_error'
+          })
+          throw listError
         }
+      })
+
+      const duration = Date.now() - listStartTime
+      
+      // Validate contents
+      if (!contents || !Array.isArray(contents)) {
+        logger.error('Invalid FTP list response', {
+          connectionId,
+          path,
+          correlationId,
+          contentsType: typeof contents,
+          operation: 'ftp_list_invalid_response'
+        })
+        throw new Error('Invalid response from FTP server: expected array')
+      }
+
+             const files = contents
+               .map((item: any) => formatFileInfo(item, path))
+               .filter((file: any) => file !== null) // Filter out invalid items
+
+             logger.performance('FTP list operation', duration, {
+               connectionId,
+               path,
+               correlationId,
+               itemCount: files.length,
+               operation: 'ftp_list_performance'
+             })
+
+      logger.info('FTP list operation completed successfully', {
+        connectionId,
+        path,
+        correlationId,
+        fileCount: files.length,
+        duration,
+        operation: 'ftp_list_success'
+      })
+
+      // Record success
+      recordSuccess(websiteId)
+
+      return NextResponse.json({
+        success: true,
+        files,
+        path,
+        connectionId
+      })
+
+    } catch (err: any) {
+      lastError = err
+      retries--
+      
+      logger.error('FTP list operation failed', err, 'ftp_list_error')
+
+      // Don't retry on certain errors
+      if (err.message?.includes('550') || err.message?.includes('550 ')) {
+        // Directory not found - don't retry
+        recordFailure(websiteId)
+        return NextResponse.json(
+          { error: `Directory not found: ${path}` },
+          { status: 404 }
+        )
+      }
+
+      if (err.message?.includes('530')) {
+        // Authentication failed - don't retry
+        recordFailure(websiteId)
+        return NextResponse.json(
+          { error: 'Authentication failed (530). Verify FTP username/password.' },
+          { status: 401 }
+        )
+      }
+
+      if (retries > 0) {
+        // Wait before retry (exponential backoff)
+        const delay = (4 - retries) * 500 // 500ms, 1000ms, 1500ms
+        logger.info('Retrying FTP list operation', {
+          connectionId,
+          path,
+          correlationId,
+          retries,
+          delay,
+          operation: 'ftp_list_retry'
+        })
+        await new Promise(resolve => setTimeout(resolve, delay))
       }
     }
-
-    logger.error('FTP list operation failed with classified error', {
-      correlationId,
-      path,
-      connectionId,
-      errorMessage,
-      statusCode,
-      duration,
-      operation: 'ftp_list_classified_error'
-    })
-
-    return NextResponse.json({ error: `Failed to list files in ${path}: ${errorMessage}` }, { status: statusCode })
   }
+
+  // All retries failed
+  const duration = Date.now() - listStartTime
+  recordFailure(websiteId)
+
+  let errorMessage = lastError?.message || 'Unknown error'
+  let statusCode = 500
+
+  // Handle specific connection errors
+  if (lastError.message?.includes('ECONNRESET') || lastError.message?.includes('read ECONNRESET')) {
+    errorMessage = 'Connection to FTP server was lost. Please reconnect.'
+    statusCode = 503
+  } else if (lastError.message?.includes('Client is closed')) {
+    errorMessage = 'FTP client connection is closed. Please reconnect.'
+    statusCode = 503
+  } else if (lastError.message?.includes('530')) {
+    errorMessage = 'Authentication failed (530). Verify FTP username/password.'
+    statusCode = 401
+  } else if (lastError.message?.includes('ETIMEDOUT')) {
+    errorMessage = 'Operation timed out. The FTP server may be slow or unreachable.'
+    statusCode = 504
+  } else if (lastError.message?.includes('None of the available transfer strategies work')) {
+    errorMessage = 'FTP transfer failed - connection may be unstable. Please reconnect.'
+    statusCode = 503
+  } else if (lastError.message?.includes('EACCES') || lastError.message?.includes('permission denied')) {
+    errorMessage = 'Permission denied. You may not have access to this directory.'
+    statusCode = 403
+  } else {
+    // Extract FTP error codes if available
+    const ftpCodeMatch = lastError.message?.match(/(\d{3})/);
+    const ftpCode = ftpCodeMatch ? ftpCodeMatch[1] : undefined;
+    if (ftpCode) {
+      if (ftpCode.startsWith('55')) {
+        errorMessage = `Access denied to directory: ${path}`
+        statusCode = 403
+      } else if (ftpCode.startsWith('45')) {
+        errorMessage = `Directory not found: ${path}`
+        statusCode = 404
+      }
+    }
+  }
+
+  logger.error('FTP list operation failed after retries', {
+    correlationId,
+    path,
+    connectionId,
+    errorMessage,
+    statusCode,
+    duration,
+    operation: 'ftp_list_classified_error'
+  })
+
+  return NextResponse.json(
+    { error: `Failed to list files in ${path}: ${errorMessage}` },
+    { status: statusCode }
+  )
 }
