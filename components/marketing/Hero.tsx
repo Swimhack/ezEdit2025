@@ -30,10 +30,10 @@ export function Hero() {
             transition={{ duration: 0.5 }}
             className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight"
           >
-            The Premier Platform for
+            Your Website Updates,
             <br />
             <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-              Web Design & Hosting
+              Done For You
             </span>
           </motion.h1>
 
@@ -44,8 +44,8 @@ export function Hero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto"
           >
-            Design, host, update, and optimize your websites—all in one powerful platform. 
-            Professional tools with AI assistance to manage your entire web presence.
+            Professional web design, hosting, and update services—all in one platform. 
+            Start with our powerful editor, or let us handle everything for you.
           </motion.p>
 
           {/* CTA Buttons */}
