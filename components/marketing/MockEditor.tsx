@@ -56,9 +56,9 @@ export function MockEditor() {
         >
           <div className="space-y-1 text-[13px] leading-relaxed">
             <div><span className="text-gray-500">1</span>  <span className="text-purple-400">import</span> <span className="text-gray-300">React</span> <span className="text-purple-400">from</span> <span className="text-orange-300">'react'</span><span className="text-gray-500">;</span></div>
-            <div><span className="text-gray-500">2</span>  <span className="text-purple-400">import</span> <span className="text-gray-300">{{ Hero }}</span> <span className="text-purple-400">from</span> <span className="text-orange-300">'./components'</span><span className="text-gray-500">;</span></div>
+            <div><span className="text-gray-500">2</span>  <span className="text-purple-400">import</span> <span className="text-gray-300">{`{ Hero }`}</span> <span className="text-purple-400">from</span> <span className="text-orange-300">'./components'</span><span className="text-gray-500">;</span></div>
             <div><span className="text-gray-500">3</span></div>
-            <div><span className="text-gray-500">4</span>  <span className="text-purple-400">export</span> <span className="text-purple-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-300">App</span><span className="text-gray-300">()</span> <span className="text-gray-300">{{</span></div>
+            <div><span className="text-gray-500">4</span>  <span className="text-purple-400">export</span> <span className="text-purple-400">default</span> <span className="text-blue-400">function</span> <span className="text-yellow-300">App</span><span className="text-gray-300">()</span> <span className="text-gray-300">{`{`}</span></div>
             <div><span className="text-gray-500">5</span>    <span className="text-purple-400">return</span> <span className="text-gray-300">(</span></div>
             <div><span className="text-gray-500">6</span>      <span className="text-gray-500 ml-4">&lt;</span><span className="text-green-400">div</span> <span className="text-blue-300">className</span>=<span className="text-orange-300">"container"</span><span className="text-gray-500">&gt;</span></div>
             <div><span className="text-gray-500">7</span>        <span className="text-gray-500 ml-8">&lt;</span><span className="text-green-400">Hero</span> <span className="text-blue-300">title</span>=<span className="text-orange-300">"Welcome"</span> <span className="text-gray-500">/&gt;</span></div>
@@ -67,7 +67,7 @@ export function MockEditor() {
             <div><span className="text-gray-500">10</span>        <span className="text-gray-500 ml-8">&lt;/</span><span className="text-green-400">section</span><span className="text-gray-500">&gt;</span></div>
             <div><span className="text-gray-500">11</span>      <span className="text-gray-500 ml-4">&lt;/</span><span className="text-green-400">div</span><span className="text-gray-500">&gt;</span></div>
             <div><span className="text-gray-500">12</span>    <span className="text-gray-300">)</span><span className="text-gray-500">;</span></div>
-            <div><span className="text-gray-500">13</span>  <span className="text-gray-300">}}</span></div>
+            <div><span className="text-gray-500">13</span>  <span className="text-gray-300">{`}`}</span></div>
           </div>
         </motion.div>
 
