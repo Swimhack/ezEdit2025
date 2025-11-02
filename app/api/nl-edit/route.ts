@@ -3,13 +3,16 @@ import { OpenAI } from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import type { NLEditRequest, NLEditResponse } from '@/types/cms';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize AI clients only if API keys are available
+const getOpenAI = () => {
+  if (!process.env.OPENAI_API_KEY) return null;
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+};
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const getAnthropic = () => {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,6 +23,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Current content is required' },
         { status: 400 }
+      );
+    }
+
+    const anthropic = getAnthropic();
+    if (!anthropic) {
+      return NextResponse.json(
+        { success: false, error: 'AI service not configured' },
+        { status: 503 }
       );
     }
 
