@@ -3,18 +3,23 @@ import EmailCapture from './components/EmailCapture'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="flex items-center justify-between px-6 py-4 lg:px-8">
         <div className="flex items-center">
           <Logo variant="nav" showText={true} />
         </div>
-        <div className="hidden md:flex items-center gap-x-8">
+        <div className="hidden md:flex items-center gap-x-6">
           <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium">Features</a>
           <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium">Pricing</a>
           <a href="#docs" className="text-gray-600 hover:text-gray-900 font-medium">Docs</a>
-          <a href="/auth/signin" className="text-gray-600 hover:text-gray-900 font-medium">Login</a>
-          <a href="/auth/signup?plan=FREE" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors">Get Started</a>
+          <div className="flex items-center gap-x-4 ml-4">
+            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <a href="/auth/signin" className="text-gray-900 hover:text-gray-600 font-medium">Log in</a>
+            <a href="/auth/signup?plan=FREE" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors">Sign up</a>
+          </div>
         </div>
       </nav>
 
@@ -34,18 +39,15 @@ export default function Home() {
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
                 href="/auth/signup?plan=FREE"
-                className="bg-blue-600 text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="bg-blue-600 text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
               >
                 Get Started for Free
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
               </a>
               <a
                 href="/demo"
                 className="text-gray-700 px-8 py-3.5 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50 transition-colors"
               >
-                Try Demo
+                Watch Demo
               </a>
             </div>
           </div>
@@ -155,18 +157,22 @@ export default function Home() {
       </div>
 
       {/* Pricing Section */}
-      <div className="py-24 sm:py-32">
+      <div className="py-24 sm:py-32 bg-gray-50">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="text-base font-semibold leading-7 text-blue-600">Pricing</h2>
             <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
               Choose the right plan for you
             </p>
+            <p className="mt-4 text-lg text-gray-600">
+              From quick fixes to enterprise-scale operations
+            </p>
           </div>
-          <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+            {/* Starter Plan */}
             <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10 sm:p-10">
               <div>
-                <h3 className="text-base font-semibold leading-7 text-blue-600">Free</h3>
+                <h3 className="text-base font-semibold leading-7 text-blue-600">Starter</h3>
                 <div className="mt-4 flex items-baseline gap-x-2">
                   <span className="text-5xl font-bold tracking-tight text-gray-900">$0</span>
                   <span className="text-base font-semibold leading-7 text-gray-600">/month</span>
@@ -183,6 +189,12 @@ export default function Home() {
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
+                    50 AI requests/month
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
                     Basic AI assistance
                   </li>
                   <li className="flex gap-x-3">
@@ -191,24 +203,50 @@ export default function Home() {
                     </svg>
                     7-day history
                   </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    10MB max file size
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Community support
+                  </li>
                 </ul>
               </div>
               <a href="/auth/signup?plan=FREE" className="mt-8 block rounded-md bg-blue-600 px-3.5 py-2 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Get started today</a>
             </div>
+
+            {/* Professional Plan - Most Popular */}
             <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-2 ring-blue-600 sm:p-10">
               <div>
-                <h3 className="text-base font-semibold leading-7 text-blue-600">Single Site</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold leading-7 text-blue-600">Professional</h3>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Most Popular
+                  </span>
+                </div>
                 <div className="mt-4 flex items-baseline gap-x-2">
-                  <span className="text-5xl font-bold tracking-tight text-gray-900">$20</span>
+                  <span className="text-5xl font-bold tracking-tight text-gray-900">$29</span>
                   <span className="text-base font-semibold leading-7 text-gray-600">/month</span>
                 </div>
-                <p className="mt-6 text-base leading-7 text-gray-600">Perfect for individual websites</p>
+                <p className="mt-2 text-sm text-gray-500">or $290/year (save 17%)</p>
+                <p className="mt-4 text-base leading-7 text-gray-600">Perfect for freelancers & small businesses</p>
                 <ul role="list" className="mt-10 space-y-4 text-sm leading-6 text-gray-600">
                   <li className="flex gap-x-3">
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
-                    1 website connection
+                    3 website connections
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    500 AI requests/month
                   </li>
                   <li className="flex gap-x-3">
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
@@ -226,26 +264,53 @@ export default function Home() {
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
-                    Priority support
+                    100MB max file size
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Priority email support (24hr)
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Batch file operations
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Code templates library
                   </li>
                 </ul>
               </div>
-              <a href="/auth/signup?plan=SINGLE_SITE" className="mt-8 block rounded-md bg-blue-600 px-3.5 py-2 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Get started today</a>
+              <a href="/auth/signup?plan=PROFESSIONAL" className="mt-8 block rounded-md bg-blue-600 px-3.5 py-2 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Get started today</a>
             </div>
+
+            {/* Agency Plan */}
             <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10 sm:p-10">
               <div>
-                <h3 className="text-base font-semibold leading-7 text-blue-600">Unlimited</h3>
+                <h3 className="text-base font-semibold leading-7 text-blue-600">Agency</h3>
                 <div className="mt-4 flex items-baseline gap-x-2">
-                  <span className="text-5xl font-bold tracking-tight text-gray-900">$100</span>
+                  <span className="text-5xl font-bold tracking-tight text-gray-900">$99</span>
                   <span className="text-base font-semibold leading-7 text-gray-600">/month</span>
                 </div>
-                <p className="mt-6 text-base leading-7 text-gray-600">For agencies and multiple sites</p>
+                <p className="mt-2 text-sm text-gray-500">or $990/year (save 17%)</p>
+                <p className="mt-4 text-base leading-7 text-gray-600">For agencies & multiple client sites</p>
                 <ul role="list" className="mt-10 space-y-4 text-sm leading-6 text-gray-600">
                   <li className="flex gap-x-3">
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
-                    Unlimited websites
+                    15 website connections
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    2,000 AI requests/month
                   </li>
                   <li className="flex gap-x-3">
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
@@ -263,17 +328,98 @@ export default function Home() {
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
-                    Team collaboration
+                    500MB max file size
                   </li>
                   <li className="flex gap-x-3">
                     <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
                     </svg>
-                    Dedicated support
+                    Priority support (12hr response)
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Team collaboration (up to 5 members)
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Client site management
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    API access
                   </li>
                 </ul>
               </div>
-              <a href="/auth/signup?plan=UNLIMITED" className="mt-8 block rounded-md bg-blue-600 px-3.5 py-2 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Get started today</a>
+              <a href="/auth/signup?plan=AGENCY" className="mt-8 block rounded-md bg-blue-600 px-3.5 py-2 text-center text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Get started today</a>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className="flex flex-col justify-between rounded-3xl bg-gradient-to-br from-gray-900 to-gray-800 p-8 shadow-xl ring-1 ring-gray-900/10 sm:p-10 text-white">
+              <div>
+                <h3 className="text-base font-semibold leading-7 text-white">Enterprise</h3>
+                <div className="mt-4 flex items-baseline gap-x-2">
+                  <span className="text-5xl font-bold tracking-tight text-white">Custom</span>
+                </div>
+                <p className="mt-2 text-sm text-gray-300">Starting at $299/month</p>
+                <p className="mt-4 text-base leading-7 text-gray-300">For large organizations</p>
+                <ul role="list" className="mt-10 space-y-4 text-sm leading-6 text-gray-300">
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Unlimited website connections
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Unlimited AI requests
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Premium AI assistance
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    No file size limits
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    Dedicated account manager
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    24/7 phone support
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    SSO/SAML integration
+                  </li>
+                  <li className="flex gap-x-3">
+                    <svg className="h-6 w-5 flex-none text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                    </svg>
+                    SLA guarantees
+                  </li>
+                </ul>
+              </div>
+              <a href="/auth/signup?plan=ENTERPRISE" className="mt-8 block rounded-md bg-white px-3.5 py-2 text-center text-sm font-semibold leading-6 text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Contact Sales</a>
             </div>
           </div>
         </div>

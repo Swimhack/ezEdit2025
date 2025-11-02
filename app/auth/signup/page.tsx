@@ -3,58 +3,111 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
-import { supabase } from '@/lib/supabase'
 import { fetchWithRetry, getAuthErrorMessage, AUTH_RETRY_CONFIG, checkNetworkConnectivity } from '@/lib/retry-logic'
 
 export const dynamic = 'force-dynamic'
 
-// Simple pricing plans without Stripe dependency
+// Enhanced pricing plans for all website update types
 const PRICING_PLANS = {
   FREE: {
-    name: 'Free',
+    name: 'Starter',
     price: 0,
     priceId: null,
     features: [
       '1 website connection',
+      '50 AI requests/month',
       'Basic AI assistance',
-      '7-day history',
+      '7-day edit history',
+      '10MB max file size',
       'Community support'
-    ]
+    ],
+    limits: {
+      websites: 1,
+      aiRequests: 50,
+      fileSizeMB: 10,
+      historyDays: 7
+    }
   },
-  SINGLE_SITE: {
-    name: 'Single Site',
-    price: 20,
-    priceId: 'single_site',
+  PROFESSIONAL: {
+    name: 'Professional',
+    price: 29,
+    priceId: 'professional',
+    yearlyPrice: 290,
     features: [
-      '1 website connection',
+      '3 website connections',
+      '500 AI requests/month',
       'Advanced AI assistance',
-      'Unlimited history',
-      'Priority support'
-    ]
+      'Unlimited edit history',
+      '100MB max file size',
+      'Priority email support (24hr)',
+      'Batch file operations',
+      'Code templates library'
+    ],
+    limits: {
+      websites: 3,
+      aiRequests: 500,
+      fileSizeMB: 100,
+      historyDays: -1 // unlimited
+    }
   },
-  UNLIMITED: {
-    name: 'Unlimited',
-    price: 100,
-    priceId: 'unlimited',
+  AGENCY: {
+    name: 'Agency',
+    price: 99,
+    priceId: 'agency',
+    yearlyPrice: 990,
     features: [
-      'Unlimited websites',
+      '15 website connections',
+      '2,000 AI requests/month',
       'Advanced AI assistance',
-      'Unlimited history',
-      'Team collaboration',
-      'Dedicated support'
-    ]
+      'Unlimited edit history',
+      '500MB max file size',
+      'Priority support (12hr response)',
+      'Team collaboration (up to 5 members)',
+      'Client site management',
+      'Custom branding',
+      'API access'
+    ],
+    limits: {
+      websites: 15,
+      aiRequests: 2000,
+      fileSizeMB: 500,
+      historyDays: -1
+    }
+  },
+  ENTERPRISE: {
+    name: 'Enterprise',
+    price: 299,
+    priceId: 'enterprise',
+    yearlyPrice: null, // Custom pricing
+    features: [
+      'Unlimited website connections',
+      'Unlimited AI requests',
+      'Premium AI assistance',
+      'Unlimited edit history',
+      'No file size limits',
+      'Dedicated account manager',
+      '24/7 phone support',
+      'Unlimited team members',
+      'SSO/SAML integration',
+      'Custom integrations',
+      'SLA guarantees'
+    ],
+    limits: {
+      websites: -1, // unlimited
+      aiRequests: -1,
+      fileSizeMB: -1,
+      historyDays: -1
+    }
   }
 }
 
 function SignUpForm() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [company, setCompany] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({})
-  const [passwordStrength, setPasswordStrength] = useState<any>(null)
-  const [selectedPlan, setSelectedPlan] = useState<'FREE' | 'SINGLE_SITE' | 'UNLIMITED'>('FREE')
+  const [selectedPlan, setSelectedPlan] = useState<'FREE' | 'PROFESSIONAL' | 'AGENCY' | 'ENTERPRISE'>('FREE')
   const [retryAttempt, setRetryAttempt] = useState(0)
   const [isRetrying, setIsRetrying] = useState(false)
 
@@ -63,7 +116,7 @@ function SignUpForm() {
   // Handle plan selection from URL parameters on client side
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
-    const planParam = urlParams.get('plan') as 'FREE' | 'SINGLE_SITE' | 'UNLIMITED'
+    const planParam = urlParams.get('plan') as 'FREE' | 'PROFESSIONAL' | 'AGENCY' | 'ENTERPRISE'
     if (planParam && PRICING_PLANS[planParam]) {
       setSelectedPlan(planParam)
     }
@@ -84,12 +137,6 @@ function SignUpForm() {
       validationErrors.email = ['Email is required']
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       validationErrors.email = ['Invalid email format']
-    }
-
-    if (!password) {
-      validationErrors.password = ['Password is required']
-    } else if (password.length < 8) {
-      validationErrors.password = ['Password must be at least 8 characters']
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -123,9 +170,9 @@ function SignUpForm() {
         },
         body: JSON.stringify({
           email: email.trim(),
-          password: password,
           company: company?.trim() || '',
-          plan: selectedPlan
+          plan: selectedPlan,
+          redirectTo: `${window.location.origin}/auth/callback`
         })
       }, retryConfigWithFeedback)
 
@@ -140,14 +187,14 @@ function SignUpForm() {
       setError('')
       setRetryAttempt(0)
 
-      // Account created successfully
-      if (selectedPlan === 'FREE') {
-        alert('Account created successfully! Redirecting to dashboard...')
-        router.push('/dashboard')
-      } else {
-        alert(`${selectedPlan} plan selected! Payment integration coming soon. For now, you'll get free access.`)
-        router.push('/dashboard')
+      // ScaleKit returns a redirect URL - redirect to ScaleKit hosted signup page
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+        return
       }
+
+      // Fallback: redirect to dashboard
+      router.push('/dashboard')
     } catch (err: any) {
       // Use the enhanced error message handler
       const userFriendlyMessage = getAuthErrorMessage(err)
@@ -161,37 +208,14 @@ function SignUpForm() {
     }
   }
 
-  const handlePasswordChange = (value: string) => {
-    setPassword(value)
-    if (value) {
-      // Basic password strength check
-      let score = 0
-      if (value.length >= 8) score++
-      if (/[A-Z]/.test(value)) score++
-      if (/[a-z]/.test(value)) score++
-      if (/[0-9]/.test(value)) score++
-      if (/[^A-Za-z0-9]/.test(value)) score++
-
-      const strength = {
-        score,
-        feedback: score < 3 ? ['Password should be at least 8 characters with mixed case, numbers, and symbols'] : []
-      }
-      setPasswordStrength(strength)
-    } else {
-      setPasswordStrength(null)
-    }
-  }
-
   const handleEmailChange = (value: string) => {
-    // Basic input sanitization
-    const sanitized = value.trim()
-    setEmail(sanitized)
+    // Don't trim while typing - only trim on submit
+    setEmail(value)
   }
 
   const handleCompanyChange = (value: string) => {
-    // Basic input sanitization
-    const sanitized = value.trim()
-    setCompany(sanitized)
+    // Don't trim while typing - only trim on submit
+    setCompany(value)
   }
 
   const handleGoogleSignUp = async () => {
@@ -199,17 +223,33 @@ function SignUpForm() {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
+      // Redirect to ScaleKit hosted login page for social login
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          socialLogin: true,
+          plan: selectedPlan,
+          company: company?.trim() || '',
           redirectTo: `${window.location.origin}/auth/callback`
-        }
+        })
       })
 
-      if (error) {
-        setError(error.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        const errorMessage = data.error || data.message || 'Failed to initiate Google sign up'
+        setError(errorMessage)
+        return
       }
-      // If successful, the user will be redirected to Google
+
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl
+      } else {
+        setError('Failed to initiate Google sign up')
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to initiate Google sign up')
     } finally {
@@ -249,7 +289,7 @@ function SignUpForm() {
                   />
                   <label htmlFor={key} className="ml-3 block text-sm font-medium text-gray-700">
                     {plan.name} {plan.price > 0 && `- $${plan.price}/month`}
-                    {key === 'SINGLE_SITE' && (
+                    {key === 'PROFESSIONAL' && (
                       <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         Most Popular
                       </span>
@@ -281,62 +321,6 @@ function SignUpForm() {
                 {validationErrors.email && (
                   <div className="mt-1 text-sm text-red-600">
                     {validationErrors.email.map((error, index) => (
-                      <div key={index}>{error}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={password}
-                  onChange={(e) => handlePasswordChange(e.target.value)}
-                  className={`appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
-                    validationErrors.password ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {passwordStrength && (
-                  <div className="mt-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full ${
-                            passwordStrength.score >= 5 ? 'bg-green-500' :
-                            passwordStrength.score >= 3 ? 'bg-yellow-500' : 'bg-red-500'
-                          }`}
-                          style={{ width: `${(passwordStrength.score / 6) * 100}%` }}
-                        />
-                      </div>
-                      <span className={`text-xs font-medium ${
-                        passwordStrength.score >= 5 ? 'text-green-600' :
-                        passwordStrength.score >= 3 ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
-                        {passwordStrength.score >= 5 ? 'Strong' :
-                         passwordStrength.score >= 3 ? 'Medium' : 'Weak'}
-                      </span>
-                    </div>
-                    {passwordStrength.feedback.length > 0 && (
-                      <ul className="mt-1 text-xs text-red-600 space-y-1">
-                        {passwordStrength.feedback.map((feedback: string, index: number) => (
-                          <li key={index}>• {feedback}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-                {validationErrors.password && (
-                  <div className="mt-1 text-sm text-red-600">
-                    {validationErrors.password.map((error, index) => (
                       <div key={index}>{error}</div>
                     ))}
                   </div>

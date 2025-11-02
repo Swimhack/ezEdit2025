@@ -108,39 +108,100 @@ export const getSubscriptionPlans = async () => {
   }))
 }
 
-// Pricing configuration for EzEdit
+// Enhanced pricing configuration for EzEdit
 export const PRICING_PLANS = {
   FREE: {
-    name: 'Free',
+    name: 'Starter',
     price: 0,
     priceId: null,
+    yearlyPriceId: null,
     features: [
       '1 website connection',
+      '50 AI requests/month',
       'Basic AI assistance',
-      '7-day history'
-    ]
+      '7-day history',
+      '10MB max file size',
+      'Community support'
+    ],
+    limits: {
+      websites: 1,
+      aiRequests: 50,
+      fileSizeMB: 10,
+      historyDays: 7
+    }
   },
-  SINGLE_SITE: {
-    name: 'Single Site',
-    price: 20,
-    priceId: process.env.STRIPE_SINGLE_SITE_PRICE_ID,
+  PROFESSIONAL: {
+    name: 'Professional',
+    price: 29,
+    priceId: process.env.STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID,
+    yearlyPriceId: process.env.STRIPE_PROFESSIONAL_YEARLY_PRICE_ID,
+    yearlyPrice: 290,
     features: [
-      '1 website connection',
+      '3 website connections',
+      '500 AI requests/month',
       'Advanced AI assistance',
       'Unlimited history',
-      'Priority support'
-    ]
+      '100MB max file size',
+      'Priority email support (24hr)',
+      'Batch file operations',
+      'Code templates library'
+    ],
+    limits: {
+      websites: 3,
+      aiRequests: 500,
+      fileSizeMB: 100,
+      historyDays: -1 // unlimited
+    }
   },
-  UNLIMITED: {
-    name: 'Unlimited',
-    price: 100,
-    priceId: process.env.STRIPE_UNLIMITED_PRICE_ID,
+  AGENCY: {
+    name: 'Agency',
+    price: 99,
+    priceId: process.env.STRIPE_AGENCY_MONTHLY_PRICE_ID,
+    yearlyPriceId: process.env.STRIPE_AGENCY_YEARLY_PRICE_ID,
+    yearlyPrice: 990,
     features: [
-      'Unlimited websites',
+      '15 website connections',
+      '2,000 AI requests/month',
       'Advanced AI assistance',
       'Unlimited history',
-      'Team collaboration',
-      'Dedicated support'
-    ]
+      '500MB max file size',
+      'Priority support (12hr response)',
+      'Team collaboration (up to 5 members)',
+      'Client site management',
+      'Custom branding',
+      'API access'
+    ],
+    limits: {
+      websites: 15,
+      aiRequests: 2000,
+      fileSizeMB: 500,
+      historyDays: -1
+    }
+  },
+  ENTERPRISE: {
+    name: 'Enterprise',
+    price: 299,
+    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID || 'custom',
+    yearlyPriceId: null, // Custom pricing
+    yearlyPrice: null,
+    features: [
+      'Unlimited website connections',
+      'Unlimited AI requests',
+      'Premium AI assistance',
+      'Unlimited history',
+      'No file size limits',
+      'Dedicated account manager',
+      '24/7 phone support',
+      'Unlimited team members',
+      'SSO/SAML integration',
+      'Custom integrations',
+      'SLA guarantees'
+    ],
+    limits: {
+      websites: -1, // unlimited
+      aiRequests: -1,
+      fileSizeMB: -1,
+      historyDays: -1
+    }
   }
 }
