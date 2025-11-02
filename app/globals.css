@@ -44,15 +44,15 @@
 }
 
 :root {
-  /* ezEdit Brand Colors - Blue (#4A9FE8) and White */
+  /* ezEdit Brand Colors - Sky Blue (#5DADE2) and Navy */
   --radius: 0.75rem;
   --background: oklch(0.99 0 0); /* Clean white */
-  --foreground: oklch(0.2 0.01 240); /* Dark blue-gray */
+  --foreground: oklch(0.25 0.02 240); /* Dark navy */
   --card: oklch(1 0 0); /* Pure white cards */
-  --card-foreground: oklch(0.2 0.01 240);
+  --card-foreground: oklch(0.25 0.02 240);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.01 240);
-  --primary: oklch(0.62 0.15 230); /* ezEdit Blue #4A9FE8 */
+  --popover-foreground: oklch(0.25 0.02 240);
+  --primary: oklch(0.68 0.14 230); /* ezEdit Sky Blue #5DADE2 */
   --primary-foreground: oklch(1 0 0); /* White text on blue */
   --secondary: oklch(0.95 0.01 240); /* Light blue-gray */
   --secondary-foreground: oklch(0.3 0.02 240);
@@ -80,15 +80,15 @@
 }
 
 .dark {
-  /* Dark mode with blue accents */
-  --background: oklch(0.15 0.01 240); /* Dark blue-gray */
+  /* Dark mode - Logo Navy Background */
+  --background: oklch(0.22 0.02 240); /* Navy like logo #2C3E50 */
   --foreground: oklch(0.98 0 0); /* Near white */
-  --card: oklch(0.2 0.015 240); /* Darker blue-gray cards */
+  --card: oklch(0.25 0.02 240); /* Slightly lighter navy cards */
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.18 0.012 240);
+  --popover: oklch(0.22 0.02 240);
   --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.65 0.15 230); /* Brighter blue in dark mode */
-  --primary-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.68 0.14 230); /* Same sky blue from logo */
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.25 0.02 240);
   --secondary-foreground: oklch(0.95 0 0);
   --muted: oklch(0.25 0.015 240);
