@@ -43,10 +43,21 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('FTP operation error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorDetails = error instanceof Error ? {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      ...(error as any), // Include any additional properties
+    } : {};
+    
+    console.error('Detailed error:', errorDetails);
+    
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: errorMessage,
+        details: errorDetails,
       },
       { status: 500 }
     );

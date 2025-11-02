@@ -21,12 +21,14 @@ export class FTPService {
       });
     } else {
       this.ftpClient = new ftp.Client();
+      this.ftpClient.ftp.verbose = true; // Enable verbose logging
       await this.ftpClient.access({
         host: config.host,
         port: config.port,
         user: config.username,
         password: config.password,
         secure: config.secure || false,
+        secureOptions: config.secure ? { rejectUnauthorized: false } : undefined,
       });
     }
   }
