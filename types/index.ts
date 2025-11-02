@@ -21,7 +21,7 @@ export interface FileContent {
 
 // ==================== Connection Types ====================
 
-export type ConnectionType = 'ftp' | 'sftp' | 's3' | 'local';
+export type ConnectionType = 'ftp' | 'sftp' | 's3' | 'local' | 'wordpress' | 'wix';
 
 export interface FTPConnection {
   id: string;
@@ -46,7 +46,26 @@ export interface S3Connection {
   endpoint?: string;
 }
 
-export type Connection = FTPConnection | S3Connection;
+export interface WordPressConnection {
+  id: string;
+  name: string;
+  type: 'wordpress';
+  siteUrl: string;
+  username: string;
+  applicationPassword: string;
+  basePath?: string;
+}
+
+export interface WixConnection {
+  id: string;
+  name: string;
+  type: 'wix';
+  siteId: string;
+  apiKey: string;
+  refreshToken?: string;
+}
+
+export type Connection = FTPConnection | S3Connection | WordPressConnection | WixConnection;
 
 // ==================== AI Types ====================
 
