@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, Zap, TrendingUp, Code, Sparkles, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { ContactForm } from '@/components/marketing/ContactForm';
 
 const services = [
   {
@@ -268,38 +269,14 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* Contact CTA */}
+        {/* Contact Form */}
         <section id="contact" className="py-20 bg-primary/5">
           <div className="container mx-auto px-4">
-            <Card className="max-w-2xl mx-auto text-center">
-              <CardHeader>
-                <CardTitle className="text-3xl">Ready to Get Started?</CardTitle>
-                <CardDescription className="text-lg">
-                  Let's discuss your website needs
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <p className="text-muted-foreground">
-                  Not sure which package is right for you? Contact us for a free consultation and custom quote.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="mailto:hello@ezedit.co">
-                    <Button size="lg" className="w-full sm:w-auto">
-                      Email Us
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link href="#packages">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                      View Packages
-                    </Button>
-                  </Link>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Typical response time: Within 2 hours during business hours
-                </p>
-              </CardContent>
-            </Card>
+            <ContactForm 
+              title="Ready to Get Started?"
+              description="Not sure which package is right for you? Contact us for a free consultation and custom quote."
+              showServiceType={true}
+            />
           </div>
         </section>
       </main>
