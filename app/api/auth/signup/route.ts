@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { isScalekitConfigured, getAuthorizationUrl } from '@/lib/scalekit'
 
 // Force dynamic rendering
@@ -53,11 +54,27 @@ export async function POST(request: NextRequest) {
 
     // ScaleKit handles user registration through their hosted UI
     // Generate authorization URL for ScaleKit hosted signup/login page
-    const redirectUri = redirectTo || `${request.nextUrl.origin}/auth/callback`
+    // Normalize redirect URI to ensure exact match (no trailing slash)
+    const baseRedirectUri = redirectTo || `${request.nextUrl.origin}/auth/callback`
+    const redirectUri = baseRedirectUri.replace(/\/$/, '') // Remove trailing slash
+    
+    console.log('ScaleKit signup authorization request:', {
+      redirectUri,
+      origin: request.nextUrl.origin,
+      baseRedirectUri,
+      redirectTo: redirectTo || 'not provided',
+      email: email?.substring(0, 5) + '...',
+      timestamp: new Date().toISOString()
+    })
     
     try {
       const authorizationUrl = getAuthorizationUrl(redirectUri, {
         loginHint: email?.trim() || undefined
+      })
+
+      console.log('ScaleKit signup authorization URL generated:', {
+        url: authorizationUrl.substring(0, 100) + '...',
+        redirectUri
       })
 
       // Store signup metadata in cookie
@@ -65,6 +82,15 @@ export async function POST(request: NextRequest) {
         success: true,
         redirectUrl: authorizationUrl,
         message: 'Redirecting to registration...'
+      })
+
+      // Store redirect URI in cookie to ensure exact match in callback
+      // This is critical - ScaleKit validates the exact redirect URI
+      response.cookies.set('scalekit_redirect_uri', redirectUri, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 300 // 5 minutes - same as code expiration
       })
 
       // Store signup metadata temporarily (only if provided)
@@ -81,6 +107,16 @@ export async function POST(request: NextRequest) {
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
           maxAge: 600 // 10 minutes
+        })
+      }
+
+      // Store email in cookie temporarily (only if provided)
+      if (email) {
+        response.cookies.set('scalekit_email', email.trim(), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 300 // 5 minutes
         })
       }
 
