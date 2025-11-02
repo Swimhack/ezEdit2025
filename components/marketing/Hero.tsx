@@ -34,15 +34,15 @@ export function Hero() {
 
             {/* Heading */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-              Edit Anywhere,
+              The Premier Platform for
               <br />
-              <span className="text-primary">Deploy Instantly</span>
+              <span className="text-primary">Web Design & Hosting</span>
             </h1>
 
             {/* Description */}
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Professional code editor with FTP, WordPress, and Wix integration. 
-              Edit remotely with natural language AI assistance.
+              Design, host, update, and optimize your websites—all in one powerful platform. 
+              Professional tools with AI assistance to manage your entire web presence.
             </p>
 
             {/* Features list */}

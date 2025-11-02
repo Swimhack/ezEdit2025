@@ -7,38 +7,39 @@ import { motion } from 'framer-motion';
 export function Features() {
   const items = [
     {
-      title: 'AI-Powered Editing',
-      description: 'Natural language commands to refactor, explain, and optimize code with OpenAI, Claude, or Ollama.',
-      icon: SparklesIcon,
+      title: 'Professional Web Design',
+      description: 'Industry-leading Monaco editor with IntelliSense, 40+ languages, and real-time preview for stunning websites.',
+      icon: Code2,
       gradient: 'from-blue-500 to-cyan-500',
     },
     {
-      title: 'Multi-Platform Support',
-      description: 'Connect to FTP, SFTP, WordPress, Wix, and S3. Edit content anywhere, instantly.',
-      icon: Globe,
+      title: 'Integrated Hosting',
+      description: 'Seamless hosting integration with one-click deployment. Connect to any platform—FTP, SFTP, WordPress, Wix.',
+      icon: ServerIcon,
       gradient: 'from-purple-500 to-pink-500',
     },
     {
-      title: 'Monaco Editor',
-      description: 'Industry-leading code editor with IntelliSense, syntax highlighting, and 40+ languages.',
-      icon: Code2,
+      title: 'Instant Updates',
+      description: 'Push updates instantly with auto-backups and rollback. Keep your sites fresh with zero downtime.',
+      icon: Workflow,
       gradient: 'from-green-500 to-emerald-500',
     },
     {
-      title: 'Smart Workflows',
-      description: 'One-click deploy with auto-backups and rollback. Ship changes with confidence.',
-      icon: Workflow,
+      title: 'SEO Optimization',
+      description: 'Built-in SEO tools and AI-powered optimization to boost your search rankings and drive traffic. (Coming Soon)',
+      icon: SparklesIcon,
       gradient: 'from-orange-500 to-red-500',
+      badge: 'Coming Soon',
     },
     {
-      title: 'Server Management',
-      description: 'Direct FTP/SFTP access to edit files remotely with built-in file explorer.',
-      icon: ServerIcon,
+      title: 'Multi-Platform Support',
+      description: 'Work across all major platforms. WordPress, Wix, custom servers—manage everything in one place.',
+      icon: Globe,
       gradient: 'from-indigo-500 to-blue-500',
     },
     {
       title: 'Enterprise Security',
-      description: 'Encrypted credentials, secure connections, and comprehensive audit logs.',
+      description: 'Bank-level security with encrypted credentials, secure connections, and comprehensive audit logs.',
       icon: ShieldIcon,
       gradient: 'from-teal-500 to-cyan-500',
     },
@@ -59,12 +60,12 @@ export function Features() {
           className="mx-auto max-w-3xl text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            Everything you need to{' '}
-            <span className="text-primary">code smarter</span>
+            Your Complete{' '}
+            <span className="text-primary">Web Platform</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Built for developers and editors to work faster with confidence. 
-            Professional tools, simplified.
+            Design, host, update, and optimize—all in one place. 
+            The premier solution for modern web management.
           </p>
         </motion.div>
 

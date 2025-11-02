@@ -6,25 +6,46 @@ import Link from 'next/link';
 
 const tiers = [
   {
-    name: 'Starter',
+    name: 'Free',
     price: '$0',
-    description: 'For quick edits and evaluation',
-    features: ['Monaco Editor', 'Local files', 'Community support'],
-    cta: 'Get Started',
+    description: 'Perfect for trying out the platform',
+    features: [
+      'View & edit files',
+      'Monaco code editor',
+      'Try all features',
+      'Community support',
+      '❌ No saving or deploying'
+    ],
+    cta: 'Try Free',
   },
   {
     name: 'Pro',
-    price: '$19/mo',
-    description: 'For freelancers and small teams',
-    features: ['FTP/S3 connections', 'AI explain/refactor', 'Auto-backups & rollback'],
+    price: '$20/mo',
+    description: 'For freelancers, agencies & small businesses',
+    features: [
+      '✅ Save & deploy changes',
+      'Unlimited sites',
+      'FTP/SFTP/WordPress/Wix',
+      'Auto-backups & rollback',
+      'SEO optimization tools',
+      'Priority email support'
+    ],
     cta: 'Start Pro',
     highlighted: true,
   },
   {
     name: 'Enterprise',
-    price: 'Contact us',
-    description: 'For organizations with compliance needs',
-    features: ['SSO & RBAC', 'Audit logs', 'Priority support'],
+    price: 'Contact Us',
+    description: 'For teams with advanced needs',
+    features: [
+      'Everything in Pro',
+      'Unlimited team members',
+      'White-label solution',
+      'Custom integrations',
+      'SSO & advanced security',
+      'Dedicated account manager',
+      '24/7 priority support'
+    ],
     cta: 'Contact Sales',
   },
 ];
@@ -35,8 +56,9 @@ export default function PricingPage() {
       <Navbar />
       <main className="container mx-auto flex-1 px-4 py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-4xl font-bold">Simple, transparent pricing</h1>
-          <p className="mt-3 text-muted-foreground">Choose a plan that fits your workflow.</p>
+          <h1 className="text-4xl font-bold">Design, Host, Update & Optimize</h1>
+          <p className="mt-3 text-xl text-muted-foreground">Start free, upgrade when you're ready to save and deploy.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Join the premier platform for web management.</p>
         </div>
 
         <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -66,6 +88,48 @@ export default function PricingPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* AI Add-on Section */}
+        <div className="mt-16 mx-auto max-w-3xl">
+          <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-fit rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary mb-2">
+                Coming Soon
+              </div>
+              <CardTitle className="text-3xl">AI-Powered Features</CardTitle>
+              <CardDescription className="text-base">
+                Next-generation AI assistance for automated updates and optimization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 mb-6">
+                <div className="space-y-2">
+                  <h4 className="font-semibold">AI Content Updates</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Natural language editing</li>
+                    <li>• Automated content generation</li>
+                    <li>• Smart code refactoring</li>
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="font-semibold">AI SEO Optimization</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Automated meta tags</li>
+                    <li>• Content optimization</li>
+                    <li>• Performance suggestions</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="text-center space-y-4">
+                <p className="text-2xl font-bold">+$30/mo <span className="text-sm font-normal text-muted-foreground">add-on to Pro or Enterprise</span></p>
+                <Button size="lg" disabled className="cursor-not-allowed">
+                  Join Waitlist (Coming 2025)
+                </Button>
+                <p className="text-xs text-muted-foreground">Early adopters get 50% off for life</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
       <Footer />
