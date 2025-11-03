@@ -593,29 +593,65 @@ export class PitchDeckService {
         const submission = ContactSubmissionFactory.create(formData)
 
         // Save to database
-        const { error } = await this.supabase
+        const dbRow = submission.toDatabaseRow()
+        console.log('Attempting to insert contact submission:', {
+          table: 'contact_submissions',
+          data: { ...dbRow, email: dbRow.email ? `${dbRow.email.substring(0, 3)}***` : 'undefined' } // Log email partially for debugging
+        })
+        
+        const { data: insertedData, error } = await this.supabase
           .from('contact_submissions')
-          .insert(submission.toDatabaseRow())
+          .insert(dbRow)
+          .select()
 
         if (error) {
-          // Check for common database configuration errors
-          const isConfigError = error.code === 'PGRST116' || 
-                               error.message?.includes('JWT') ||
-                               error.message?.includes('not configured') ||
-                               !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-                               !process.env.SUPABASE_SERVICE_ROLE_KEY
+          console.error('Database error inserting contact submission:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          })
           
+          // Check if table doesn't exist (PGRST116 = relation does not exist)
+          if (error.code === 'PGRST116' || error.message?.includes('does not exist') || error.message?.includes('relation')) {
+            return {
+              success: false,
+              error: {
+                error: 'DATABASE_ERROR',
+                message: 'Contact form database table not found. Please run the database migration.',
+                details: { 
+                  code: error.code, 
+                  message: error.message,
+                  hint: 'Run migration: supabase/migrations/004_contact_submissions.sql'
+                }
+              }
+            }
+          }
+          
+          // Check for JWT/auth errors
+          if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.message?.includes('permission')) {
+            return {
+              success: false,
+              error: {
+                error: 'DATABASE_ERROR',
+                message: 'Database authentication failed. Please check Supabase configuration.',
+                details: { code: error.code, message: error.message }
+              }
+            }
+          }
+          
+          // Generic database error
           return {
             success: false,
             error: {
               error: 'DATABASE_ERROR',
-              message: isConfigError 
-                ? 'Contact form is not configured. Please contact support directly.'
-                : 'Failed to submit contact form. Please try again or contact support directly.',
+              message: 'Failed to submit contact form. Please try again or contact support directly.',
               details: { code: error.code, message: error.message }
             }
           }
         }
+        
+        console.log('Successfully inserted contact submission:', insertedData?.[0]?.id)
 
         // Track contact form event
         await this.trackEvent({
@@ -623,10 +659,12 @@ export class PitchDeckService {
           event: 'contact_form'
         }, metadata)
 
+        const insertedId = insertedData?.[0]?.id || submission.id
+        
         return {
           success: true,
           data: {
-            submission_id: submission.id!,
+            submission_id: insertedId!,
             follow_up_timeline: 'within 24 hours'
           }
         }
