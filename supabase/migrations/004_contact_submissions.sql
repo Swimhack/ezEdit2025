@@ -1,5 +1,8 @@
 -- Create contact_submissions table for pitch deck contact forms
-CREATE TABLE IF NOT EXISTS contact_submissions (
+-- Drop table if it exists with wrong schema (safely recreate)
+DROP TABLE IF EXISTS contact_submissions CASCADE;
+
+CREATE TABLE contact_submissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     email TEXT NOT NULL,
