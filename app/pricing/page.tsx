@@ -29,7 +29,7 @@ export default function PricingPage() {
             <CardContent>
               <p className="text-lg font-semibold">Pricing starts at $100</p>
               <Button asChild size="lg" className="mt-6 w-full">
-                <Link href="/#contact">Send an Inquiry →</Link>
+                <Link href="/services">Send an Inquiry →</Link>
               </Button>
             </CardContent>
           </Card>
