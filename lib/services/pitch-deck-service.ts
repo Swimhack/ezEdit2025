@@ -534,6 +534,18 @@ export class PitchDeckService {
   ): Promise<ServiceResult<{ submission_id: string; follow_up_timeline: string }>> {
     return withRetry(async () => {
       try {
+        // Check if Supabase is configured
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || 
+            (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+          return {
+            success: false,
+            error: {
+              error: 'CONFIGURATION_ERROR',
+              message: 'Contact form is not configured. Please contact support directly.',
+              details: { issue: 'Missing Supabase environment variables' }
+            }
+          }
+        }
         // Validate required fields
         if (!formData.name || !formData.email) {
           return {
@@ -586,12 +598,21 @@ export class PitchDeckService {
           .insert(submission.toDatabaseRow())
 
         if (error) {
+          // Check for common database configuration errors
+          const isConfigError = error.code === 'PGRST116' || 
+                               error.message?.includes('JWT') ||
+                               error.message?.includes('not configured') ||
+                               !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+                               !process.env.SUPABASE_SERVICE_ROLE_KEY
+          
           return {
             success: false,
             error: {
               error: 'DATABASE_ERROR',
-              message: 'Failed to submit contact form',
-              details: { code: error.code }
+              message: isConfigError 
+                ? 'Contact form is not configured. Please contact support directly.'
+                : 'Failed to submit contact form. Please try again or contact support directly.',
+              details: { code: error.code, message: error.message }
             }
           }
         }
