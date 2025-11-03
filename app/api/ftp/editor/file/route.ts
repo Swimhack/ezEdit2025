@@ -277,6 +277,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
+    try {
       // Download file content using a buffer stream
       logger.info('FTP Editor starting file download', {
         correlationId,
@@ -714,11 +715,6 @@ export async function PUT(request: NextRequest) {
     return createErrorResponse(
       error instanceof Error ? error : new Error('File save operation failed'),
       context
-    );
-
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
     );
   }
 }

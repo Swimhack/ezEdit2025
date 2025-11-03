@@ -432,7 +432,6 @@ function SignUpForm() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-2 text-xs">14-day free trial included</p>
               </div>
             </div>
           )}

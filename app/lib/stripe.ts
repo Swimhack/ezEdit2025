@@ -67,7 +67,6 @@ export const createCheckoutSession = async ({
     mode: 'subscription',
     allow_promotion_codes: true,
     subscription_data: {
-      trial_period_days: 14, // 14-day free trial
       metadata: {
         isYearly: isYearly.toString()
       }

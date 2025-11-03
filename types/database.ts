@@ -582,6 +582,198 @@ export interface Database {
           }
         ]
       }
+      tickets: {
+        Row: {
+          id: string
+          customer_email: string
+          customer_name: string | null
+          domain: string
+          has_existing_website: boolean
+          detected_platform: 'wordpress' | 'shopify' | 'wix' | 'ftp' | 'sftp' | 'unknown' | null
+          platform_confidence: number | null
+          detection_method: 'api' | 'custom' | 'manual' | null
+          request_description: string
+          status: 'submitted' | 'admin_review' | 'quoted' | 'customer_accepted' | 'in_progress' | 'completed' | 'cancelled'
+          quoted_price: number | null
+          quoted_timeline: string | null
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+          submitted_by: string | null
+        }
+        Insert: {
+          id?: string
+          customer_email: string
+          customer_name?: string | null
+          domain: string
+          has_existing_website?: boolean
+          detected_platform?: 'wordpress' | 'shopify' | 'wix' | 'ftp' | 'sftp' | 'unknown' | null
+          platform_confidence?: number | null
+          detection_method?: 'api' | 'custom' | 'manual' | null
+          request_description: string
+          status?: 'submitted' | 'admin_review' | 'quoted' | 'customer_accepted' | 'in_progress' | 'completed' | 'cancelled'
+          quoted_price?: number | null
+          quoted_timeline?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+          submitted_by?: string | null
+        }
+        Update: {
+          id?: string
+          customer_email?: string
+          customer_name?: string | null
+          domain?: string
+          has_existing_website?: boolean
+          detected_platform?: 'wordpress' | 'shopify' | 'wix' | 'ftp' | 'sftp' | 'unknown' | null
+          platform_confidence?: number | null
+          detection_method?: 'api' | 'custom' | 'manual' | null
+          request_description?: string
+          status?: 'submitted' | 'admin_review' | 'quoted' | 'customer_accepted' | 'in_progress' | 'completed' | 'cancelled'
+          quoted_price?: number | null
+          quoted_timeline?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'tickets_submitted_by_fkey'
+            columns: ['submitted_by']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      ticket_credentials: {
+        Row: {
+          id: string
+          ticket_id: string
+          credential_type: 'ftp' | 'sftp' | 'wordpress_api' | 'shopify_api' | 'wix_api'
+          host: string | null
+          port: number | null
+          username: string | null
+          password: string | null
+          api_key: string | null
+          api_secret: string | null
+          path: string | null
+          encrypted_data: Json | null
+          encrypted_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          credential_type: 'ftp' | 'sftp' | 'wordpress_api' | 'shopify_api' | 'wix_api'
+          host?: string | null
+          port?: number | null
+          username?: string | null
+          password?: string | null
+          api_key?: string | null
+          api_secret?: string | null
+          path?: string | null
+          encrypted_data?: Json | null
+          encrypted_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          ticket_id?: string
+          credential_type?: 'ftp' | 'sftp' | 'wordpress_api' | 'shopify_api' | 'wix_api'
+          host?: string | null
+          port?: number | null
+          username?: string | null
+          password?: string | null
+          api_key?: string | null
+          api_secret?: string | null
+          path?: string | null
+          encrypted_data?: Json | null
+          encrypted_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ticket_credentials_ticket_id_fkey'
+            columns: ['ticket_id']
+            referencedRelation: 'tickets'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      ticket_comments: {
+        Row: {
+          id: string
+          ticket_id: string
+          author_id: string | null
+          author_role: 'customer' | 'admin'
+          author_email: string | null
+          comment: string
+          is_internal: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ticket_id: string
+          author_id?: string | null
+          author_role: 'customer' | 'admin'
+          author_email?: string | null
+          comment: string
+          is_internal?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          ticket_id?: string
+          author_id?: string | null
+          author_role?: 'customer' | 'admin'
+          author_email?: string | null
+          comment?: string
+          is_internal?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'ticket_comments_ticket_id_fkey'
+            columns: ['ticket_id']
+            referencedRelation: 'tickets'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'ticket_comments_author_id_fkey'
+            columns: ['author_id']
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      platform_detections: {
+        Row: {
+          id: string
+          domain: string
+          detected_platform: string | null
+          detection_data: Json
+          last_checked: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          domain: string
+          detected_platform?: string | null
+          detection_data?: Json
+          last_checked?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          domain?: string
+          detected_platform?: string | null
+          detection_data?: Json
+          last_checked?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       [table: string]: {
         Row: Record<string, any>
         Insert: Record<string, any>

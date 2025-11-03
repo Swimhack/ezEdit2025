@@ -9,6 +9,9 @@ import { getScalekitClient, isScalekitConfigured, getAuthorizationUrl } from '@/
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
+// TEMPORARY: Bypass authentication for testing
+const BYPASS_AUTH = true
+
 // Handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -23,6 +26,17 @@ export async function OPTIONS(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // TEMPORARY: Bypass ScaleKit check if auth is disabled
+    if (BYPASS_AUTH) {
+      // Return success response without ScaleKit redirect
+      // This allows the dashboard to load without authentication
+      return NextResponse.json({
+        success: true,
+        message: 'Authentication bypassed - redirecting to dashboard',
+        redirectUrl: '/dashboard'
+      })
+    }
+
     // Check if ScaleKit is configured
     if (!isScalekitConfigured()) {
       return NextResponse.json(

@@ -108,7 +108,8 @@ function SignInForm() {
         return
       }
 
-      // ScaleKit returns a redirect URL - redirect to ScaleKit hosted login page
+      // If auth is bypassed, redirect directly to dashboard
+      // Or if ScaleKit returns a redirect URL, redirect to ScaleKit hosted login page
       if (data.redirectUrl) {
         window.location.href = data.redirectUrl
         return
