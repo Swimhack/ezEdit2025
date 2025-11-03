@@ -16,7 +16,7 @@ export default function Header({ userEmail, showAdminBadge = false }: HeaderProp
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center">
             <Link href={isAdminPage ? '/admin' : '/'} className="flex items-center hover:opacity-80 transition-opacity">

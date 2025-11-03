@@ -22,12 +22,12 @@ export default function Logo({ size = 'md', className = '', variant = 'default',
 
   if (variant === 'nav') {
     return (
-      <div className={`flex items-center gap-2 ${className}`}>
-        <div className="bg-blue-600 rounded-lg p-2 flex items-center justify-center">
-          <span className="text-white font-bold text-lg">Ez</span>
+      <div className={`flex items-center gap-3 ${className}`}>
+        <div className="bg-blue-600 rounded-lg p-3 flex items-center justify-center shadow-md">
+          <span className="text-white font-bold text-2xl">Ez</span>
         </div>
         {showText && (
-          <span className="font-semibold text-xl text-gray-900">EzEdit.co</span>
+          <span className="font-semibold text-3xl text-gray-900">EzEdit.co</span>
         )}
       </div>
     )
