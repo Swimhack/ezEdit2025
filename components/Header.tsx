@@ -73,13 +73,6 @@ export function Header() {
               <Moon className="h-4 w-4" />
             )}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full transition-smooth hover:bg-accent"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
           <Link href="/editor">
             <Button className="rounded-full px-6 shadow-lg hover:shadow-xl transition-smooth bg-primary hover:bg-primary/90">
               Launch Editor
