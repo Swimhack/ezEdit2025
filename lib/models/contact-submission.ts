@@ -180,10 +180,19 @@ export class ContactSubmissionModel {
 
   /**
    * Create for database storage
+   * Converts camelCase to snake_case for database columns
    */
-  toDatabaseRow(): Omit<ContactSubmission, 'id'> {
-    const { id, ...dbData } = this.data
-    return dbData
+  toDatabaseRow(): Record<string, any> {
+    return {
+      name: this.data.name,
+      email: this.data.email,
+      company: this.data.company || null,
+      investor_type: this.data.investorType || null,
+      message: this.data.message || null,
+      interested_sections: this.data.interestedSections || [],
+      submitted_at: this.data.submittedAt || new Date().toISOString(),
+      followup_status: this.data.followupStatus || 'pending'
+    }
   }
 
   /**
