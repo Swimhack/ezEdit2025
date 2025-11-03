@@ -41,6 +41,15 @@ CREATE POLICY "Service role can update contact submissions" ON contact_submissio
     FOR UPDATE 
     USING (true);
 
+-- Create update timestamp trigger function (if it doesn't exist)
+CREATE OR REPLACE FUNCTION update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create update timestamp trigger
 CREATE TRIGGER update_contact_submissions_updated_at BEFORE UPDATE ON contact_submissions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
