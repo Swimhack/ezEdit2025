@@ -4,35 +4,90 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+const tiers = [
+  {
+    name: 'Free',
+    price: '$0',
+    description: 'Perfect for trying out the platform',
+    features: [
+      'View & edit files',
+      'Monaco code editor',
+      'Try all features',
+      'Community support',
+      '❌ No saving or deploying'
+    ],
+    cta: 'Try Free',
+  },
+  {
+    name: 'Pro',
+    price: '$20/mo',
+    description: 'For freelancers, agencies & small businesses',
+    features: [
+      '✅ Save & deploy changes',
+      'Unlimited sites',
+      'FTP/SFTP/WordPress/Wix',
+      'Auto-backups & rollback',
+      'SEO optimization tools',
+      'Priority email support'
+    ],
+    cta: 'Start Pro',
+    highlighted: true,
+  },
+  {
+    name: 'Enterprise',
+    price: 'Contact Us',
+    description: 'For teams with advanced needs',
+    features: [
+      'Everything in Pro',
+      'Unlimited team members',
+      'White-label solution',
+      'Custom integrations',
+      'SSO & advanced security',
+      'Dedicated account manager',
+      '24/7 priority support'
+    ],
+    cta: 'Contact Sales',
+  },
+];
+
 export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="container mx-auto flex-1 px-4 py-16">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold">Need a Website Update?</h1>
-          <p className="mt-3 text-xl text-muted-foreground">
-            From minor content tweaks to new features, I handle all your website update requests.
-            <br />
-            No subscription needed. Just send an inquiry to get a custom quote.
-          </p>
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-4xl font-bold">Design, Host, Update & Optimize</h1>
+          <p className="mt-3 text-xl text-muted-foreground">Start free, upgrade when you're ready to save and deploy.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Join the premier platform for web management.</p>
         </div>
 
-        <div className="mt-12 max-w-xl mx-auto">
-          <Card className="text-center">
-            <CardHeader>
-              <CardTitle className="text-2xl">One-Off Updates & Custom Solutions</CardTitle>
-              <CardDescription>
-                Tell me what you need, and I'll provide a custom quote based on the scope and complexity of the work.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-lg font-semibold">Pricing starts at $100</p>
-              <Button asChild size="lg" className="mt-6 w-full">
-                <Link href="/services">Send an Inquiry →</Link>
-              </Button>
-            </CardContent>
-          </Card>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {tiers.map((tier) => (
+            <Card key={tier.name} className={tier.highlighted ? 'border-primary shadow-md' : ''}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  {tier.name}
+                  <span className="text-xl font-semibold">{tier.price}</span>
+                </CardTitle>
+                <CardDescription>{tier.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  {tier.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-primary" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-6">
+                  <Button asChild className="w-full" variant={tier.highlighted ? 'default' : 'outline'}>
+                    <Link href={tier.name === 'Enterprise' ? '/#contact' : '/editor'}>{tier.cta}</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* AI Add-on Section */}
