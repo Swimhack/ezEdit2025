@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight, Code, Zap, Shield, Globe, Bot, Save } from 'lucide-react'
+import QuoteForm from '@/components/QuoteForm'
 
 export default function HomePage() {
   return (
@@ -53,19 +54,10 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Email Signup */}
+            {/* Get a Quote */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md mx-auto shadow-lg border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Get Early Access</h3>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Get Invite
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Get a Quote</h3>
+              <QuoteForm />
             </div>
           </div>
         </div>

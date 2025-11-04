@@ -82,6 +82,14 @@ CREATE TABLE IF NOT EXISTS public.ai_messages (
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Quote Submissions table
+CREATE TABLE IF NOT EXISTS public.quote_submissions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    domain_name TEXT NOT NULL,
+    request_details TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Row Level Security (RLS) Policies
 
 -- Enable RLS

@@ -238,6 +238,26 @@ export interface Database {
           timestamp?: string
         }
       }
+      quote_submissions: {
+        Row: {
+          id: string
+          domain_name: string
+          request_details: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          domain_name: string
+          request_details: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          domain_name?: string
+          request_details?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
