@@ -1,5 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Code, Zap, Shield, Globe, Bot, Save } from 'lucide-react'
+import QuoteForm from '@/components/QuoteForm'
 
 export default function HomePage() {
   return (
@@ -8,16 +10,13 @@ export default function HomePage() {
       <nav className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">Ez</span>
-              </div>
-              <span className="font-semibold text-xl text-gray-900 dark:text-white">EzEdit.co</span>
+            <div className="flex items-center">
+              <Image src="/images/logo.jpg" alt="EzEdit.co Logo" width={120} height={32} />
             </div>
             
             <div className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Features</a>
-              <a href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Pricing</a>
+              <a href="#services" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Services</a>
               <Link href="/docs" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Docs</Link>
               <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Login</Link>
               <Link href="/auth/register" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
@@ -30,9 +29,9 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Edit Legacy Websites with{' '}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 AI-Powered
@@ -55,29 +54,20 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Email Signup */}
+            {/* Get a Quote */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md mx-auto shadow-lg border border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Get Early Access</h3>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Get Invite
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Get a Quote</h3>
+              <QuoteForm />
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white dark:bg-gray-800">
+      <section id="features" className="py-12 bg-white dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
               Everything You Need to Edit Your Website
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
@@ -149,118 +139,49 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-gray-50 dark:bg-gray-900">
+      {/* Services Section */}
+      <section id="services" className="py-12 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Simple, Transparent Pricing
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+              Our Services
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300">
-              No setup fees • Cancel anytime • 30-day money back guarantee
+              We offer a range of services to help you get the most out of your website.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Free Tier */}
+            {/* Service 1 */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Free</h3>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                $0<span className="text-lg font-normal text-gray-500">/forever</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  1 FTP connection
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Basic code editor
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  5 AI requests/day
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Community support
-                </li>
-              </ul>
-              <Link href="/auth/register" className="w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-center block">
-                Start Free
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Website Updates</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Keep your website fresh and up-to-date with our content update services.
+              </p>
+              <Link href="/auth/register" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block">
+                Learn More
               </Link>
             </div>
 
-            {/* Single Site */}
+            {/* Service 2 */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-8 border-2 border-blue-500 relative">
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Single Site</h3>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                $20<span className="text-lg font-normal text-gray-500">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  1 FTP connection
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Advanced editor features
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Unlimited AI assistance
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Priority support
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Auto-save & history
-                </li>
-              </ul>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Custom Development</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Need a new feature or a custom solution? Our development team can help.
+              </p>
               <Link href="/auth/register" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block">
-                Start Free Trial
+                Get a Quote
               </Link>
             </div>
 
-            {/* Unlimited */}
+            {/* Service 3 */}
             <div className="bg-white dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Unlimited</h3>
-              <div className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-                $100<span className="text-lg font-normal text-gray-500">/month</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Unlimited FTP connections
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  All editor features
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Unlimited AI assistance
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Premium support
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Team collaboration
-                </li>
-                <li className="flex items-center text-gray-600 dark:text-gray-300">
-                  <span className="text-green-500 mr-2">✓</span>
-                  API access
-                </li>
-              </ul>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Consulting</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Get expert advice on how to improve your website's performance and user experience.
+              </p>
               <Link href="/auth/register" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center block">
-                Start Free Trial
+                Book a Consultation
               </Link>
             </div>
           </div>
@@ -269,14 +190,11 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">Ez</span>
-                </div>
-                <span className="font-semibold text-xl text-gray-900 dark:text-white">EzEdit.co</span>
+              <div className="flex items-center mb-4">
+                <Image src="/images/logo.jpg" alt="EzEdit.co Logo" width={120} height={32} />
               </div>
               <p className="text-gray-600 dark:text-gray-300 text-sm">
                 The easiest way to edit your website files with AI assistance.
@@ -287,7 +205,7 @@ export default function HomePage() {
               <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Product</h4>
               <ul className="space-y-2">
                 <li><a href="#features" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm">Features</a></li>
-                <li><a href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm">Pricing</a></li>
+                <li><a href="#services" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm">Services</a></li>
                 <li><Link href="/docs" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm">Documentation</Link></li>
               </ul>
             </div>
