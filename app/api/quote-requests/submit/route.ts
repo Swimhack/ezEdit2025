@@ -23,40 +23,85 @@ function createSupabaseClient() {
   return createClient(url, key)
 }
 
-// Helper function to save quote request - tries multiple methods
+// Helper function to save quote request - tries multiple methods with detailed logging
 async function saveQuoteRequest(domain: string, message: string): Promise<{ success: boolean; id?: string; error?: any }> {
+  const domainTrimmed = domain.trim()
+  const messageTrimmed = message.trim()
+  
+  console.log('Attempting to save quote request:', { domain: domainTrimmed, messageLength: messageTrimmed.length })
+
   // Try method 1: Supabase client
   try {
+    console.log('Method 1: Trying Supabase client...')
     const supabase = createSupabaseClient()
-    const { data, error } = await supabase
+    
+    const insertData = {
+      domain: domainTrimmed,
+      message: messageTrimmed,
+      status: 'pending'
+    }
+    
+    console.log('Inserting data:', insertData)
+    
+    // Try with select().single() first
+    let { data, error } = await supabase
       .from('quote_requests')
-      .insert({
-        domain: domain.trim(),
-        message: message.trim(),
-        status: 'pending'
-      })
+      .insert(insertData)
       .select()
       .single()
 
-    if (!error && data) {
-      console.log('Quote request saved successfully via Supabase:', { id: data.id, domain })
+    if (error) {
+      console.error('Supabase insert with select error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      // Try insert without select (sometimes select fails but insert succeeds)
+      const { error: insertError } = await supabase
+        .from('quote_requests')
+        .insert(insertData)
+      
+      if (!insertError) {
+        console.log('✅ Quote request saved via Supabase (insert succeeded, select failed)')
+        return { success: true }
+      } else {
+        console.error('Supabase insert error (without select):', insertError)
+      }
+    } else if (data) {
+      console.log('✅ Quote request saved successfully via Supabase:', { id: data.id, domain: domainTrimmed })
       return { success: true, id: data.id }
-    } else {
-      console.error('Supabase insert error:', error)
-      // Continue to try fallback method
     }
-  } catch (supabaseError) {
-    console.error('Supabase client error:', supabaseError)
-    // Continue to try fallback method
+  } catch (supabaseError: any) {
+    console.error('Supabase client error:', {
+      message: supabaseError?.message,
+      stack: supabaseError?.stack,
+      name: supabaseError?.name
+    })
   }
 
-  // Try method 2: Direct SQL query via Supabase REST API
+  // Try method 2: Direct REST API call
   try {
+    console.log('Method 2: Trying REST API...')
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     
-    if (url && key) {
-      const response = await fetch(`${url}/rest/v1/quote_requests`, {
+    if (!url || !key) {
+      console.error('Missing Supabase credentials for REST API')
+    } else {
+      const restUrl = `${url}/rest/v1/quote_requests`
+      console.log('REST API URL:', restUrl)
+      
+      const requestBody = {
+        domain: domainTrimmed,
+        message: messageTrimmed,
+        status: 'pending'
+      }
+      
+      console.log('REST API request body:', requestBody)
+      
+      const response = await fetch(restUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -64,29 +109,89 @@ async function saveQuoteRequest(domain: string, message: string): Promise<{ succ
           'Authorization': `Bearer ${key}`,
           'Prefer': 'return=representation'
         },
-        body: JSON.stringify({
-          domain: domain.trim(),
-          message: message.trim(),
-          status: 'pending'
-        })
+        body: JSON.stringify(requestBody)
       })
+
+      console.log('REST API response status:', response.status, response.statusText)
 
       if (response.ok) {
         const data = await response.json()
         const savedId = Array.isArray(data) ? data[0]?.id : data?.id
-        console.log('Quote request saved successfully via REST API:', { id: savedId, domain })
+        console.log('✅ Quote request saved successfully via REST API:', { id: savedId, domain: domainTrimmed })
         return { success: true, id: savedId }
       } else {
         const errorText = await response.text()
-        console.error('REST API insert error:', { status: response.status, error: errorText })
+        console.error('REST API insert error:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          error: errorText 
+        })
       }
     }
-  } catch (restError) {
-    console.error('REST API error:', restError)
+  } catch (restError: any) {
+    console.error('REST API error:', {
+      message: restError?.message,
+      stack: restError?.stack,
+      name: restError?.name
+    })
   }
 
-  // If all methods fail, log but don't throw - we'll still return success to user
-  console.error('All save methods failed for quote request:', { domain, messageLength: message.length })
+  // Try method 3: RPC call as last resort
+  try {
+    console.log('Method 3: Trying RPC call...')
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    if (url && key) {
+      const supabase = createSupabaseClient()
+      const { data, error } = await supabase.rpc('insert_quote_request', {
+        p_domain: domainTrimmed,
+        p_message: messageTrimmed
+      })
+      
+      if (!error && data) {
+        console.log('✅ Quote request saved via RPC:', { data, domain: domainTrimmed })
+        return { success: true, id: data }
+      } else {
+        console.error('RPC error:', error)
+      }
+    }
+  } catch (rpcError: any) {
+    console.error('RPC error:', {
+      message: rpcError?.message,
+      stack: rpcError?.stack
+    })
+  }
+
+  // If all methods fail, log detailed error but don't throw
+  console.error('❌ All save methods failed for quote request:', { 
+    domain: domainTrimmed, 
+    messageLength: messageTrimmed.length,
+    timestamp: new Date().toISOString()
+  })
+  
+  // Still try one more time with basic insert without select
+  try {
+    console.log('Final attempt: Basic insert without select...')
+    const supabase = createSupabaseClient()
+    const { error } = await supabase
+      .from('quote_requests')
+      .insert({
+        domain: domainTrimmed,
+        message: messageTrimmed,
+        status: 'pending'
+      })
+
+    if (!error) {
+      console.log('✅ Quote request saved via basic insert (no ID returned)')
+      return { success: true }
+    } else {
+      console.error('Final insert attempt error:', error)
+    }
+  } catch (finalError: any) {
+    console.error('Final insert attempt failed:', finalError)
+  }
+
   return { success: false, error: 'All save methods failed' }
 }
 
@@ -137,7 +242,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Always attempt to save, regardless of errors
+    console.log('Calling saveQuoteRequest with:', { domain: domainStr, messageLength: messageStr.length })
     const saveResult = await saveQuoteRequest(domainStr, messageStr)
+    console.log('Save result:', saveResult)
+
+    // Log the save result for debugging
+    if (!saveResult.success) {
+      console.error('⚠️ Quote request save failed, but returning success to user:', {
+        domain: domainStr,
+        error: saveResult.error
+      })
+    }
 
     // Always return success to user, even if save failed
     // Errors are logged internally for debugging
@@ -145,7 +260,9 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: 'Quote request submitted successfully. We will be in touch soon.',
-        data: saveResult.id ? { id: saveResult.id } : undefined
+        data: saveResult.id ? { id: saveResult.id } : undefined,
+        // Include save status in response for debugging (will be removed in production)
+        _debug: process.env.NODE_ENV === 'development' ? { saved: saveResult.success } : undefined
       },
       { 
         status: 201,
