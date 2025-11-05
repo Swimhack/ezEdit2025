@@ -29,6 +29,8 @@ export default function QuoteRequestForm() {
 
       let response
       try {
+        console.log('Submitting quote request:', { domain: domain.trim(), messageLength: message.trim().length })
+        
         response = await fetch('/api/quote-requests/submit', {
           method: 'POST',
           headers: { 
@@ -39,8 +41,20 @@ export default function QuoteRequestForm() {
             domain: domain.trim(), 
             message: message.trim() 
           }),
-          signal: controller.signal
+          signal: controller.signal,
+          credentials: 'same-origin'
         })
+        
+        console.log('Response received:', { status: response.status, statusText: response.statusText, ok: response.ok })
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId)
+        console.error('Fetch error details:', {
+          name: fetchError?.name,
+          message: fetchError?.message,
+          stack: fetchError?.stack,
+          cause: fetchError?.cause
+        })
+        throw fetchError
       } finally {
         clearTimeout(timeoutId)
       }

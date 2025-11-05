@@ -45,6 +45,7 @@ function checkRateLimit(ip: string): { allowed: boolean; resetTime?: number } {
 }
 
 export async function POST(request: NextRequest) {
+  // Wrap everything in try-catch to ensure we always return a response
   try {
     console.log('Quote request API endpoint called:', {
       method: request.method,
@@ -52,14 +53,23 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
 
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
+               request.headers.get('x-real-ip') || 
+               'unknown'
 
     const rateCheck = checkRateLimit(ip)
     if (!rateCheck.allowed) {
       console.log('Rate limit exceeded for IP:', ip)
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
-        { status: 429 }
+        { 
+          status: 429,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
@@ -71,7 +81,14 @@ export async function POST(request: NextRequest) {
       console.error('Failed to parse request body:', parseError)
       return NextResponse.json(
         { error: 'Invalid request format. Please check your input and try again.' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
     
@@ -81,28 +98,56 @@ export async function POST(request: NextRequest) {
     if (!domain || !message) {
       return NextResponse.json(
         { error: 'Domain and message are required' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
     if (typeof domain !== 'string' || typeof message !== 'string') {
       return NextResponse.json(
         { error: 'Invalid data format' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
     if (domain.length > 255) {
       return NextResponse.json(
         { error: 'Domain name is too long (max 255 characters)' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
     if (message.length > 2000) {
       return NextResponse.json(
         { error: 'Message is too long (max 2000 characters)' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
@@ -117,7 +162,14 @@ export async function POST(request: NextRequest) {
           error: 'Database connection error. Please contact support.',
           details: clientError instanceof Error ? clientError.message : 'Unknown error'
         },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
@@ -155,7 +207,14 @@ export async function POST(request: NextRequest) {
             error: 'Database configuration error. The quote requests table is not available. Please contact support.',
             details: `Error: ${error.message}`
           },
-          { status: 500 }
+          { 
+            status: 500,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            }
+          }
         )
       }
       
@@ -163,7 +222,14 @@ export async function POST(request: NextRequest) {
       if (error.code === '23505') {
         return NextResponse.json(
           { error: 'A quote request with this information already exists.' },
-          { status: 409 }
+          { 
+            status: 409,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            }
+          }
         )
       }
       
@@ -174,7 +240,14 @@ export async function POST(request: NextRequest) {
             error: 'Database permission error. Please contact support.',
             details: error.message
           },
-          { status: 500 }
+          { 
+            status: 500,
+            headers: {
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Methods': 'POST, OPTIONS',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            }
+          }
         )
       }
       
@@ -184,7 +257,14 @@ export async function POST(request: NextRequest) {
           error: 'Failed to submit quote request. Please try again.',
           details: error.message || 'Unknown database error'
         },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          }
+        }
       )
     }
 
@@ -199,17 +279,40 @@ export async function POST(request: NextRequest) {
         message: 'Quote request submitted successfully',
         data: { id: data.id }
       },
-      { status: 201 }
+      { 
+        status: 201,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      }
     )
   } catch (error) {
+    // Catch-all error handler - ensure we always return a response
     console.error('Quote request submission error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    
+    // Log full error details for debugging
+    console.error('Full error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : typeof error
+    })
+    
     return NextResponse.json(
       { 
         error: 'Internal server error',
         details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        }
+      }
     )
   }
 }
