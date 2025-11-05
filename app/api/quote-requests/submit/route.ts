@@ -41,347 +41,180 @@ function createSupabaseClient() {
   return client
 }
 
-// Helper function to save quote request - tries multiple methods with detailed logging
+// Helper function to save quote request - simplified with proper error handling
 async function saveQuoteRequest(domain: string, message: string): Promise<{ success: boolean; id?: string; error?: any }> {
   const domainTrimmed = domain.trim()
   const messageTrimmed = message.trim()
-  
-  console.log('Attempting to save quote request:', { domain: domainTrimmed, messageLength: messageTrimmed.length })
 
-  // Try method 1: Supabase client
+  console.log('=== SAVE QUOTE REQUEST START ===')
+  console.log('Domain:', domainTrimmed)
+  console.log('Message length:', messageTrimmed.length)
+  console.log('Timestamp:', new Date().toISOString())
+
   try {
-    console.log('Method 1: Trying Supabase client...')
+    // Create Supabase client with service role (bypasses RLS)
     const supabase = createSupabaseClient()
-    
+
     const insertData = {
       domain: domainTrimmed,
       message: messageTrimmed,
-      status: 'pending'
+      status: 'pending' as const
     }
-    
-    console.log('Inserting data:', insertData)
-    
-    // Try with select().single() first
-    let { data, error } = await supabase
+
+    console.log('Attempting insert with data:', JSON.stringify(insertData, null, 2))
+
+    // Attempt insert and return the inserted row
+    const { data, error } = await supabase
       .from('quote_requests')
       .insert(insertData)
-      .select()
+      .select('id, domain, message, status, created_at')
       .single()
 
+    // Log the full response
+    console.log('Insert response:', {
+      hasData: !!data,
+      hasError: !!error,
+      data: data ? JSON.stringify(data, null, 2) : null,
+      error: error ? JSON.stringify(error, null, 2) : null
+    })
+
     if (error) {
-      console.error('Supabase insert with select error:', {
+      console.error('❌ INSERT FAILED with error:', {
         code: error.code,
         message: error.message,
         details: error.details,
         hint: error.hint
       })
-      
-      // Try insert without select (sometimes select fails but insert succeeds)
-      const { error: insertError } = await supabase
-        .from('quote_requests')
-        .insert(insertData)
-      
-      if (!insertError) {
-        console.log('✅ Quote request saved via Supabase (insert succeeded, select failed)')
-        
-        // Verify the save by querying for the most recent entry with this domain
-        const { data: verifyData, error: verifyError } = await supabase
-          .from('quote_requests')
-          .select('id, domain, created_at')
-          .eq('domain', domainTrimmed)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-        
-        if (!verifyError && verifyData) {
-          console.log('✅ Save verified - found entry with ID:', verifyData.id)
-          return { success: true, id: verifyData.id }
-        } else {
-          console.error('⚠️ Could not verify save:', verifyError)
-          // Still return success since insert succeeded
-          return { success: true }
-        }
-      } else {
-        console.error('Supabase insert error (without select):', insertError)
-      }
-    } else if (data && data.id) {
-      console.log('✅ Quote request saved successfully via Supabase:', { id: data.id, domain: domainTrimmed })
-      
-      // Verify the save by fetching it back
-      const { data: verifyData, error: verifyError } = await supabase
-        .from('quote_requests')
-        .select('id, domain')
-        .eq('id', data.id)
-        .single()
-      
-      if (verifyError || !verifyData) {
-        console.error('⚠️ Save verification failed:', verifyError)
-        // Still return success since insert succeeded
-      } else {
-        console.log('✅ Save verified - data exists in database')
-      }
-      
+      return { success: false, error: error.message }
+    }
+
+    if (data && data.id) {
+      console.log('✅ Quote request saved successfully!')
+      console.log('Saved data:', JSON.stringify(data, null, 2))
+      console.log('=== SAVE QUOTE REQUEST SUCCESS ===')
       return { success: true, id: data.id }
-    } else {
-      console.error('❌ Supabase insert returned no data and no error - unexpected state')
     }
-  } catch (supabaseError: any) {
-    console.error('Supabase client error:', {
-      message: supabaseError?.message,
-      stack: supabaseError?.stack,
-      name: supabaseError?.name
+
+    // Unexpected: no error but no data
+    console.error('❌ INSERT returned no error but no data - unexpected state')
+    return { success: false, error: 'Insert returned no data' }
+
+  } catch (error: any) {
+    console.error('❌ EXCEPTION during save:', {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack
     })
+    return { success: false, error: error?.message || 'Unknown error' }
   }
-
-  // Try method 2: Direct REST API call
-  try {
-    console.log('Method 2: Trying REST API...')
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    if (!url || !key) {
-      console.error('Missing Supabase credentials for REST API')
-    } else {
-      const restUrl = `${url}/rest/v1/quote_requests`
-      console.log('REST API URL:', restUrl)
-      
-      const requestBody = {
-        domain: domainTrimmed,
-        message: messageTrimmed,
-        status: 'pending'
-      }
-      
-      console.log('REST API request body:', requestBody)
-      
-      const response = await fetch(restUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      console.log('REST API response status:', response.status, response.statusText)
-
-      if (response.ok) {
-        const data = await response.json()
-        const savedId = Array.isArray(data) ? data[0]?.id : data?.id
-        console.log('✅ Quote request saved successfully via REST API:', { id: savedId, domain: domainTrimmed })
-        return { success: true, id: savedId }
-      } else {
-        const errorText = await response.text()
-        console.error('REST API insert error:', { 
-          status: response.status, 
-          statusText: response.statusText,
-          error: errorText 
-        })
-      }
-    }
-  } catch (restError: any) {
-    console.error('REST API error:', {
-      message: restError?.message,
-      stack: restError?.stack,
-      name: restError?.name
-    })
-  }
-
-  // Try method 3: RPC call as last resort
-  try {
-    console.log('Method 3: Trying RPC call...')
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    
-    if (url && key) {
-      const supabase = createSupabaseClient()
-      const { data, error } = await supabase.rpc('insert_quote_request', {
-        p_domain: domainTrimmed,
-        p_message: messageTrimmed
-      })
-      
-      if (!error && data) {
-        console.log('✅ Quote request saved via RPC:', { data, domain: domainTrimmed })
-        return { success: true, id: data }
-      } else {
-        console.error('RPC error:', error)
-      }
-    }
-  } catch (rpcError: any) {
-    console.error('RPC error:', {
-      message: rpcError?.message,
-      stack: rpcError?.stack
-    })
-  }
-
-  // If all methods fail, log detailed error but don't throw
-  console.error('❌ All save methods failed for quote request:', { 
-    domain: domainTrimmed, 
-    messageLength: messageTrimmed.length,
-    timestamp: new Date().toISOString()
-  })
-  
-  // Still try one more time with basic insert without select
-  try {
-    console.log('Final attempt: Basic insert without select...')
-    const supabase = createSupabaseClient()
-    const { error } = await supabase
-      .from('quote_requests')
-      .insert({
-        domain: domainTrimmed,
-        message: messageTrimmed,
-        status: 'pending'
-      })
-
-    if (!error) {
-      console.log('✅ Quote request saved via basic insert (no ID returned)')
-      return { success: true }
-    } else {
-      console.error('Final insert attempt error:', error)
-    }
-  } catch (finalError: any) {
-    console.error('Final insert attempt failed:', finalError)
-  }
-
-  return { success: false, error: 'All save methods failed' }
 }
 
 export async function POST(request: NextRequest) {
-  // Always return success to user, but log errors internally
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
   }
 
-  try {
-    console.log('Quote request API endpoint called:', {
-      method: request.method,
-      url: request.url,
-      timestamp: new Date().toISOString()
-    })
+  console.log('=== QUOTE REQUEST API CALLED ===')
+  console.log('Method:', request.method)
+  console.log('URL:', request.url)
+  console.log('Timestamp:', new Date().toISOString())
 
+  try {
     // Parse request body
     let body
     try {
       body = await request.json()
+      console.log('Request body parsed successfully')
     } catch (parseError) {
       console.error('Failed to parse request body:', parseError)
-      // Still try to save with what we have
-      body = {}
-    }
-    
-    const { domain, message } = body || {}
-
-    // Basic validation - if invalid, still try to save
-    const domainStr = (domain || '').toString().trim().substring(0, 255)
-    const messageStr = (message || '').toString().trim().substring(0, 2000)
-
-    if (!domainStr || !messageStr) {
-      console.warn('Invalid quote request data:', { domain: domainStr, hasMessage: !!messageStr })
-      // Still return success to user
       return NextResponse.json(
         {
-          success: true,
-          message: 'Quote request received. We will review it shortly.'
+          success: false,
+          error: 'Invalid request format'
         },
-        { 
-          status: 200,
+        {
+          status: 400,
           headers: corsHeaders
         }
       )
     }
 
-    // Attempt to save - MUST succeed before returning success
-    console.log('Calling saveQuoteRequest with:', { domain: domainStr, messageLength: messageStr.length })
-    const saveResult = await saveQuoteRequest(domainStr, messageStr)
-    console.log('Save result:', saveResult)
+    const { domain, message } = body || {}
 
-    // CRITICAL: Only return success if save actually succeeded
-    if (!saveResult.success) {
-      console.error('❌ Quote request save FAILED:', {
-        domain: domainStr,
-        error: saveResult.error,
-        timestamp: new Date().toISOString()
-      })
-      
-      // Try to verify if data exists despite error
-      try {
-        const supabase = createSupabaseClient()
-        const { data: verifyData, error: verifyError } = await supabase
-          .from('quote_requests')
-          .select('id, domain, created_at')
-          .eq('domain', domainStr)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-        
-        if (!verifyError && verifyData) {
-          console.log('✅ Data exists in database despite save error! ID:', verifyData.id)
-          // Data was saved, return success
-          return NextResponse.json(
-            {
-              success: true,
-              message: 'Quote request submitted successfully. We will be in touch soon.',
-              data: { id: verifyData.id }
-            },
-            { 
-              status: 201,
-              headers: corsHeaders
-            }
-          )
-        }
-      } catch (verifyErr) {
-        console.error('Verification check failed:', verifyErr)
-      }
-      
-      // Save failed - return error
+    // Validate required fields
+    const domainStr = (domain || '').toString().trim().substring(0, 255)
+    const messageStr = (message || '').toString().trim().substring(0, 2000)
+
+    if (!domainStr || !messageStr) {
+      console.warn('Missing required fields:', { hasDomain: !!domainStr, hasMessage: !!messageStr })
       return NextResponse.json(
         {
           success: false,
-          error: 'Failed to save quote request. Please try again or contact support.',
+          error: 'Domain and message are required'
+        },
+        {
+          status: 400,
+          headers: corsHeaders
+        }
+      )
+    }
+
+    console.log('Validation passed - calling saveQuoteRequest')
+
+    // Attempt to save
+    const saveResult = await saveQuoteRequest(domainStr, messageStr)
+
+    console.log('Save result:', saveResult)
+
+    // Return appropriate response based on save result
+    if (!saveResult.success) {
+      console.error('❌ FINAL RESULT: Save failed')
+      return NextResponse.json(
+        {
+          success: false,
+          error: saveResult.error || 'Failed to save quote request. Please try again.',
           details: process.env.NODE_ENV === 'development' ? saveResult.error : undefined
         },
-        { 
+        {
           status: 500,
           headers: corsHeaders
         }
       )
     }
 
-    // Save succeeded - return success
+    // Success!
+    console.log('✅ FINAL RESULT: Save succeeded with ID:', saveResult.id)
     return NextResponse.json(
       {
         success: true,
         message: 'Quote request submitted successfully. We will be in touch soon.',
         data: saveResult.id ? { id: saveResult.id } : undefined
       },
-      { 
+      {
         status: 201,
         headers: corsHeaders
       }
     )
 
   } catch (error) {
-    // Catch-all: log error and return error to user
-    console.error('Unexpected error in quote request handler:', error)
+    console.error('❌ UNEXPECTED ERROR in quote request handler:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    
-    console.error('Full error details:', {
+
+    console.error('Error details:', {
       message: errorMessage,
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : typeof error
     })
-    
-    // Return error so user knows something went wrong
+
     return NextResponse.json(
       {
         success: false,
         error: 'An unexpected error occurred. Please try again.',
         details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
-      { 
+      {
         status: 500,
         headers: corsHeaders
       }
