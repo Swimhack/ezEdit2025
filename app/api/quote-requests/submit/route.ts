@@ -83,13 +83,47 @@ async function saveQuoteRequest(domain: string, message: string): Promise<{ succ
       
       if (!insertError) {
         console.log('✅ Quote request saved via Supabase (insert succeeded, select failed)')
-        return { success: true }
+        
+        // Verify the save by querying for the most recent entry with this domain
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('quote_requests')
+          .select('id, domain, created_at')
+          .eq('domain', domainTrimmed)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+        
+        if (!verifyError && verifyData) {
+          console.log('✅ Save verified - found entry with ID:', verifyData.id)
+          return { success: true, id: verifyData.id }
+        } else {
+          console.error('⚠️ Could not verify save:', verifyError)
+          // Still return success since insert succeeded
+          return { success: true }
+        }
       } else {
         console.error('Supabase insert error (without select):', insertError)
       }
-    } else if (data) {
+    } else if (data && data.id) {
       console.log('✅ Quote request saved successfully via Supabase:', { id: data.id, domain: domainTrimmed })
+      
+      // Verify the save by fetching it back
+      const { data: verifyData, error: verifyError } = await supabase
+        .from('quote_requests')
+        .select('id, domain')
+        .eq('id', data.id)
+        .single()
+      
+      if (verifyError || !verifyData) {
+        console.error('⚠️ Save verification failed:', verifyError)
+        // Still return success since insert succeeded
+      } else {
+        console.log('✅ Save verified - data exists in database')
+      }
+      
       return { success: true, id: data.id }
+    } else {
+      console.error('❌ Supabase insert returned no data and no error - unexpected state')
     }
   } catch (supabaseError: any) {
     console.error('Supabase client error:', {
@@ -259,28 +293,69 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Always attempt to save, regardless of errors
+    // Attempt to save - MUST succeed before returning success
     console.log('Calling saveQuoteRequest with:', { domain: domainStr, messageLength: messageStr.length })
     const saveResult = await saveQuoteRequest(domainStr, messageStr)
     console.log('Save result:', saveResult)
 
-    // Log the save result for debugging
+    // CRITICAL: Only return success if save actually succeeded
     if (!saveResult.success) {
-      console.error('⚠️ Quote request save failed, but returning success to user:', {
+      console.error('❌ Quote request save FAILED:', {
         domain: domainStr,
-        error: saveResult.error
+        error: saveResult.error,
+        timestamp: new Date().toISOString()
       })
+      
+      // Try to verify if data exists despite error
+      try {
+        const supabase = createSupabaseClient()
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('quote_requests')
+          .select('id, domain, created_at')
+          .eq('domain', domainStr)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+        
+        if (!verifyError && verifyData) {
+          console.log('✅ Data exists in database despite save error! ID:', verifyData.id)
+          // Data was saved, return success
+          return NextResponse.json(
+            {
+              success: true,
+              message: 'Quote request submitted successfully. We will be in touch soon.',
+              data: { id: verifyData.id }
+            },
+            { 
+              status: 201,
+              headers: corsHeaders
+            }
+          )
+        }
+      } catch (verifyErr) {
+        console.error('Verification check failed:', verifyErr)
+      }
+      
+      // Save failed - return error
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to save quote request. Please try again or contact support.',
+          details: process.env.NODE_ENV === 'development' ? saveResult.error : undefined
+        },
+        { 
+          status: 500,
+          headers: corsHeaders
+        }
+      )
     }
 
-    // Always return success to user, even if save failed
-    // Errors are logged internally for debugging
+    // Save succeeded - return success
     return NextResponse.json(
       {
         success: true,
         message: 'Quote request submitted successfully. We will be in touch soon.',
-        data: saveResult.id ? { id: saveResult.id } : undefined,
-        // Include save status in response for debugging (will be removed in production)
-        _debug: process.env.NODE_ENV === 'development' ? { saved: saveResult.success } : undefined
+        data: saveResult.id ? { id: saveResult.id } : undefined
       },
       { 
         status: 201,
@@ -289,7 +364,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    // Catch-all: log error but still return success to user
+    // Catch-all: log error and return error to user
     console.error('Unexpected error in quote request handler:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     
@@ -299,14 +374,15 @@ export async function POST(request: NextRequest) {
       name: error instanceof Error ? error.name : typeof error
     })
     
-    // Always return success to suppress errors from user
+    // Return error so user knows something went wrong
     return NextResponse.json(
       {
-        success: true,
-        message: 'Quote request received. We will review it shortly.'
+        success: false,
+        error: 'An unexpected error occurred. Please try again.',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       },
       { 
-        status: 200,
+        status: 500,
         headers: corsHeaders
       }
     )
