@@ -7,8 +7,21 @@ export const dynamic = 'force-dynamic'
 function createSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) throw new Error('Missing Supabase credentials')
-  return createClient(url, key)
+  if (!url || !key) {
+    console.error('Missing Supabase credentials in admin API')
+    throw new Error('Missing Supabase credentials')
+  }
+  // Service role key bypasses RLS, so we should be able to read/write
+  const client = createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    },
+    db: {
+      schema: 'public'
+    }
+  })
+  return client
 }
 
 export async function GET(request: NextRequest) {
@@ -18,6 +31,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    console.log('Admin fetching quote requests...')
     const supabase = createSupabaseClient()
     const searchParams = request.nextUrl.searchParams
 
@@ -25,6 +39,24 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
     const status = searchParams.get('status')
+
+    console.log('Query params:', { page, limit, offset, status })
+
+    // First, try to get count to verify table access
+    const { count: totalCount, error: countError } = await supabase
+      .from('quote_requests')
+      .select('*', { count: 'exact', head: true })
+
+    if (countError) {
+      console.error('Failed to get count:', {
+        code: countError.code,
+        message: countError.message,
+        details: countError.details,
+        hint: countError.hint
+      })
+    } else {
+      console.log('Total quote requests count:', totalCount)
+    }
 
     let query = supabase
       .from('quote_requests')
@@ -40,25 +72,38 @@ export async function GET(request: NextRequest) {
     const { data: requests, error } = await query
 
     if (error) {
-      console.error('Failed to fetch quote requests:', error)
-      return NextResponse.json({ error: 'Failed to fetch quote requests' }, { status: 500 })
+      console.error('Failed to fetch quote requests:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      return NextResponse.json({ 
+        error: 'Failed to fetch quote requests',
+        details: error.message 
+      }, { status: 500 })
     }
 
-    const { count } = await supabase
-      .from('quote_requests')
-      .select('*', { count: 'exact', head: true })
+    console.log('Fetched quote requests:', {
+      count: requests?.length || 0,
+      firstRequest: requests?.[0] ? { id: requests[0].id, domain: requests[0].domain } : null
+    })
 
     return NextResponse.json({
       items: requests || [],
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
+        total: totalCount || 0,
+        totalPages: Math.ceil((totalCount || 0) / limit)
       }
     })
   } catch (error) {
     console.error('Admin quote requests error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: errorMessage 
+    }, { status: 500 })
   }
 }
