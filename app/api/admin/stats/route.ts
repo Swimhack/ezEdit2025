@@ -123,6 +123,38 @@ export async function GET(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
       .gte('created_at', last24Hours.toISOString())
 
+    // Quote requests stats
+    const { count: totalQuotes } = await supabase
+      .from('quote_requests')
+      .select('*', { count: 'exact', head: true })
+
+    const { count: pendingQuotes } = await supabase
+      .from('quote_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+
+    const { count: reviewedQuotes } = await supabase
+      .from('quote_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'reviewed')
+
+    const { data: quotesByStatus } = await supabase
+      .from('quote_requests')
+      .select('status')
+
+    const quoteStatusCounts: Record<string, number> = {}
+    if (quotesByStatus) {
+      quotesByStatus.forEach((quote: any) => {
+        const status = quote.status || 'unknown'
+        quoteStatusCounts[status] = (quoteStatusCounts[status] || 0) + 1
+      })
+    }
+
+    const { count: recentQuotes } = await supabase
+      .from('quote_requests')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', last24Hours.toISOString())
+
     const stats: AdminDashboardStats = {
       contactSubmissions: {
         total: totalContacts || 0,
@@ -139,9 +171,16 @@ export async function GET(request: NextRequest) {
         byStatus: statusCounts,
         byPlatform: platformCounts
       },
+      quoteRequests: {
+        total: totalQuotes || 0,
+        pending: pendingQuotes || 0,
+        reviewed: reviewedQuotes || 0,
+        byStatus: quoteStatusCounts
+      },
       recentActivity: {
         contactSubmissions: recentContacts || 0,
-        tickets: recentTickets || 0
+        tickets: recentTickets || 0,
+        quoteRequests: recentQuotes || 0
       }
     }
 
@@ -154,4 +193,7 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+
+
 

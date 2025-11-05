@@ -6,15 +6,17 @@ import AdminLayout from '@/components/layout/AdminLayout'
 import DashboardStats from '@/components/admin/DashboardStats'
 import ContactSubmissionsList from '@/components/admin/ContactSubmissionsList'
 import TicketsList from '@/components/admin/TicketsList'
+import QuoteRequestsList from '@/components/admin/QuoteRequestsList'
 import SubmissionDetail from '@/components/admin/SubmissionDetail'
-import { AdminDashboardStats, ContactSubmissionDisplay, TicketDisplay } from '@/types/admin'
+import { AdminDashboardStats, ContactSubmissionDisplay, TicketDisplay, QuoteRequestDisplay } from '@/types/admin'
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'contacts' | 'tickets'>('contacts')
+  const [activeTab, setActiveTab] = useState<'contacts' | 'tickets' | 'quotes'>('contacts')
   const [stats, setStats] = useState<AdminDashboardStats | null>(null)
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmissionDisplay[]>([])
   const [tickets, setTickets] = useState<TicketDisplay[]>([])
+  const [quoteRequests, setQuoteRequests] = useState<QuoteRequestDisplay[]>([])
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string>('')
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmissionDisplay | null>(null)
@@ -75,6 +77,13 @@ export default function AdminDashboard() {
         const ticketsData = await ticketsResponse.json()
         setTickets(ticketsData.tickets || [])
       }
+
+      // Load quote requests
+      const quotesResponse = await fetch('/api/admin/quote-requests?limit=100')
+      if (quotesResponse.ok) {
+        const quotesData = await quotesResponse.json()
+        setQuoteRequests(quotesData.items || [])
+      }
     } catch (error) {
       console.error('Error loading admin data:', error)
     } finally {
@@ -95,7 +104,7 @@ export default function AdminDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Manage contact form submissions and ticket requests
+            Manage contact form submissions, ticket requests, and quote requests
           </p>
         </div>
 
@@ -136,6 +145,21 @@ export default function AdminDashboard() {
                   {tickets.length}
                 </span>
               </button>
+              <button
+                onClick={() => setActiveTab('quotes')}
+                className={`${
+                  activeTab === 'quotes'
+                    ? 'border-blue-600 text-blue-600 font-semibold'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+              >
+                Quote Requests
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  activeTab === 'quotes' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {quoteRequests.length}
+                </span>
+              </button>
             </nav>
           </div>
         </div>
@@ -153,6 +177,17 @@ export default function AdminDashboard() {
           <TicketsList
             tickets={tickets}
             loading={loading}
+          />
+        )}
+
+        {activeTab === 'quotes' && (
+          <QuoteRequestsList
+            requests={quoteRequests}
+            loading={loading}
+            onViewDetails={(request) => {
+              console.log('View quote request:', request)
+              // TODO: Implement quote request detail modal if needed
+            }}
           />
         )}
 

@@ -1,5 +1,5 @@
 import Logo from './components/Logo'
-import EmailCapture from './components/EmailCapture'
+import QuoteRequestForm from './components/QuoteRequestForm'
 
 export default function Home() {
   return (
@@ -24,43 +24,43 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <div className="relative isolate px-6 pt-14 lg:px-8">
-        <div className="mx-auto max-w-4xl py-24 sm:py-32 lg:py-40">
+      <div className="relative isolate px-6 pt-4 lg:px-8">
+        <div className="mx-auto max-w-4xl py-8 sm:py-10 lg:py-12">
           <div className="text-center">
-            <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
               Stop Waiting Days for Website Updates.{' '}
               <span className="text-blue-600">Fix It Yourself in Minutes.</span>
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              Tired of paying developers $100+/hour and waiting weeks for simple changes? 
-              Update your legacy website instantly with AI—no coding experience needed. 
+            <p className="mt-4 text-base sm:text-lg leading-6 sm:leading-7 text-gray-600 max-w-2xl mx-auto">
+              Tired of paying developers $100+/hour and waiting weeks for simple changes?
+              Update your legacy website instantly with AI—no coding experience needed.
               Just describe what you want, and watch it happen.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
                 href="/auth/signup?plan=FREE"
-                className="bg-blue-600 text-white px-8 py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
               >
                 Start Fixing Your Site Free
               </a>
               <a
                 href="/demo"
-                className="text-gray-700 px-8 py-3.5 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto text-gray-700 px-8 py-3 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50 transition-colors text-center"
               >
                 See How It Works
               </a>
             </div>
           </div>
 
-          {/* Email Capture Card */}
-          <div className="mt-16">
-            <EmailCapture />
+          {/* Quote Request Form */}
+          <div className="mt-8">
+            <QuoteRequestForm />
           </div>
         </div>
       </div>
 
       {/* Pain Points Section */}
-      <div className="py-24 sm:py-32 bg-red-50">
+      <div className="py-8 sm:py-10 bg-red-50">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
             <h2 className="text-base font-semibold leading-7 text-red-600">The Real Problem</h2>
@@ -71,7 +71,7 @@ export default function Home() {
               Your outdated website is losing customers while you wait for developers who charge too much and take too long.
             </p>
           </div>
-          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <div className="mx-auto mt-6 max-w-2xl sm:mt-8 lg:mt-10 lg:max-w-none">
             <dl className="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
               <div className="flex flex-col bg-white p-6 rounded-lg shadow-sm">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
@@ -118,7 +118,7 @@ export default function Home() {
       </div>
 
       {/* Solution Section */}
-      <div className="py-24 sm:py-32 bg-white">
+      <div className="py-8 sm:py-10 bg-white">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
             <h2 className="text-base font-semibold leading-7 text-blue-600">The Solution</h2>
@@ -129,7 +129,7 @@ export default function Home() {
               No more waiting. No more huge bills. Just describe what you want in plain English, and AI does the rest—safely and instantly.
             </p>
           </div>
-          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+          <div className="mx-auto mt-6 max-w-2xl sm:mt-8 lg:mt-10 lg:max-w-none">
             <dl className="grid max-w-xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
               <div className="flex flex-col">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
@@ -215,7 +215,7 @@ export default function Home() {
       </div>
 
       {/* Pricing Section */}
-      <div className="py-24 sm:py-32 bg-gray-50">
+      <div className="py-8 sm:py-10 bg-gray-50">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="text-base font-semibold leading-7 text-blue-600">Pricing</h2>
@@ -226,7 +226,7 @@ export default function Home() {
               From quick fixes to enterprise-scale operations
             </p>
           </div>
-          <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+          <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-6 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-4">
             {/* Starter Plan */}
             <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10 sm:p-10">
               <div>

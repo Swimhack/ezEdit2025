@@ -9,7 +9,7 @@ CREATE TABLE contact_submissions (
     company TEXT,
     investor_type TEXT CHECK (investor_type IN ('angel', 'vc', 'strategic', 'family_office', 'other')),
     message TEXT,
-    interested_sections JSONB DEFAULT '[]',
+interested_sections JSONB DEFAULT '[]',
     submitted_at TIMESTAMPTZ DEFAULT NOW(),
     followup_status TEXT DEFAULT 'pending' CHECK (followup_status IN ('pending', 'contacted', 'responded', 'closed', 'spam')),
     created_at TIMESTAMPTZ DEFAULT NOW(),

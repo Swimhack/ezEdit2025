@@ -165,3 +165,6 @@ COMMENT ON TABLE ticket_credentials IS 'Encrypted credentials for accessing cust
 COMMENT ON TABLE ticket_comments IS 'Comments and notes on tickets from customers and admins';
 COMMENT ON TABLE platform_detections IS 'Cache for domain platform detection results to reduce API calls';
 
+
+
+

@@ -18,9 +18,16 @@ export interface AdminDashboardStats {
     byStatus: Record<string, number>
     byPlatform: Record<string, number>
   }
+  quoteRequests: {
+    total: number
+    pending: number
+    reviewed: number
+    byStatus: Record<string, number>
+  }
   recentActivity: {
     contactSubmissions: number
     tickets: number
+    quoteRequests: number
   }
 }
 
@@ -52,6 +59,20 @@ export interface TicketDisplay {
   updated_at: string
 }
 
+export interface QuoteRequestDisplay {
+  id: string
+  domain: string
+  message: string
+  customerEmail?: string | null
+  submittedBy?: string | null
+  status: string
+  adminNotes?: string | null
+  quotedPrice?: number | null
+  quotedTimeline?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AdminListResponse<T> {
   items: T[]
   pagination: {
@@ -61,4 +82,7 @@ export interface AdminListResponse<T> {
     totalPages: number
   }
 }
+
+
+
 
