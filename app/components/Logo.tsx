@@ -23,80 +23,22 @@ export default function Logo({ size = 'md', className = '', variant = 'default',
   if (variant === 'nav') {
     return (
       <div className={`flex items-center gap-3 ${className}`}>
-        {showText ? (
-          <div 
-            className={`font-bold tracking-tight ${sizeClasses[size] || 'text-3xl'}`}
-            style={{
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-              display: 'inline-flex',
-              alignItems: 'center'
-            }}
-          >
-            <span 
-              style={{
-                color: variant === 'light' ? '#ffffff' : '#1f2937',
-                textShadow: variant === 'light'
-                  ? '2px 2px 4px rgba(0,0,0,0.3), -1px -1px 2px rgba(255,255,255,0.2), 0 0 8px rgba(255,255,255,0.1)'
-                  : '2px 2px 4px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.8), 0 0 4px rgba(0,0,0,0.1)',
-                display: 'inline-block'
-              }}
-            >
-              Ez
-            </span>
-            <span 
-              style={{
-                color: '#3b82f6',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.3), -1px -1px 2px rgba(59,130,246,0.3), 0 0 8px rgba(59,130,246,0.1)',
-                display: 'inline-block',
-                marginLeft: '0.1em'
-              }}
-            >
-              Edit
-            </span>
-          </div>
-        ) : (
-          <div className="bg-blue-600 rounded-lg p-3 flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-2xl">Ez</span>
-          </div>
+        <div className="bg-blue-600 rounded-lg p-3 flex items-center justify-center shadow-md">
+          <span className="text-white font-bold text-2xl">Ez</span>
+        </div>
+        {showText && (
+          <span className="font-semibold text-3xl text-gray-900">EzEdit.co</span>
         )}
       </div>
     )
   }
 
-  const ezColor = variant === 'light' ? '#ffffff' : '#1f2937'
+  const ezColor = variant === 'light' ? 'text-white' : variant === 'dark' ? 'text-gray-900' : 'text-gray-800'
 
   return (
-    <div 
-      className={`font-bold tracking-tight ${sizeClasses[size]} ${className}`}
-      style={{
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontWeight: 700,
-        letterSpacing: '-0.02em',
-        display: 'inline-flex',
-        alignItems: 'center'
-      }}
-    >
-      <span 
-        style={{
-          color: ezColor,
-          textShadow: variant === 'light' 
-            ? '2px 2px 4px rgba(0,0,0,0.3), -1px -1px 2px rgba(255,255,255,0.2), 0 0 8px rgba(255,255,255,0.1)'
-            : '2px 2px 4px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.8), 0 0 4px rgba(0,0,0,0.1)',
-          display: 'inline-block'
-        }}
-      >
-        Ez
-      </span>
-      <span 
-        style={{
-          color: '#3b82f6',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.3), -1px -1px 2px rgba(59,130,246,0.3), 0 0 8px rgba(59,130,246,0.1)',
-          display: 'inline-block',
-          marginLeft: '0.1em'
-        }}
-      >
+    <div className={`font-bold tracking-tight ${sizeClasses[size]} ${className}`}>
+      <span className={ezColor}>Ez</span>
+      <span className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 bg-clip-text text-transparent">
         Edit
       </span>
     </div>
