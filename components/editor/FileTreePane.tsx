@@ -46,8 +46,8 @@ export default function FileTreePane() {
       // Select file
       selectFile(node.path);
 
-      // Double-click to open file for editing
-      if (event.detail === 2 && isEditableFile(node)) {
+      // Single-click to open file for editing (WYSIWYG)
+      if (isEditableFile(node)) {
         const validation = validateFileOperation(node, 'read');
         if (validation) {
           actions.setError(validation);

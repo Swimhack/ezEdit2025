@@ -131,7 +131,7 @@ export default function EditorPane() {
           <h3 className="text-lg font-semibold text-[#cccccc] mb-2">No File Selected</h3>
           <p className="text-[#858585] mb-4">Select a file from the file tree to start editing</p>
           <div className="text-sm text-[#858585]">
-            <p>Tip: Double-click a file to open it for editing</p>
+            <p>Tip: Click a file to open it for editing</p>
           </div>
         </div>
       </div>

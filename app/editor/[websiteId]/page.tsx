@@ -156,32 +156,35 @@ export default function EditorPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      {/* Top Navigation Bar */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+      {/* Top Navigation Bar - Dark theme to match editor */}
+      <nav className="bg-[#252526] shadow-sm border-b border-[#3e3e42] px-4 py-2 flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Logo variant="nav" showText={false} />
           <div className="flex items-center space-x-2">
-            <h1 className="text-lg font-semibold text-gray-900">
+            <span className="text-xl font-bold text-[#007acc]">EzEdit</span>
+          </div>
+          <span className="text-[#858585]">|</span>
+          <div className="flex items-center space-x-2">
+            <h1 className="text-lg font-semibold text-[#cccccc]">
               {website.name}
             </h1>
-            <span className="text-gray-400">|</span>
-            <span className="text-sm text-gray-600">{website.host}</span>
+            <span className="text-[#858585]">|</span>
+            <span className="text-sm text-[#858585]">{website.host}</span>
           </div>
         </div>
 
         <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-[#cccccc]">
             Welcome, {user?.email}
           </div>
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-gray-600 hover:text-gray-900 px-3 py-1 rounded-md text-sm font-medium"
+            className="text-[#cccccc] hover:text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-[#37373d] transition-colors"
           >
             Dashboard
           </button>
           <button
             onClick={handleSignOut}
-            className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-gray-200"
+            className="bg-[#3c3c3c] text-[#cccccc] px-3 py-1 rounded-md text-sm font-medium hover:bg-[#4a4a4a] transition-colors"
           >
             Sign Out
           </button>

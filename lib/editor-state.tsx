@@ -278,10 +278,20 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
+      // Get website to use its path if configured
+      const websiteResponse = await fetch(`/api/websites/${websiteId}`);
+      let initialPath = '/';
+      if (websiteResponse.ok) {
+        const websiteData = await websiteResponse.json();
+        if (websiteData.website?.path) {
+          initialPath = websiteData.website.path || '/';
+        }
+      }
+
       const response = await fetch('/api/ftp/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ websiteId, path: '/' }),
+        body: JSON.stringify({ websiteId, path: initialPath }),
         signal: controller.signal
       });
 
@@ -515,9 +525,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       }
 
       const fileContent: FileContent = await response.json();
+      // Handle both response formats: { content } and { content, path, ... }
+      const content = fileContent.content || (fileContent as any).content || '';
       dispatch({
         type: 'LOAD_FILE_SUCCESS',
-        payload: { content: fileContent.content, file: path }
+        payload: { content, file: path }
       });
     } catch (error) {
       dispatch({
