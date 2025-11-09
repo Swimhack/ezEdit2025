@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ftp_mcp": {
+      "command": "python",
+      "args": [
+        "mcp_servers/ftp_mcp.py"
+      ],
+      "cwd": ".",
+      "env": {}
+    }
+  }
+}

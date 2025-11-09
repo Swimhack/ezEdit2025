@@ -1,0 +1,17 @@
+# FTP/SFTP MCP Server Requirements
+# Install with: pip install -r requirements.txt
+
+# FastMCP - Model Context Protocol server framework
+mcp>=1.0.0
+
+# FTP client library
+# Standard library ftplib is used (no install needed)
+
+# SFTP/SSH client library
+paramiko>=3.4.0
+
+# Data validation and settings management
+pydantic>=2.5.0
+
+# Type hints for older Python versions
+typing-extensions>=4.9.0
