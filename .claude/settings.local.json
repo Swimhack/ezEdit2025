@@ -7,6 +7,14 @@
       ],
       "cwd": ".",
       "env": {}
+    },
+    "wordpress_mcp": {
+      "command": "python",
+      "args": [
+        "mcp_servers/wordpress_mcp.py"
+      ],
+      "cwd": ".",
+      "env": {}
     }
   }
 }
