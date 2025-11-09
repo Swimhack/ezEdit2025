@@ -615,16 +615,54 @@ export async function POST(request: NextRequest) {
             operation: 'ftp_list_directory'
           })
           
-          // Perform the actual LIST command
-          const listing = await connection.client.list(listPath)
-          
-          logger.info('FTP LIST command completed', {
-            path: listPath,
-            itemCount: listing?.length || 0,
-            connectionId,
-            correlationId,
-            operation: 'ftp_list_command_success'
-          })
+          // Perform the actual LIST command with fallback logic
+          let listing: any[] = []
+          try {
+            listing = await connection.client.list(listPath)
+            logger.info('FTP LIST command completed', {
+              path: listPath,
+              itemCount: listing?.length || 0,
+              connectionId,
+              correlationId,
+              operation: 'ftp_list_command_success'
+            })
+          } catch (listError: any) {
+            // If listing fails, try listing current directory
+            logger.warn('Direct list failed, trying current directory', {
+              listPath,
+              error: listError.message,
+              correlationId,
+              operation: 'ftp_list_fallback'
+            })
+            try {
+              const currentDir = await connection.client.pwd()
+              logger.info('Current directory from PWD', { 
+                currentDir, 
+                correlationId,
+                operation: 'ftp_pwd_success'
+              })
+              listing = await connection.client.list(currentDir || '.')
+              logger.info('FTP LIST from current directory completed', {
+                currentDir,
+                itemCount: listing?.length || 0,
+                correlationId,
+                operation: 'ftp_list_current_dir_success'
+              })
+            } catch (pwdError) {
+              // Last resort: try listing '.'
+              logger.warn('PWD failed, trying relative path', {
+                error: pwdError instanceof Error ? pwdError.message : 'Unknown',
+                correlationId,
+                operation: 'ftp_list_relative_fallback'
+              })
+              listing = await connection.client.list('.')
+              logger.info('FTP LIST from relative path completed', {
+                itemCount: listing?.length || 0,
+                correlationId,
+                operation: 'ftp_list_relative_success'
+              })
+            }
+          }
           
           // Return both listing and the actual path used
           return { listing: listing || [], actualPath: listPath }
