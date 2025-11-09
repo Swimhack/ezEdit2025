@@ -6,6 +6,7 @@ import { extractErrorContext, createErrorResponse } from '@/lib/api-error-handle
 import { getWebsite } from '@/lib/websites-memory-store'
 import { getFTPConfig } from '@/lib/ftp-config'
 import { randomUUID } from 'crypto'
+import { logFTPActivity } from '@/lib/ftp-activity-log'
 
 // Helper to normalize and validate paths
 function normalizePath(path: string): string {
@@ -137,8 +138,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     websiteId = body.websiteId
     path = normalizePath(body.path || '/')
+    
+    // Log request start
+    logFTPActivity({
+      operation: 'ftp_list',
+      websiteId,
+      correlationId,
+      status: 'info',
+      path,
+      details: {
+        requestPath: body.path,
+        normalizedPath: path
+      }
+    });
   } catch (error) {
     logger.error('Invalid JSON request body', error as Error, 'ftp_list_parse_error')
+    logFTPActivity({
+      operation: 'ftp_list',
+      correlationId,
+      status: 'error',
+      details: { error: 'Invalid JSON request body' },
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack
+      } : { message: 'Unknown error' }
+    });
     return createErrorResponse(
       new Error('Invalid JSON request body'),
       context
@@ -222,6 +246,21 @@ export async function POST(request: NextRequest) {
         operation: 'ftp_connection_attempt'
       })
       
+      logFTPActivity({
+        operation: 'ftp_connect',
+        websiteId,
+        connectionId,
+        correlationId,
+        status: 'info',
+        details: {
+          host: website.host.trim(),
+          port: parseInt(website.port, 10) || 21,
+          username: website.username,
+          protocol: website.type,
+          workingPath: website.path
+        }
+      });
+      
       // Determine if we need secure connection based on website type
       const isSecure = website.type?.toLowerCase() === 'ftps' || website.type?.toLowerCase() === 'sftp'
       
@@ -256,6 +295,19 @@ export async function POST(request: NextRequest) {
         correlationId,
         operation: 'ftp_connection_success'
       })
+      
+      logFTPActivity({
+        operation: 'ftp_connect',
+        websiteId,
+        connectionId,
+        correlationId,
+        status: 'success',
+        details: {
+          host: website.host.trim(),
+          port: parseInt(website.port, 10) || 21
+        },
+        duration: Date.now() - startTime
+      });
       
       // Test connection with PWD command
       try {
@@ -329,6 +381,24 @@ export async function POST(request: NextRequest) {
         errorCode: err.code,
         operation: 'ftp_connection_failed'
       }, 'ftp_connection_error')
+      
+      logFTPActivity({
+        operation: 'ftp_connect',
+        websiteId,
+        connectionId,
+        correlationId,
+        status: 'error',
+        details: {
+          host: website.host,
+          port: website.port,
+          username: website.username
+        },
+        error: {
+          message: msg,
+          code: err.code
+        },
+        duration: Date.now() - startTime
+      });
       
       // Provide detailed error messages based on error code
       if (msg.includes('530') || msg.includes('User cannot log in') || msg.includes('Login incorrect') || msg.includes('Authentication failed')) {
@@ -480,7 +550,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Queue the FTP operation to prevent concurrent access
-      const contents = await queueFTPOperation(connection, async () => {
+      const result = await queueFTPOperation(connection, async () => {
         // Ensure we're in the correct directory before listing
         try {
           // If website has a working directory, change to it first
@@ -530,7 +600,8 @@ export async function POST(request: NextRequest) {
             operation: 'ftp_list_command_success'
           })
           
-          return listing || []
+          // Return both listing and the actual path used
+          return { listing: listing || [], actualPath: listPath }
         } catch (listError: any) {
           logger.error('FTP list operation failed', {
             error: listError,
@@ -547,8 +618,12 @@ export async function POST(request: NextRequest) {
 
       const duration = Date.now() - listStartTime
       
+      // Extract listing and actual path from result
+      const contents = result.listing || []
+      const actualPath = result.actualPath || path
+      
       // Validate contents
-      if (!contents || !Array.isArray(contents)) {
+      if (!Array.isArray(contents)) {
         logger.error('Invalid FTP list response', {
           connectionId,
           path,
@@ -559,8 +634,9 @@ export async function POST(request: NextRequest) {
         throw new Error('Invalid response from FTP server: expected array')
       }
 
+             // Use actualPath for formatting file info to ensure correct paths
              const files = contents
-               .map((item: any) => formatFileInfo(item, path))
+               .map((item: any) => formatFileInfo(item, actualPath))
                .filter((file: any) => file !== null) // Filter out invalid items
 
              logger.performance('FTP list operation', duration, {
@@ -582,11 +658,29 @@ export async function POST(request: NextRequest) {
 
       // Record success
       recordSuccess(websiteId)
+      
+      // Log successful list operation
+      logFTPActivity({
+        operation: 'ftp_list',
+        websiteId,
+        connectionId,
+        correlationId,
+        status: 'success',
+        path,
+        details: {
+          originalPath: path,
+          websitePath: website.path,
+          listPath: path === '/' ? (website.path && website.path !== '/' ? website.path : '/') : path
+        },
+        duration,
+        fileCount: files.length
+      });
 
       return NextResponse.json({
         success: true,
         files,
-        path,
+        path: actualPath, // Return the actual path that was listed
+        originalPath: path, // Include original requested path for reference
         connectionId
       })
 
@@ -634,6 +728,25 @@ export async function POST(request: NextRequest) {
   // All retries failed
   const duration = Date.now() - listStartTime
   recordFailure(websiteId)
+  
+  // Log failed list operation
+  logFTPActivity({
+    operation: 'ftp_list',
+    websiteId,
+    connectionId,
+    correlationId,
+    status: 'error',
+    path,
+    details: {
+      retriesExhausted: true,
+      originalPath: path
+    },
+    error: lastError ? {
+      message: lastError.message || 'Unknown error',
+      code: lastError.code
+    } : { message: 'Unknown error' },
+    duration
+  });
 
   let errorMessage = lastError?.message || 'Unknown error'
   let statusCode = 500

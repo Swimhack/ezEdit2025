@@ -10,6 +10,7 @@ import { extractErrorContext, createErrorResponse } from '@/lib/api-error-handle
 import { getWebsite } from '@/lib/websites-memory-store';
 import { getFTPConfig } from '@/lib/ftp-config';
 import { randomUUID } from 'crypto';
+import { logFTPActivity } from '@/lib/ftp-activity-log';
 
 // Helper to normalize and validate paths
 function normalizePath(path: string): string {
@@ -460,6 +461,25 @@ export async function POST(request: NextRequest) {
       };
 
       const totalDuration = Date.now() - startTime
+      
+      // Log successful file read
+      logFTPActivity({
+        operation: 'ftp_editor_read',
+        websiteId,
+        connectionId,
+        correlationId,
+        status: 'success',
+        filePath,
+        details: {
+          fileSize,
+          contentLength: content.length,
+          mimeType: response.mimeType,
+          encoding: response.encoding
+        },
+        fileSize,
+        duration: totalDuration
+      });
+      
       logger.info('FTP Editor file load operation completed successfully', {
         correlationId,
         websiteId,
@@ -498,6 +518,24 @@ export async function POST(request: NextRequest) {
         ftpErrorCode: (ftpError as any).code || 'UNKNOWN',
         timestamp: new Date().toISOString()
       }, 'ftp_editor_file_load_ftp_error');
+      
+      // Log failed file read
+      logFTPActivity({
+        operation: 'ftp_editor_read',
+        websiteId,
+        connectionId,
+        correlationId,
+        status: 'error',
+        filePath,
+        details: {
+          errorType: 'FTP_OPERATION_ERROR'
+        },
+        error: {
+          message: (ftpError as Error).message,
+          code: (ftpError as any).code || 'UNKNOWN'
+        },
+        duration: totalDuration
+      });
 
       return NextResponse.json(
         { error: 'Failed to read file from FTP server' },
