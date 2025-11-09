@@ -29,8 +29,21 @@ function formatFileInfo(item: any, path: string): any {
   }
 
   const normalizedPath = normalizePath(path)
-  const id = `${normalizedPath}/${item.name}`.replace(/\/+/g, '/')
-  const fullPath = normalizedPath === '/' ? `/${item.name}` : `${normalizedPath}/${item.name}`
+  
+  // Build full path - handle both absolute and relative paths
+  let fullPath: string
+  if (normalizedPath === '/') {
+    fullPath = `/${item.name}`
+  } else {
+    // Ensure we don't have double slashes
+    const cleanPath = normalizedPath.endsWith('/') ? normalizedPath.slice(0, -1) : normalizedPath
+    fullPath = `${cleanPath}/${item.name}`
+  }
+  
+  // Normalize the full path
+  fullPath = fullPath.replace(/\/+/g, '/')
+  
+  const id = fullPath
 
   // Improved file type detection
   let fileType: string
@@ -39,8 +52,11 @@ function formatFileInfo(item: any, path: string): any {
   if (item.isDirectory !== undefined) {
     fileType = item.isDirectory ? 'directory' : 'file'
   } else if (item.type !== undefined) {
-    // Type 1 = directory, Type 0 = file
+    // Type 1 = directory, Type 0 = file (basic-ftp format)
     fileType = item.type === 1 ? 'directory' : 'file'
+  } else if (typeof item.type === 'string') {
+    // Already a string type
+    fileType = item.type
   } else {
     // Fallback: use file extension
     const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(item.name)
@@ -52,15 +68,25 @@ function formatFileInfo(item: any, path: string): any {
     }
   }
 
-  return {
+  const result = {
     id,
     name: item.name || 'unknown',
     path: fullPath,
     type: fileType,
     size: fileType === 'file' ? (item.size || 0) : 0,
-    modified: item.modifiedAt ? item.modifiedAt.toISOString() : new Date().toISOString(),
+    modified: item.modifiedAt ? (typeof item.modifiedAt === 'string' ? item.modifiedAt : item.modifiedAt.toISOString()) : new Date().toISOString(),
     permissions: item.permissions || undefined
   }
+  
+  // Debug logging for first few items
+  if (Math.random() < 0.1) { // Log 10% of items to avoid spam
+    console.log('[FTP List] Formatted file:', {
+      originalItem: { name: item.name, type: item.type, isDirectory: item.isDirectory },
+      formatted: result
+    })
+  }
+  
+  return result
 }
 
 // Rate limiting and circuit breaker
@@ -635,9 +661,63 @@ export async function POST(request: NextRequest) {
       }
 
              // Use actualPath for formatting file info to ensure correct paths
+             // Log raw contents for debugging
+             if (contents.length > 0) {
+               logger.info('FTP list raw contents sample', {
+                 connectionId,
+                 path: actualPath,
+                 correlationId,
+                 sampleItems: contents.slice(0, 3).map((item: any) => ({
+                   name: item.name,
+                   type: item.type,
+                   isDirectory: item.isDirectory,
+                   size: item.size
+                 })),
+                 totalItems: contents.length,
+                 operation: 'ftp_list_raw_contents'
+               })
+             } else {
+               logger.warn('FTP list returned empty contents', {
+                 connectionId,
+                 path: actualPath,
+                 correlationId,
+                 websitePath: website.path,
+                 operation: 'ftp_list_empty_result'
+               })
+             }
+             
              const files = contents
-               .map((item: any) => formatFileInfo(item, actualPath))
+               .map((item: any) => {
+                 try {
+                   return formatFileInfo(item, actualPath)
+                 } catch (error) {
+                   logger.error('Error formatting file info', {
+                     error: error instanceof Error ? error.message : 'Unknown error',
+                     item,
+                     actualPath,
+                     correlationId,
+                     operation: 'ftp_list_format_error'
+                   })
+                   return null
+                 }
+               })
                .filter((file: any) => file !== null) // Filter out invalid items
+               
+             // Log formatted files for debugging
+             if (files.length > 0) {
+               logger.info('FTP list formatted files sample', {
+                 connectionId,
+                 path: actualPath,
+                 correlationId,
+                 sampleFiles: files.slice(0, 3).map((f: any) => ({
+                   name: f.name,
+                   path: f.path,
+                   type: f.type
+                 })),
+                 totalFiles: files.length,
+                 operation: 'ftp_list_formatted_files'
+               })
+             }
 
              logger.performance('FTP list operation', duration, {
                connectionId,

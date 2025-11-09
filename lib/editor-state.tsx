@@ -339,33 +339,92 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Check if the response has the expected structure
-      if (!result.success || !Array.isArray(result.files)) {
-        console.error(`[Editor] Invalid response structure:`, result);
-        throw new Error('Invalid response from server. Please try again.');
+      if (!result.success) {
+        console.error(`[Editor] API returned success=false:`, result);
+        throw new Error(result.error || 'Failed to load file tree from server');
+      }
+      
+      if (!Array.isArray(result.files)) {
+        console.error(`[Editor] Invalid response structure - files is not an array:`, {
+          files: result.files,
+          filesType: typeof result.files,
+          fullResult: result
+        });
+        throw new Error('Invalid response from server: files is not an array');
       }
 
-      const fileTree: FTPFileNode[] = result.files
-        .filter((item: any) => item && item.name && item.path) // Filter out invalid items
-        .map((item: any) => ({
-          path: item.path,
-          name: item.name || 'unknown',
-          type: item.type === 'directory' ? 'directory' : 'file',
-          size: Number(item.size) || 0,
-          modified: new Date(item.modified || Date.now()),
-          permissions: item.permissions || '',
-          isExpanded: false,
-          isLoaded: item.type === 'directory' ? false : true,
-          children: item.type === 'directory' ? [] : undefined
-        }));
-
-      console.log(`[Editor] File tree loaded successfully:`, {
-        itemCount: fileTree.length,
-        directories: fileTree.filter(f => f.type === 'directory').length,
-        files: fileTree.filter(f => f.type === 'file').length
+      // Debug: Log raw files before processing
+      console.log(`[Editor] Raw files from API:`, {
+        fileCount: result.files?.length || 0,
+        files: result.files?.slice(0, 5), // Log first 5 files for debugging
+        path: result.path,
+        originalPath: result.originalPath
       });
 
+      // Ensure we have an array
+      const rawFiles = Array.isArray(result.files) ? result.files : [];
+      
+      // Process files with better error handling
+      const fileTree: FTPFileNode[] = rawFiles
+        .map((item: any, index: number) => {
+          try {
+            // Validate required fields
+            if (!item) {
+              console.warn(`[Editor] Skipping null/undefined item at index ${index}`);
+              return null;
+            }
+            
+            if (!item.name) {
+              console.warn(`[Editor] Skipping item without name at index ${index}:`, item);
+              return null;
+            }
+            
+            if (!item.path) {
+              console.warn(`[Editor] Item missing path, using name:`, item.name);
+              // Try to construct path from name and result path
+              const basePath = result.path || result.originalPath || '/';
+              item.path = basePath === '/' ? `/${item.name}` : `${basePath}/${item.name}`;
+            }
+
+            return {
+              path: item.path,
+              name: item.name || 'unknown',
+              type: item.type === 'directory' ? 'directory' : 'file',
+              size: Number(item.size) || 0,
+              modified: new Date(item.modified || Date.now()),
+              permissions: item.permissions || '',
+              isExpanded: false,
+              isLoaded: item.type === 'directory' ? false : true,
+              children: item.type === 'directory' ? [] : undefined
+            };
+          } catch (error) {
+            console.error(`[Editor] Error processing file item at index ${index}:`, error, item);
+            return null;
+          }
+        })
+        .filter((item: any) => item !== null); // Filter out null items
+
+      console.log(`[Editor] File tree loaded successfully:`, {
+        rawFileCount: rawFiles.length,
+        processedFileCount: fileTree.length,
+        directories: fileTree.filter(f => f.type === 'directory').length,
+        files: fileTree.filter(f => f.type === 'file').length,
+        sampleFiles: fileTree.slice(0, 3).map(f => ({ name: f.name, path: f.path, type: f.type }))
+      });
+
+      // Always set the file tree, even if empty (to clear loading state)
       dispatch({ type: 'SET_FILE_TREE', payload: fileTree });
       dispatch({ type: 'SET_LOADING', payload: false });
+      
+      // If no files found, log a warning but don't throw an error
+      if (fileTree.length === 0) {
+        console.warn(`[Editor] File tree is empty after processing`, {
+          rawFileCount: rawFiles.length,
+          path: result.path,
+          originalPath: result.originalPath,
+          websiteId
+        });
+      }
     } catch (error) {
       console.error('[Editor] Failed to load file tree:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
