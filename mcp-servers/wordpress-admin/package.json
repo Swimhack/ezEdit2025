@@ -1,0 +1,33 @@
+{
+  "name": "@ezedit/wordpress-admin-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for WordPress admin functions",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "wordpress-admin-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "wordpress",
+    "admin",
+    "model-context-protocol"
+  ],
+  "author": "ezEdit",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.6.5",
+    "form-data": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  }
+}
