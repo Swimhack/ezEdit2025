@@ -28,7 +28,23 @@ websiteStore.set('demo-user', [
     url: 'https://eastgateministries.com',
     type: 'FTP',
     host: '72.167.42.141',
-    username: 'eastgateus',
+    username: 'eastgate_ftp',
+    password: 'Eastgate411!',
+    port: '21',
+    path: '/public_html'
+  }
+]);
+
+// Also support test-user-123 (used in UI)
+websiteStore.set('test-user-123', [
+  {
+    id: 'w_mfqaki011hc6q3',
+    userId: 'test-user-123',
+    name: 'Eastgate Ministries',
+    url: 'https://eastgateministries.com',
+    type: 'FTP',
+    host: '72.167.42.141',
+    username: 'eastgate_ftp',
     password: 'Eastgate411!',
     port: '21',
     path: '/public_html'
