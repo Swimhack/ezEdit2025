@@ -4,10 +4,10 @@ import { test, expect } from '@playwright/test';
  * Production Authentication Testing
  *
  * Tests signup and login system on the production deployment
- * URL: https://ezedit-co.fly.dev
+ * URL: https://ezeditapp.fly.dev
  */
 
-const PRODUCTION_BASE_URL = 'https://ezedit-co.fly.dev';
+const PRODUCTION_BASE_URL = 'https://ezeditapp.fly.dev';
 
 test.describe('Production Authentication System', () => {
   test.beforeEach(async ({ page }) => {
@@ -343,7 +343,7 @@ test.describe('Production Authentication System', () => {
   test('should test production HTTPS enforcement', async ({ page }) => {
     // Test that HTTP redirects to HTTPS
     try {
-      const response = await page.request.get('http://ezedit-co.fly.dev/auth/signup');
+      const response = await page.request.get('http://ezeditapp.fly.dev/auth/signup');
 
       if (response.status() === 301 || response.status() === 302) {
         const location = response.headers()['location'];

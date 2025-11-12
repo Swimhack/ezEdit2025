@@ -130,7 +130,7 @@ export function validateEnvironment(): RuntimeEnvConfig {
       IS_DEVELOPMENT: env.NODE_ENV === 'development',
       IS_TEST: env.NODE_ENV === 'test',
       APP_URL: env.NEXT_PUBLIC_APP_URL ||
-        (env.NODE_ENV === 'production' ? 'https://ezedit.fly.dev' : 'http://localhost:3000'),
+        (env.NODE_ENV === 'production' ? 'https://ezeditapp.fly.dev' : 'http://localhost:3000'),
       DATABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL
     }
 

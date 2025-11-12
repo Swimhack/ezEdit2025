@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
  * Patient testing approach with proper wait conditions
  */
 
-const PRODUCTION_BASE_URL = 'https://ezedit-co.fly.dev';
+const PRODUCTION_BASE_URL = 'https://ezeditapp.fly.dev';
 
 test.describe('Production Authentication System - Final Verification', () => {
   test('should verify /auth/register redirects to /auth/signup', async ({ page }) => {
