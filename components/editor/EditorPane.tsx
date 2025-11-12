@@ -72,15 +72,9 @@ export default function EditorPane() {
       saveFile();
     });
 
-    // Add file content change listener
-    editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
-      updateContent(value);
-    });
-
     // Focus editor when mounted
     editor.focus();
-  }, [state.session?.preferences, saveFile, updateContent]);
+  }, [state.session?.preferences, saveFile]);
 
   // Handle editor value change
   const handleEditorChange = useCallback((value: string | undefined) => {
@@ -110,7 +104,20 @@ export default function EditorPane() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentFile, isDirty, saveFile]);
 
-  // Show loading state
+  // Show loading state - show loading when file is being loaded
+  if (isLoading && currentFile && !fileContent) {
+    return (
+      <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-loading">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
+          <p className="text-[#cccccc]">Loading file...</p>
+          <p className="text-[#858585] text-sm mt-2">{currentFile.split('/').pop()}</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show loading state for initial editor load
   if (isLoading && !currentFile) {
     return (
       <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-loading">
@@ -205,6 +212,7 @@ export default function EditorPane() {
       {/* Monaco Editor */}
       <div className="flex-1 overflow-hidden" data-testid="monaco-container">
         <Editor
+          key={currentFile} // Force remount when file changes to ensure content loads
           height="100%"
           language={getEditorLanguage()}
           theme="vs-dark"

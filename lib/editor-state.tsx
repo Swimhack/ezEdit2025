@@ -565,8 +565,12 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
    * Load file content for editing
    */
   const loadFile = useCallback(async (path: string) => {
-    if (!state.connectionId) return;
+    if (!state.connectionId) {
+      console.error('[Editor] Cannot load file: No connection ID');
+      return;
+    }
 
+    console.log('[Editor] Loading file:', path);
     dispatch({ type: 'LOAD_FILE_START', payload: path });
 
     try {
@@ -580,17 +584,26 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to load file: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to load file: ${response.statusText}`);
       }
 
       const fileContent: FileContent = await response.json();
       // Handle both response formats: { content } and { content, path, ... }
       const content = fileContent.content || (fileContent as any).content || '';
+      
+      console.log('[Editor] File loaded successfully:', {
+        path,
+        contentLength: content.length,
+        hasContent: !!content
+      });
+      
       dispatch({
         type: 'LOAD_FILE_SUCCESS',
         payload: { content, file: path }
       });
     } catch (error) {
+      console.error('[Editor] Failed to load file:', error);
       dispatch({
         type: 'LOAD_FILE_ERROR',
         payload: error instanceof Error ? error.message : 'Failed to load file'

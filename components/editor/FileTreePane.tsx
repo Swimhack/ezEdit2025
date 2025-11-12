@@ -37,12 +37,15 @@ export default function FileTreePane() {
     event.stopPropagation();
 
     if (node.type === 'directory') {
+      console.log('[FileTree] Directory clicked:', node.path, node.isExpanded ? 'collapsing' : 'expanding');
       if (node.isExpanded) {
         collapseDirectory(node.path);
       } else {
         await expandDirectory(node.path);
       }
     } else {
+      console.log('[FileTree] File clicked:', node.path, 'editable:', isEditableFile(node));
+      
       // Select file
       selectFile(node.path);
 
@@ -50,15 +53,21 @@ export default function FileTreePane() {
       if (isEditableFile(node)) {
         const validation = validateFileOperation(node, 'read');
         if (validation) {
+          console.error('[FileTree] File validation failed:', validation);
           actions.setError(validation);
           return;
         }
 
         try {
+          console.log('[FileTree] Loading file content...');
           await loadFile(node.path);
+          console.log('[FileTree] File loaded successfully');
         } catch (error) {
+          console.error('[FileTree] Failed to load file:', error);
           actions.setError(`Failed to load file: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
+      } else {
+        console.log('[FileTree] File is not editable, skipping load');
       }
     }
   }, [expandDirectory, collapseDirectory, selectFile, loadFile, actions]);
