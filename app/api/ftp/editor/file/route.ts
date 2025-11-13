@@ -187,18 +187,18 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     })
 
-    try {
-      // Check if file exists and get size
-      logger.info('FTP Editor checking file size', {
-        correlationId,
-        filePath,
-        operation: 'ftp_editor_file_size_check_start',
-        timestamp: new Date().toISOString()
-      })
+    // Check if file exists and get size
+    logger.info('FTP Editor checking file size', {
+      correlationId,
+      filePath,
+      operation: 'ftp_editor_file_size_check_start',
+      timestamp: new Date().toISOString()
+    })
 
-      let fileSize;
-      const fileSizeStart = Date.now()
-      
+    let fileSize: number = 0;
+    const fileSizeStart = Date.now()
+    
+    try {
       // Retry logic for file size check
       let retries = 3
       let sizeError: any = null
@@ -232,42 +232,43 @@ export async function POST(request: NextRequest) {
       if (sizeError) {
         throw sizeError
       }
-        const fileSizeDuration = Date.now() - fileSizeStart
+      
+      const fileSizeDuration = Date.now() - fileSizeStart
 
-        logger.info('FTP Editor file size retrieved', {
-          correlationId,
-          filePath,
-          fileSize,
-          fileSizeDuration,
-          operation: 'ftp_editor_file_size_retrieved',
-          timestamp: new Date().toISOString()
-        })
-      } catch (error) {
-        const fileSizeDuration = Date.now() - fileSizeStart
-        logger.error('FTP Editor file size check failed', {
-          error: error as Error,
-          correlationId,
-          filePath,
-          fileSizeDuration,
-          operation: 'ftp_editor_file_size_check_failed',
-          errorType: 'FILE_NOT_FOUND_OR_INACCESSIBLE',
-          ftpErrorMessage: (error as Error).message,
-          duration: Date.now() - startTime
-        }, 'ftp_editor_file_size_error')
-        return NextResponse.json(
-          { error: 'File not found or inaccessible' },
-          { status: 404 }
-        );
-      }
+      logger.info('FTP Editor file size retrieved', {
+        correlationId,
+        filePath,
+        fileSize,
+        fileSizeDuration,
+        operation: 'ftp_editor_file_size_retrieved',
+        timestamp: new Date().toISOString()
+      })
+    } catch (error) {
+      const fileSizeDuration = Date.now() - fileSizeStart
+      logger.error('FTP Editor file size check failed', {
+        error: error as Error,
+        correlationId,
+        filePath,
+        fileSizeDuration,
+        operation: 'ftp_editor_file_size_check_failed',
+        errorType: 'FILE_NOT_FOUND_OR_INACCESSIBLE',
+        ftpErrorMessage: (error as Error).message,
+        duration: Date.now() - startTime
+      }, 'ftp_editor_file_size_error')
+      return NextResponse.json(
+        { error: 'File not found or inaccessible' },
+        { status: 404 }
+      );
+    }
 
-      // Check file size (limit to 10MB for editor)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (fileSize > maxSize) {
-        return NextResponse.json(
-          { error: `File too large (${Math.round(fileSize / 1024 / 1024)}MB). Maximum size is 10MB.` },
-          { status: 413 }
-        );
-      }
+    // Check file size (limit to 10MB for editor)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (fileSize > maxSize) {
+      return NextResponse.json(
+        { error: `File too large (${Math.round(fileSize / 1024 / 1024)}MB). Maximum size is 10MB.` },
+        { status: 413 }
+      );
+    }
 
     try {
       // Download file content using a buffer stream
