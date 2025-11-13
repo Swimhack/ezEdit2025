@@ -104,26 +104,14 @@ export default function EditorPane() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentFile, isDirty, saveFile]);
 
-  // Show loading state - show loading when file is being loaded
-  if (isLoading && currentFile && !fileContent) {
+  // Show loading state when file is being loaded
+  if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-loading">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
-          <p className="text-[#cccccc]">Loading file...</p>
-          <p className="text-[#858585] text-sm mt-2">{currentFile.split('/').pop()}</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Show loading state for initial editor load
-  if (isLoading && !currentFile) {
-    return (
-      <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-loading">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
-          <p className="text-[#cccccc]">Loading editor...</p>
+          <p className="text-[#cccccc]">{currentFile ? 'Loading file...' : 'Loading editor...'}</p>
+          {currentFile && <p className="text-[#858585] text-sm mt-2">{currentFile.split('/').pop()}</p>}
         </div>
       </div>
     );

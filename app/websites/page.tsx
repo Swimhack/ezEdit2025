@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Logo from '@/app/components/Logo'
+import ConnectionWizard from '@/app/components/ConnectionWizard'
 
 // TEMPORARY: Disable authentication for testing
 const BYPASS_AUTH = true
@@ -11,20 +12,9 @@ export default function Websites() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [websites, setWebsites] = useState<any[]>([])
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [showWizard, setShowWizard] = useState(false)
   const [editingWebsite, setEditingWebsite] = useState<any>(null)
-  const [showPassword, setShowPassword] = useState(false)
   const [editShowPassword, setEditShowPassword] = useState(false)
-  const [newWebsite, setNewWebsite] = useState({
-    name: '',
-    url: '',
-    type: 'FTP',
-    host: '',
-    username: '',
-    password: '',
-    port: '21',
-    path: '/'
-  })
 
   const router = useRouter()
 
@@ -92,31 +82,18 @@ export default function Websites() {
     getUser()
   }, [router])
 
-  const handleAddWebsite = async (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleWizardComplete = async (websiteData: any) => {
     try {
       const response = await fetch('/api/websites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newWebsite)
+        body: JSON.stringify(websiteData)
       })
 
       if (response.ok) {
         const data = await response.json()
         setWebsites([...websites, data.website])
-        setShowAddForm(false)
-        setShowPassword(false)
-        setNewWebsite({
-          name: '',
-          url: '',
-          type: 'FTP',
-          host: '',
-          username: '',
-          password: '',
-          port: '21',
-          path: '/'
-        })
+        setShowWizard(false)
         alert('Website added successfully!')
       } else {
         const errorData = await response.json()
@@ -232,19 +209,27 @@ export default function Websites() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Websites</h1>
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">My Websites</h1>
           <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            onClick={() => setShowWizard(true)}
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-700 shadow-md hover:shadow-lg transition-all text-sm"
           >
-            Add Website
+            + Connect Website
           </button>
         </div>
 
-        {/* Add Website Form */}
-        {showAddForm && (
+        {/* Connection Wizard */}
+        {showWizard && (
+          <ConnectionWizard
+            onComplete={handleWizardComplete}
+            onCancel={() => setShowWizard(false)}
+          />
+        )}
+
+        {/* OLD FORM REMOVED - Now using ConnectionWizard */}
+        {false && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
               <h2 className="text-2xl font-bold mb-6">Add New Website</h2>
@@ -378,18 +363,84 @@ export default function Websites() {
                   />
                 </div>
 
+                {/* Test Connection Button */}
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={handleTestConnection}
+                    disabled={testingConnection || !newWebsite.host || !newWebsite.username || !newWebsite.password}
+                    className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {testingConnection ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Testing Connection...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Test Connection
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Test Result Display */}
+                {testResult && (
+                  <div className={`mt-4 p-4 rounded-lg ${testResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <div className="flex items-start gap-3">
+                      {testResult.success ? (
+                        <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      ) : (
+                        <svg className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                      <div className="flex-1">
+                        <h4 className={`font-semibold ${testResult.success ? 'text-green-900' : 'text-red-900'}`}>
+                          {testResult.message}
+                        </h4>
+                        {testResult.success && testResult.details && (
+                          <div className="mt-2 text-sm text-green-800">
+                            <p>✓ Connected successfully</p>
+                            <p>✓ Found {testResult.details.fileCount} files/folders</p>
+                            {testResult.details.detectedPlatform && (
+                              <p>✓ Detected: {testResult.details.detectedPlatform}</p>
+                            )}
+                          </div>
+                        )}
+                        {!testResult.success && testResult.error && (
+                          <div className="mt-2 text-sm text-red-800">
+                            <p className="font-medium">{testResult.error.message}</p>
+                            <p className="mt-1 whitespace-pre-line">{testResult.error.suggestion}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex space-x-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                    disabled={!testResult || !testResult.success}
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    Add Website
+                    {testResult && testResult.success ? 'Add Website' : 'Test Connection First'}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setShowAddForm(false)
                       setShowPassword(false)
+                      setTestResult(null)
                     }}
                     className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
                   >
@@ -557,34 +608,41 @@ export default function Websites() {
         )}
 
         {/* Websites List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {websites.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <div className="text-gray-500 text-lg">No websites connected yet</div>
-              <p className="text-gray-400 mt-2">Click "Add Website" to get started</p>
+            <div className="col-span-full text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300">
+              <div className="text-gray-400 text-5xl mb-3">🌐</div>
+              <div className="text-gray-700 font-semibold mb-1">No websites connected yet</div>
+              <p className="text-gray-500 text-sm">Click "+ Connect Website" above to get started</p>
             </div>
           ) : (
             websites.map((website: any) => (
-              <div key={website.id} className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{website.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{website.url}</p>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <div key={website.id} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-semibold text-gray-900 truncate">{website.name}</h3>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{website.url}</p>
+                  </div>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-2 flex-shrink-0">
                     {website.type}
                   </span>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <button
                     onClick={() => router.push(`/editor/${website.id}`)}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm font-medium"
+                    className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-700 text-sm font-medium"
                   >
                     Edit Files
                   </button>
                   <button
                     onClick={() => startEdit(website)}
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300 text-sm font-medium"
+                    className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                    title="Settings"
                   >
-                    Settings
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                   </button>
                 </div>
               </div>

@@ -60,9 +60,10 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-8 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm text-gray-500">
-            &copy; {currentYear} EzEdit.co. All rights reserved.
-          </p>
+          <div className="text-sm text-gray-500">
+            <p>&copy; {currentYear} EzEdit.co. All rights reserved.</p>
+            <p className="mt-1">Powered by <a href="http://www.Stricklandtechnology.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">Strickland Technology</a></p>
+          </div>
           <div className="mt-4 md:mt-0 flex space-x-6">
             <a href="#" className="text-gray-400 hover:text-gray-500 transition-colors">
               <span className="sr-only">Twitter</span>

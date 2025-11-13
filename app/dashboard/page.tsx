@@ -144,151 +144,126 @@ export default function Dashboard() {
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Welcome to EzEdit Dashboard
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Your AI-powered website editing platform
-          </p>
-
-          {profile?.plan && (
-            <div className="mb-8">
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                Plan: {profile.plan}
-              </div>
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-600 mt-1">Manage your websites and files</p>
             </div>
-          )}
-
-          {/* My Websites Section */}
-          {websites.length > 0 && (
-            <div className="mb-12">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">My Websites</h2>
-                <button
-                  onClick={() => router.push('/websites')}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
-                  Manage Websites →
-                </button>
+            {profile?.plan && (
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                {profile.plan}
               </div>
+            )}
+          </div>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {websites.map((website: any) => (
-                  <div key={website.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
-                      <h3 className="text-lg font-semibold text-white truncate">{website.name}</h3>
-                      <p className="text-blue-100 text-sm truncate">{website.url}</p>
-                    </div>
-
-                    <div className="p-6">
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="font-medium w-16">Host:</span>
-                          <span className="truncate">{website.host}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="font-medium w-16">Type:</span>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            website.type === 'SFTP' ? 'bg-green-100 text-green-800' :
-                            website.type === 'FTPS' ? 'bg-purple-100 text-purple-800' :
-                            'bg-blue-100 text-blue-800'
-                          }`}>
-                            {website.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="font-medium w-16">User:</span>
-                          <span className="truncate">{website.username}</span>
-                        </div>
-                        <div className="flex items-center text-sm text-gray-600">
-                          <span className="font-medium w-16">Port:</span>
-                          <span>{website.port}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => router.push(`/editor/${website.id}`)}
-                          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-                        >
-                          Edit Files
-                        </button>
-                        <button
-                          onClick={() => window.open(website.url, '_blank')}
-                          className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors"
-                        >
-                          View Site
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {websites.length === 0 ? 'Connect Website' : 'Add More Websites'}
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {websites.length === 0
-                  ? 'Connect your first website via FTP/SFTP'
-                  : `You have ${websites.length} connected website${websites.length !== 1 ? 's' : ''}. Add more to expand your editing capabilities.`
-                }
-              </p>
+        {/* My Websites Section */}
+        {websites.length > 0 && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">My Websites</h2>
               <button
                 onClick={() => router.push('/websites')}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
-                {websites.length === 0 ? 'Add Website' : 'Manage Websites'}
+                View All →
               </button>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                AI Assistant
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Get help with your website editing
-              </p>
-              <button
-                onClick={() => router.push('/chat')}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
-              >
-                Start Chat
-              </button>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {websites.map((website: any) => (
+                <div key={website.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-3">
+                    <h3 className="text-base font-semibold text-white truncate">{website.name}</h3>
+                    <p className="text-blue-100 text-xs truncate">{website.url}</p>
+                  </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Recent Files
-              </h3>
-              <p className="text-gray-600 mb-4">
-                View your recently edited files
-              </p>
-              <button
-                onClick={() => router.push('/files')}
-                className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
-              >
-                View Files
-              </button>
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs text-gray-500">Host: {website.host}</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        website.type === 'SFTP' ? 'bg-green-100 text-green-800' :
+                        website.type === 'FTPS' ? 'bg-purple-100 text-purple-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {website.type}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => router.push(`/editor/${website.id}`)}
+                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Edit Files
+                      </button>
+                      <button
+                        onClick={() => window.open(website.url, '_blank')}
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                        title="View Site"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Getting Started</h2>
-            <div className="max-w-2xl mx-auto text-left">
-              <ol className="list-decimal list-inside space-y-2 text-gray-600">
-                <li>Connect your website via FTP/SFTP credentials</li>
-                <li>Browse your website files in our intuitive editor</li>
-                <li>Use AI commands to modify your code with natural language</li>
-                <li>Save changes directly to your server</li>
-              </ol>
-            </div>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              {websites.length === 0 ? '🌐 Connect Website' : '➕ Add Website'}
+            </h3>
+            <p className="text-sm text-gray-600 mb-3">
+              {websites.length === 0
+                ? 'Connect via SFTP/FTP'
+                : `${websites.length} connected`
+              }
+            </p>
+            <button
+              onClick={() => router.push('/websites')}
+              className="w-full bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-700 text-sm font-medium"
+            >
+              {websites.length === 0 ? 'Get Started' : 'Manage'}
+            </button>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              💬 AI Assistant
+            </h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Get editing help
+            </p>
+            <button
+              onClick={() => router.push('/chat')}
+              className="w-full bg-green-600 text-white py-2 px-3 rounded-md hover:bg-green-700 text-sm font-medium"
+            >
+              Start Chat
+            </button>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
+              📁 Recent Files
+            </h3>
+            <p className="text-sm text-gray-600 mb-3">
+              View recent edits
+            </p>
+            <button
+              onClick={() => router.push('/files')}
+              className="w-full bg-purple-600 text-white py-2 px-3 rounded-md hover:bg-purple-700 text-sm font-medium"
+            >
+              View Files
+            </button>
           </div>
         </div>
       </div>

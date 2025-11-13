@@ -105,9 +105,9 @@ export default function QuoteRequestsList({ requests, loading, onViewDetails }: 
               <td className="px-6 py-4 whitespace-nowrap text-sm">
                 <button
                   onClick={() => onViewDetails(request)}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
+                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
                 >
-                  View Details
+                  View / Edit
                 </button>
               </td>
             </tr>

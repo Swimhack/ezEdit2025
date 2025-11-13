@@ -19,8 +19,18 @@ export async function OPTIONS(request: NextRequest) {
 function createSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  console.log('🔍 Environment check:', {
+    hasUrl: !!url,
+    hasKey: !!key,
+    url: url || 'MISSING',
+    urlLength: url?.length || 0,
+    keyLength: key?.length || 0,
+    keyPrefix: key ? key.substring(0, 20) + '...' : 'MISSING'
+  })
+  
   if (!url || !key) {
-    console.error('Missing Supabase credentials:', {
+    console.error('❌ Missing Supabase credentials:', {
       hasUrl: !!url,
       hasKey: !!key,
       url: url ? 'present' : 'missing',
@@ -28,6 +38,9 @@ function createSupabaseClient() {
     })
     throw new Error('Missing Supabase credentials')
   }
+  
+  console.log('✅ Creating Supabase client with URL:', url)
+  
   // Service role key bypasses RLS, so we should be able to read/write
   const client = createClient(url, key, {
     auth: {
@@ -36,6 +49,11 @@ function createSupabaseClient() {
     },
     db: {
       schema: 'public'
+    },
+    global: {
+      headers: {
+        'x-client-info': 'ezedit-api'
+      }
     }
   })
   return client

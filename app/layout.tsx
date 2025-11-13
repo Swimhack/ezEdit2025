@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'EzEdit - AI-Powered Website & Membership Platform',
+  title: 'ezEdit - Easy Website Edits',
   description: 'Create and manage membership websites with natural language. Power your fitness programs, coaching services, and digital products.',
 }
 

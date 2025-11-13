@@ -209,3 +209,5 @@ Both can be used together for complete site management.
 - Test both FTP and WordPress MCP tools
 - Integrate into your development workflow
 
+
+

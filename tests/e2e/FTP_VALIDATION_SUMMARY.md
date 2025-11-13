@@ -91,3 +91,5 @@ npx playwright test tests/e2e/ftp-functionality.spec.ts --reporter=html
 
 The FTP MCP server (Python-based development tool) complements this by providing Claude Code with FTP capabilities during development, while the production application uses the TypeScript `basic-ftp` library for FTP operations.
 
+
+

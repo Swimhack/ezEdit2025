@@ -51,7 +51,7 @@ export default function Logo({ size = 'md', className = '', variant = 'default',
     return (
       <div className={`flex items-center gap-3 ${className}`}>
         {showText ? (
-          <div style={embossedStyle} className={sizeClasses[size] || 'text-6xl'}>
+          <div style={embossedStyle} className="text-5xl">
             <span 
               style={{
                 color: '#1f2937',
@@ -73,13 +73,13 @@ export default function Logo({ size = 'md', className = '', variant = 'default',
             </span>
           </div>
         ) : (
-          <div className="bg-blue-600 rounded-lg p-3 flex items-center justify-center shadow-md">
+          <div className="bg-blue-600 rounded-lg p-4 flex items-center justify-center shadow-lg">
             <span 
               style={{
                 color: '#ffffff',
                 textShadow: '2px 2px 4px rgba(0,0,0,0.3), -1px -1px 1px rgba(255,255,255,0.2)',
                 fontWeight: 700,
-                fontSize: '3rem'
+                fontSize: '3.5rem'
               }}
             >
               Ez

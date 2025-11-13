@@ -1,26 +1,99 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
 import Logo from './components/Logo'
 import QuoteRequestForm from './components/QuoteRequestForm'
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="flex items-center justify-between px-6 py-4 lg:px-8">
-        <div className="flex items-center">
-          <Logo variant="nav" showText={true} />
-        </div>
-        <div className="hidden md:flex items-center gap-x-6">
-          <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium">Features</a>
-          <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium">Pricing</a>
-          <a href="#docs" className="text-gray-600 hover:text-gray-900 font-medium">Docs</a>
-          <div className="flex items-center gap-x-4 ml-4">
-            <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <a href="/auth/signin" className="text-gray-900 hover:text-gray-600 font-medium">Log in</a>
-            <a href="/auth/signup?plan=FREE" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors">Sign up</a>
+      <nav className="px-6 py-6 lg:px-8 border-b border-gray-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Link href="/">
+              <Logo variant="nav" showText={true} />
+            </Link>
           </div>
+          <div className="hidden md:flex items-center gap-x-6">
+            <a href="#features" className="text-gray-600 hover:text-gray-900 font-medium">Features</a>
+            <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium">Pricing</a>
+            <Link href="/docs" className="text-gray-600 hover:text-gray-900 font-medium">Docs</Link>
+            <div className="flex items-center gap-x-4 ml-4">
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <Link href="/auth/signin" className="text-gray-900 hover:text-gray-600 font-medium">Log in</Link>
+              <Link href="/auth/signup" className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors">Sign up</Link>
+            </div>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-600"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <span className="sr-only">Open main menu</span>
+            {!mobileMenuOpen ? (
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+          </button>
         </div>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 mt-4 pt-4">
+            <div className="flex flex-col space-y-3">
+              <a 
+                href="#features" 
+                className="text-gray-600 hover:text-gray-900 font-medium px-3 py-2 rounded-md hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Features
+              </a>
+              <a 
+                href="#pricing" 
+                className="text-gray-600 hover:text-gray-900 font-medium px-3 py-2 rounded-md hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pricing
+              </a>
+              <Link 
+                href="/docs" 
+                className="text-gray-600 hover:text-gray-900 font-medium px-3 py-2 rounded-md hover:bg-gray-50"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Docs
+              </Link>
+              <div className="border-t border-gray-200 pt-3 mt-3 flex flex-col space-y-3">
+                <Link 
+                  href="/auth/signin" 
+                  className="text-gray-900 hover:text-gray-600 font-medium px-3 py-2 rounded-md hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Log in
+                </Link>
+                <Link 
+                  href="/auth/signup" 
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sign up
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -29,32 +102,36 @@ export default function Home() {
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-5xl">
               Stop Waiting Days for Website Updates.{' '}
-              <span className="text-blue-600">Fix It Yourself in Minutes.</span>
+              <span className="text-blue-600">Get Them Done Fast with AI.</span>
             </h1>
             <p className="mt-4 text-base sm:text-lg leading-6 sm:leading-7 text-gray-600 max-w-2xl mx-auto">
-              Tired of paying developers $100+/hour and waiting weeks for simple changes?
-              Update your legacy website instantly with AI—no coding experience needed.
-              Just describe what you want, and watch it happen.
+              AI-powered website updates without the wait or high hourly rates. 
+              Tell us what you need, get a custom quote, and our team handles the rest.
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            
+            {/* Single Clear CTA */}
+            <div className="mt-10 text-center">
               <a
-                href="/auth/signup?plan=FREE"
-                className="w-full sm:w-auto bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-center"
+                href="#pricing"
+                className="inline-block bg-blue-600 text-white px-10 py-5 rounded-xl font-bold text-xl hover:bg-blue-700 transition-all shadow-xl hover:shadow-2xl transform hover:scale-105"
               >
-                Start Fixing Your Site Free
+                Get Your Free Quote Now →
               </a>
-              <a
-                href="/demo"
-                className="w-full sm:w-auto text-gray-700 px-8 py-3 rounded-lg font-semibold border border-gray-300 hover:bg-gray-50 transition-colors text-center"
-              >
-                See How It Works
-              </a>
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+                <span className="inline-flex items-center gap-2 text-gray-700">
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <strong>Response Under 24 Hours</strong>
+                </span>
+                <span className="inline-flex items-center gap-2 text-gray-700">
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <strong>Pay Only When 100% Satisfied</strong>
+                </span>
+              </div>
             </div>
-          </div>
-
-          {/* Quote Request Form */}
-          <div className="mt-8">
-            <QuoteRequestForm />
           </div>
         </div>
       </div>
@@ -68,7 +145,7 @@ export default function Home() {
               Every Day You Wait Costs You Money
             </p>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Your outdated website is losing customers while you wait for developers who charge too much and take too long.
+              Your outdated website is losing customers while you wait for developers with unpredictable costs and long timelines.
             </p>
           </div>
           <div className="mx-auto mt-6 max-w-2xl sm:mt-8 lg:mt-10 lg:max-w-none">
@@ -93,10 +170,10 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  $100+ Per Hour
+                  Expensive & Unpredictable
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Simple 5-minute fixes cost $200-500. A small change becomes a $1,000 project. Your website budget disappears fast.</p>
+                  <p className="flex-auto">Simple fixes turn into costly projects. Hourly billing means you never know the final cost until it's too late. Your website budget disappears fast.</p>
                 </dd>
               </div>
               <div className="flex flex-col bg-white p-6 rounded-lg shadow-sm">
@@ -118,15 +195,15 @@ export default function Home() {
       </div>
 
       {/* Solution Section */}
-      <div className="py-8 sm:py-10 bg-white">
+      <div id="features" className="py-8 sm:py-10 bg-white">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
             <h2 className="text-base font-semibold leading-7 text-blue-600">The Solution</h2>
             <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Update Your Site Yourself in Minutes, Not Days
+              AI-Powered Website Updates
             </p>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              No more waiting. No more huge bills. Just describe what you want in plain English, and AI does the rest—safely and instantly.
+              No more waiting. No more huge bills. Our AI-assisted team delivers fast, professional updates at a fraction of the cost.
             </p>
           </div>
           <div className="mx-auto mt-6 max-w-2xl sm:mt-8 lg:mt-10 lg:max-w-none">
@@ -138,10 +215,10 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                     </svg>
                   </div>
-                  Instant Access, Zero Setup
+                  Simple Process
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Connect directly to your existing FTP server. No migration, no rebuilds. Your site stays exactly where it is—you just edit it instantly.</p>
+                  <p className="flex-auto">Submit your website domain and describe the changes you need. We'll review it and send you a custom quote—no complicated forms or technical jargon required.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
@@ -151,10 +228,10 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                     </svg>
                   </div>
-                  AI That Understands You
+                  AI-Assisted Execution
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Say "Make the contact button bigger and change it to blue" or "Add a testimonials section here." No coding knowledge needed. AI writes the code for you.</p>
+                  <p className="flex-auto">Our AI-powered team handles all the technical work efficiently. You approve the quote, we make the changes safely and professionally, and you review the results before paying.</p>
                 </dd>
               </div>
               <div className="flex flex-col">
@@ -164,49 +241,10 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                     </svg>
                   </div>
-                  Safe & Protected
+                  Safe & Tested
                 </dt>
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Every change is saved automatically. Made a mistake? One click restores the previous version. Your site stays safe while you experiment.</p>
-                </dd>
-              </div>
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                    </svg>
-                  </div>
-                  Professional Code Editor
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Edit code like a pro with syntax highlighting, auto-completion, and instant preview. See your changes before you publish.</p>
-                </dd>
-              </div>
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                  </div>
-                  Enterprise Security
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Encrypted connections, secure credentials, and safe file handling. Your FTP credentials are encrypted and never stored in plain text.</p>
-                </dd>
-              </div>
-              <div className="flex flex-col">
-                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600">
-                    <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-                    </svg>
-                  </div>
-                  Works Everywhere
-                </dt>
-                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                  <p className="flex-auto">Access your site from any device—desktop, tablet, or phone. Make urgent updates even when you're away from your office.</p>
+                  <p className="flex-auto">We test all changes thoroughly before they go live. Your website stays safe and functional—no broken links, no crashes, no surprises.</p>
                 </dd>
               </div>
             </dl>
@@ -215,18 +253,154 @@ export default function Home() {
       </div>
 
       {/* Pricing Section */}
-      <div className="py-8 sm:py-10 bg-gray-50">
+      <div id="pricing" className="py-16 sm:py-24 bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
-            <h2 className="text-base font-semibold leading-7 text-blue-600">Pricing</h2>
+          <div className="mx-auto max-w-3xl text-center mb-12">
+            <h2 className="text-base font-semibold leading-7 text-blue-600">How It Works</h2>
             <p className="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-              Choose the right plan for you
+              Get Your Website Updated in 3 Simple Steps
             </p>
-            <p className="mt-4 text-lg text-gray-600">
-              From quick fixes to enterprise-scale operations
+            <p className="mt-6 text-xl leading-8 text-gray-600">
+              No subscriptions. No hidden fees. Just tell us what you need.
             </p>
+            
+            {/* Key Guarantees */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <div className="bg-green-50 border-2 border-green-600 rounded-xl px-6 py-3 shadow-lg">
+                <p className="text-lg font-bold text-green-900">💯 Pay Only When 100% Satisfied</p>
+              </div>
+              <div className="bg-blue-50 border-2 border-blue-600 rounded-xl px-6 py-3 shadow-lg">
+                <p className="text-lg font-bold text-blue-900">⚡ Response Under 24 Hours</p>
+              </div>
+            </div>
           </div>
-          <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-6 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+
+          {/* Step 1: Quote Form - THE STARTING POINT */}
+          <div className="mx-auto max-w-4xl mb-16">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-12 border-4 border-blue-600">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white font-bold text-2xl flex-shrink-0">
+                  1
+                </div>
+                <div>
+                  <h3 className="text-3xl font-bold text-gray-900">Start Here: Tell Us What You Need</h3>
+                  <p className="text-lg text-gray-600 mt-1">Enter your website and describe the changes you want</p>
+                </div>
+              </div>
+              
+              <div className="mt-8">
+                <QuoteRequestForm />
+              </div>
+              
+              <div className="mt-6 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl p-4 text-center">
+                <p className="text-white font-bold text-lg">
+                  ⚡ Response Under 24 Hours • 💯 Pay Only When 100% Satisfied
+                </p>
+                <p className="text-blue-50 text-sm mt-1">Free quote • No credit card required</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Steps 2 & 3 */}
+          <div className="mx-auto max-w-5xl">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+              {/* Step 2 */}
+              <div className="relative bg-white rounded-2xl p-8 shadow-lg">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-2xl mb-4">
+                  2
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">We Review & Quote</h3>
+                <p className="text-gray-600 text-lg mb-4">
+                  Our team reviews your request and sends you a detailed custom quote:
+                </p>
+                <ul className="space-y-2 text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><strong>Custom pricing</strong> tailored to your specific needs</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><strong>Realistic timeline</strong> based on project scope</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><strong>Clear deliverables</strong> and what's included</span>
+                  </li>
+                </ul>
+                <div className="mt-6 p-4 bg-blue-600 rounded-lg">
+                  <p className="text-white font-bold text-center">⚡ Response Under 24 Hours Guaranteed</p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="relative bg-white rounded-2xl p-8 shadow-lg">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-600 text-white font-bold text-2xl mb-4">
+                  3
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Approve & We Deliver</h3>
+                <p className="text-gray-600 text-lg mb-4">
+                  Love the quote? Approve it and we get to work immediately:
+                </p>
+                <ul className="space-y-2 text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><strong>We make the changes</strong> safely and securely</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><strong>Test everything</strong> before going live</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><strong>You review & approve</strong> the final result</span>
+                  </li>
+                </ul>
+                <div className="mt-6 p-5 bg-green-600 rounded-lg border-4 border-green-700 shadow-xl">
+                  <p className="text-white font-bold text-lg text-center">💯 You Only Pay When You're 100% Satisfied</p>
+                  <p className="text-green-50 text-sm text-center mt-1">Zero risk • Complete peace of mind</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust Signals */}
+          <div className="mx-auto mt-16 max-w-3xl">
+            <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+              <h4 className="text-xl font-bold text-gray-900 mb-6">Why Customers Trust Us</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <div className="text-3xl font-bold text-blue-600 mb-1">$0</div>
+                  <div className="text-sm text-gray-600">Upfront Cost</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600 mb-1">&lt;24h</div>
+                  <div className="text-sm text-gray-600">Quote Response</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600 mb-1">24-48h</div>
+                  <div className="text-sm text-gray-600">Completion Time</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600 mb-1">100%</div>
+                  <div className="text-sm text-gray-600">Satisfaction</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="isolate mx-auto mt-6 grid max-w-md grid-cols-1 gap-y-6 sm:mt-8 lg:mx-0 lg:max-w-none lg:grid-cols-4" style={{display: 'none'}}>
             {/* Starter Plan */}
             <div className="flex flex-col justify-between rounded-3xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10 sm:p-10">
               <div>

@@ -115,3 +115,8 @@ COMMENT ON COLUMN quote_requests.updated_at IS 'Timestamp when the quote request
 -- SELECT COUNT(*) AS indexes_count FROM pg_indexes WHERE tablename = 'quote_requests';
 -- SELECT COUNT(*) AS policies_count FROM pg_policies WHERE tablename = 'quote_requests';
 
+
+
+
+
+

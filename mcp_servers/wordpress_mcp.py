@@ -1000,3 +1000,5 @@ async def wordpress_create_tag(params: CreateTagInput) -> str:
 if __name__ == "__main__":
     mcp.run()
 
+
+

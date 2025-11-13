@@ -92,7 +92,8 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         ...state,
         isLoading: true,
         error: null,
-        currentFile: action.payload
+        currentFile: action.payload,
+        fileContent: '' // Clear previous content while loading
       };
 
     case 'LOAD_FILE_SUCCESS':
@@ -110,7 +111,8 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
         ...state,
         isLoading: false,
         error: action.payload,
-        currentFile: null
+        currentFile: null,
+        fileContent: '' // Clear content on error
       };
 
     case 'UPDATE_FILE_CONTENT':

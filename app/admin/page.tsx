@@ -8,6 +8,7 @@ import ContactSubmissionsList from '@/components/admin/ContactSubmissionsList'
 import TicketsList from '@/components/admin/TicketsList'
 import QuoteRequestsList from '@/components/admin/QuoteRequestsList'
 import SubmissionDetail from '@/components/admin/SubmissionDetail'
+import QuoteRequestDetail from '@/components/admin/QuoteRequestDetail'
 import { AdminDashboardStats, ContactSubmissionDisplay, TicketDisplay, QuoteRequestDisplay } from '@/types/admin'
 
 export default function AdminDashboard() {
@@ -21,6 +22,8 @@ export default function AdminDashboard() {
   const [userEmail, setUserEmail] = useState<string>('')
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmissionDisplay | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [selectedQuoteRequest, setSelectedQuoteRequest] = useState<QuoteRequestDisplay | null>(null)
+  const [isQuoteDetailOpen, setIsQuoteDetailOpen] = useState(false)
 
   useEffect(() => {
     checkAdminAccess()
@@ -94,6 +97,11 @@ export default function AdminDashboard() {
   const handleViewSubmission = (submission: ContactSubmissionDisplay) => {
     setSelectedSubmission(submission)
     setIsDetailOpen(true)
+  }
+
+  const handleViewQuoteRequest = (request: QuoteRequestDisplay) => {
+    setSelectedQuoteRequest(request)
+    setIsQuoteDetailOpen(true)
   }
 
   return (
@@ -184,10 +192,7 @@ export default function AdminDashboard() {
           <QuoteRequestsList
             requests={quoteRequests}
             loading={loading}
-            onViewDetails={(request) => {
-              console.log('View quote request:', request)
-              // TODO: Implement quote request detail modal if needed
-            }}
+            onViewDetails={handleViewQuoteRequest}
           />
         )}
 
@@ -200,6 +205,21 @@ export default function AdminDashboard() {
             setSelectedSubmission(null)
           }}
         />
+
+        {/* Quote Request Detail Modal */}
+        {selectedQuoteRequest && (
+          <QuoteRequestDetail
+            request={selectedQuoteRequest}
+            isOpen={isQuoteDetailOpen}
+            onClose={() => {
+              setIsQuoteDetailOpen(false)
+              setSelectedQuoteRequest(null)
+            }}
+            onUpdate={() => {
+              loadData()
+            }}
+          />
+        )}
       </div>
     </AdminLayout>
   )

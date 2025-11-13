@@ -71,3 +71,5 @@ The MCP server is a **development tool** that runs locally with Claude Code. It 
 
 The FTP MCP server is now fully functional and ready for Claude Code integration.
 
+
+

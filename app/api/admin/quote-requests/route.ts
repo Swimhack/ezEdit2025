@@ -89,8 +89,23 @@ export async function GET(request: NextRequest) {
       firstRequest: requests?.[0] ? { id: requests[0].id, domain: requests[0].domain } : null
     })
 
+    // Transform snake_case to camelCase for frontend
+    const transformedRequests = (requests || []).map(req => ({
+      id: req.id,
+      domain: req.domain,
+      message: req.message,
+      customerEmail: req.customer_email,
+      submittedBy: req.submitted_by,
+      status: req.status,
+      adminNotes: req.admin_notes,
+      quotedPrice: req.quoted_price,
+      quotedTimeline: req.quoted_timeline,
+      createdAt: req.created_at,
+      updatedAt: req.updated_at
+    }))
+
     return NextResponse.json({
-      items: requests || [],
+      items: transformedRequests,
       pagination: {
         page,
         limit,
