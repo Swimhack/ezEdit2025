@@ -192,6 +192,14 @@ export default function ThreePaneEditor({
             </h3>
             <p className="mb-4 text-sm leading-relaxed">{state.error}</p>
             
+            {/* Debug info */}
+            <div className="mb-4 p-2 bg-[#2d2d30] rounded text-left text-xs font-mono">
+              <div className="text-[#858585]">Debug Info:</div>
+              <div className="text-[#cccccc]">Connection ID: {connectionId || 'None'}</div>
+              <div className="text-[#cccccc]">Current File: {state.currentFile || 'None'}</div>
+              <div className="text-[#cccccc]">File Tree: {state.fileTree.length} items</div>
+            </div>
+            
             {/* Show actionable suggestions for authentication errors */}
             {isAuthError && (
               <div className="mb-4 p-3 bg-[#3c3c3c] rounded text-left text-xs">
@@ -220,17 +228,30 @@ export default function ThreePaneEditor({
             <div className="space-x-3">
               <button
                 onClick={() => {
+                  console.log('[Editor] Clearing error and reloading page...');
+                  window.location.reload();
+                }}
+                className="px-4 py-2 bg-[#0e639c] text-white rounded hover:bg-[#1177bb] transition-colors"
+              >
+                Reload Page
+              </button>
+              <button
+                onClick={() => {
+                  console.log('[Editor] Clearing error and retrying...');
                   actions.clearError();
                   if (connectionId) {
                     actions.loadFileTree(connectionId);
                   }
                 }}
-                className="px-4 py-2 bg-[#0e639c] text-white rounded hover:bg-[#1177bb] transition-colors"
+                className="px-4 py-2 bg-[#3c3c3c] text-[#cccccc] rounded hover:bg-[#4a4a4a] transition-colors"
               >
                 Try Again
               </button>
               <button
-                onClick={() => actions.clearError()}
+                onClick={() => {
+                  console.log('[Editor] Dismissing error...');
+                  actions.clearError();
+                }}
                 className="px-4 py-2 bg-[#3c3c3c] text-[#cccccc] rounded hover:bg-[#4a4a4a] transition-colors"
               >
                 Dismiss
