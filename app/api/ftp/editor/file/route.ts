@@ -206,17 +206,8 @@ export async function POST(request: NextRequest) {
       while (retries > 0) {
         try {
           fileSize = await queueFTPOperation(connection, async () => {
-            // Ensure we're in the correct directory
-            if (website.path && website.path !== '/') {
-              try {
-                await connection.client.cd(website.path)
-              } catch (cdError) {
-                logger.warn('Could not change to working directory during file size check', {
-                  path: website.path,
-                  connectionId
-                })
-              }
-            }
+            // Don't change directory - use absolute path
+            // The filePath already includes the full path from root
             return await connection.client.size(filePath);
           });
           sizeError = null
@@ -364,19 +355,8 @@ export async function POST(request: NextRequest) {
                 reject(error);
               });
 
-              // Ensure we're in the correct directory before download
+              // Download using absolute path (filePath already includes full path)
               Promise.resolve().then(async () => {
-                if (website.path && website.path !== '/') {
-                  try {
-                    await connection.client.cd(website.path)
-                  } catch (cdError) {
-                    logger.warn('Could not change to working directory before download', {
-                      path: website.path,
-                      connectionId
-                    })
-                  }
-                }
-                
                 return connection.client.downloadTo(bufferStream, filePath)
               })
                 .then(() => bufferStream.end())
@@ -427,17 +407,7 @@ export async function POST(request: NextRequest) {
       let fileEntry: any = null
       try {
         const fileList = await queueFTPOperation(connection, async () => {
-          // Ensure we're in the correct directory
-          if (website.path && website.path !== '/') {
-            try {
-              await connection.client.cd(website.path)
-            } catch (cdError) {
-              logger.warn('Could not change to working directory for file listing', {
-                path: website.path,
-                connectionId
-              })
-            }
-          }
+          // Use absolute path for listing
           return await connection.client.list(parentDir);
         });
 
@@ -642,19 +612,8 @@ export async function PUT(request: NextRequest) {
                 reject(new Error('Upload timeout'));
               }, getFTPConfig().dataTimeout);
 
-              // Ensure we're in the correct directory before upload
+              // Upload using absolute path (normalizedFilePath already includes full path)
               Promise.resolve().then(async () => {
-                if (website.path && website.path !== '/') {
-                  try {
-                    await connection.client.cd(website.path)
-                  } catch (cdError) {
-                    logger.warn('Could not change to working directory before upload', {
-                      path: website.path,
-                      connectionId
-                    })
-                  }
-                }
-                
                 return connection.client.uploadFrom(stream, normalizedFilePath)
               })
                 .then(() => {
@@ -698,17 +657,7 @@ export async function PUT(request: NextRequest) {
       let fileEntry: any = null
       try {
         const fileList = await queueFTPOperation(connection, async () => {
-          // Ensure we're in the correct directory
-          if (website.path && website.path !== '/') {
-            try {
-              await connection.client.cd(website.path)
-            } catch (cdError) {
-              logger.warn('Could not change to working directory for file listing after upload', {
-                path: website.path,
-                connectionId
-              })
-            }
-          }
+          // Use absolute path for listing
           return await connection.client.list(parentDir);
         });
 
