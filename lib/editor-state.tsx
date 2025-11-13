@@ -567,10 +567,33 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
   const loadFile = useCallback(async (path: string) => {
     if (!state.connectionId) {
       console.error('[Editor] Cannot load file: No connection ID');
+      // Send to server log
+      fetch('/api/debug/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          level: 'error',
+          message: 'Cannot load file: No connection ID',
+          data: { path },
+          context: 'Editor.loadFile'
+        })
+      }).catch(() => {});
       return;
     }
 
     console.log('[Editor] Loading file:', path);
+    // Send to server log
+    fetch('/api/debug/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        level: 'info',
+        message: 'Loading file',
+        data: { path, connectionId: state.connectionId },
+        context: 'Editor.loadFile'
+      })
+    }).catch(() => {});
+    
     dispatch({ type: 'LOAD_FILE_START', payload: path });
 
     try {
@@ -624,12 +647,28 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         payload: { content, file: path }
       });
     } catch (error) {
-      console.error('[Editor] ❌ Failed to load file:', {
-        error,
+      const errorData = {
+        error: error instanceof Error ? error.message : String(error),
         path,
         connectionId: state.connectionId,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
-      });
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      };
+      
+      console.error('[Editor] ❌ Failed to load file:', errorData);
+      
+      // Send to server log
+      fetch('/api/debug/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          level: 'error',
+          message: 'Failed to load file',
+          data: errorData,
+          context: 'Editor.loadFile'
+        })
+      }).catch(() => {});
+      
       dispatch({
         type: 'LOAD_FILE_ERROR',
         payload: error instanceof Error ? error.message : 'Failed to load file'
