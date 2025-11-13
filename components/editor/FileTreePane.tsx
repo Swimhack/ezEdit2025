@@ -36,6 +36,9 @@ export default function FileTreePane() {
   const handleNodeClick = useCallback(async (node: FTPFileNode, event: React.MouseEvent) => {
     event.stopPropagation();
 
+    // Clear any previous errors
+    actions.clearError();
+
     if (node.type === 'directory') {
       console.log('[FileTree] Directory clicked:', node.path, node.isExpanded ? 'collapsing' : 'expanding');
       if (node.isExpanded) {
@@ -49,7 +52,7 @@ export default function FileTreePane() {
       // Select file
       selectFile(node.path);
 
-      // Single-click to open file for editing (WYSIWYG)
+      // Single-click to open file for editing
       if (isEditableFile(node)) {
         const validation = validateFileOperation(node, 'read');
         if (validation) {
@@ -59,12 +62,13 @@ export default function FileTreePane() {
         }
 
         try {
-          console.log('[FileTree] Loading file content...');
+          console.log('[FileTree] Loading file content for:', node.path);
           await loadFile(node.path);
-          console.log('[FileTree] File loaded successfully');
+          console.log('[FileTree] ✅ File loaded successfully:', node.path);
         } catch (error) {
-          console.error('[FileTree] Failed to load file:', error);
-          actions.setError(`Failed to load file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          console.error('[FileTree] ❌ Failed to load file:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          actions.setError(`Failed to load ${node.name}: ${errorMessage}`);
         }
       } else {
         console.log('[FileTree] File is not editable, skipping load');

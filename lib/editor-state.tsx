@@ -576,26 +576,47 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`${apiBase}/file`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
         body: JSON.stringify({
           websiteId: state.connectionId,
           filePath: path
-        })
+        }),
+        cache: 'no-store'
       });
+
+      console.log('[Editor] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `Failed to load file: ${response.statusText}`);
+        const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        console.error('[Editor] API error:', errorMsg, errorData);
+        throw new Error(errorMsg);
       }
 
       const fileContent: FileContent = await response.json();
+      console.log('[Editor] Response received:', {
+        hasContent: !!fileContent.content,
+        contentType: typeof fileContent.content,
+        contentLength: fileContent.content?.length || 0,
+        path: fileContent.path || path
+      });
+
       // Handle both response formats: { content } and { content, path, ... }
       const content = fileContent.content || (fileContent as any).content || '';
       
-      console.log('[Editor] File loaded successfully:', {
+      if (!content) {
+        console.warn('[Editor] Warning: File content is empty');
+      }
+      
+      console.log('[Editor] ✅ File loaded successfully:', {
         path,
         contentLength: content.length,
-        hasContent: !!content
+        hasContent: !!content,
+        firstChars: content.substring(0, 50)
       });
       
       dispatch({
@@ -603,7 +624,12 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         payload: { content, file: path }
       });
     } catch (error) {
-      console.error('[Editor] Failed to load file:', error);
+      console.error('[Editor] ❌ Failed to load file:', {
+        error,
+        path,
+        connectionId: state.connectionId,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      });
       dispatch({
         type: 'LOAD_FILE_ERROR',
         payload: error instanceof Error ? error.message : 'Failed to load file'
