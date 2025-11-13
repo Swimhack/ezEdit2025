@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
     // Normalize file path
     const filePath = normalizePath(rawFilePath || '')
 
-    // Temporary user
-    const userId = 'demo-user';
+    // Temporary user (matches editor page and website API)
+    const userId = 'test-user-123';
 
     // Enhanced logging: Log request details
     logger.info('FTP Editor file load request details', {
@@ -545,8 +545,8 @@ export async function PUT(request: NextRequest) {
     const body: FileRequest = await request.json();
     const { websiteId, filePath, content } = body;
 
-    // Temporary user
-    const userId = 'demo-user';
+    // Temporary user (matches editor page and website API)
+    const userId = 'test-user-123';
 
     // Validate request
     if (!websiteId || !filePath || content === undefined) {

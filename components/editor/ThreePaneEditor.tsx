@@ -67,49 +67,9 @@ export default function ThreePaneEditor({
 
       // Load initial file tree with timeout and retry logic
       const loadFileTreeWithTimeout = async () => {
-        // First, test the connection to diagnose issues
-        try {
-          console.log('[Editor] Testing FTP connection...')
-          const testResponse = await fetch('/api/ftp/test-connection', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ websiteId: connectionId }),
-            signal: AbortSignal.timeout(10000) // 10 second timeout
-          })
-          
-          if (testResponse.ok) {
-            const testData = await testResponse.json()
-            console.log('[Editor] Connection test results:', testData)
-            
-            if (testData.recommendation) {
-              console.log('[Editor] Recommended protocol:', testData.recommendation)
-            } else {
-              console.warn('[Editor] No successful connection method found. Results:', testData.results)
-              // Show error with diagnostic info
-              const failedMethods = testData.results.filter((r: any) => !r.success)
-              if (failedMethods.length > 0) {
-                const errorDetails = failedMethods.map((r: any) => `${r.method}: ${r.error || 'Unknown error'}`).join('; ')
-                const authErrors = failedMethods.filter((r: any) => r.error?.includes('530') || r.error?.includes('Authentication'))
-                if (authErrors.length > 0) {
-                  actions.setError(`Authentication failed. ${errorDetails} Please update your FTP credentials in the website settings.`)
-                } else {
-                  actions.setError(`Connection test failed. ${errorDetails}`)
-                }
-                return
-              }
-            }
-          } else {
-            // Test endpoint returned an error
-            const testError = await testResponse.json().catch(() => ({ error: 'Connection test failed' }))
-            console.warn('[Editor] Connection test endpoint error:', testError)
-            // Continue anyway - let the normal load attempt happen
-          }
-        } catch (testError: any) {
-          console.warn('[Editor] Connection test failed, continuing anyway:', testError)
-          // Continue anyway - connection test is optional
-        }
-
-        let retries = 3
+        console.log('[Editor] Loading file tree...')
+        
+        let retries = 2
         let lastError: Error | null = null
         
         while (retries > 0) {
@@ -117,7 +77,7 @@ export default function ThreePaneEditor({
             await Promise.race([
               actions.loadFileTree(connectionId),
               new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Connection timeout. The FTP server may be unavailable or the credentials may be incorrect.')), 30000)
+                setTimeout(() => reject(new Error('Connection timeout. Please check your connection.')), 15000)
               )
             ])
             // Success - exit retry loop
@@ -133,8 +93,8 @@ export default function ThreePaneEditor({
             }
             
             if (retries > 0) {
-              // Wait before retry (exponential backoff)
-              const delay = (4 - retries) * 1000 // 1s, 2s, 3s
+              // Wait before retry
+              const delay = 1000 // 1 second
               await new Promise(resolve => setTimeout(resolve, delay))
             }
           }
@@ -146,14 +106,8 @@ export default function ThreePaneEditor({
         }
       }
       
-      // Add a small delay to prevent race conditions
-      const timer = setTimeout(() => {
-        loadFileTreeWithTimeout()
-      }, 100)
-
-      return () => {
-        clearTimeout(timer);
-      };
+      // Load immediately
+      loadFileTreeWithTimeout()
     }
   }, [connectionId, connectionConfig]);
 
