@@ -29,9 +29,9 @@ websiteStore.set('demo-user', [
     type: 'FTP',
     host: '72.167.42.141',
     username: 'eastgate_ftp',
-    password: 'Eastgate411!',
+    password: 'ZzHb_6s1Lhgq1qr#',
     port: '21',
-    path: '/public_html'
+    path: '/httpdocs'
   }
 ]);
 
@@ -45,9 +45,9 @@ websiteStore.set('test-user-123', [
     type: 'FTP',
     host: '72.167.42.141',
     username: 'eastgate_ftp',
-    password: 'Eastgate411!',
+    password: 'ZzHb_6s1Lhgq1qr#',
     port: '21',
-    path: '/public_html'
+    path: '/httpdocs'
   }
 ]);
 
