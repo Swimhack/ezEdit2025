@@ -7,9 +7,9 @@ import { cookies } from 'next/headers'
 const BYPASS_AUTH = true
 
 async function getUserId(request: NextRequest): Promise<string | null> {
-  // TEMPORARY: Always return demo user for testing
+  // TEMPORARY: Always return test-user-123 for testing (matches editor page)
   if (BYPASS_AUTH) {
-    return 'demo-user'
+    return 'test-user-123'
   }
 
   try {
@@ -17,15 +17,15 @@ async function getUserId(request: NextRequest): Promise<string | null> {
     const { data: { user }, error } = await supabase.auth.getUser()
 
     if (error || !user) {
-      // Fallback to demo user for development
-      return 'demo-user'
+      // Fallback to test user for development
+      return 'test-user-123'
     }
 
     return user.id
   } catch (error) {
     console.error('Failed to get user ID:', error)
-    // Fallback to demo user
-    return 'demo-user'
+    // Fallback to test user
+    return 'test-user-123'
   }
 }
 
@@ -42,8 +42,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Website not found' }, { status: 404 })
   }
 
-  const { password, ...safe } = website as any
-  return NextResponse.json({ website: safe })
+  // Return full website data including password for FTP connection
+  // In production, this should be secured with proper authentication
+  return NextResponse.json({ website })
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
