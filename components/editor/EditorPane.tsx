@@ -22,6 +22,16 @@ export default function EditorPane() {
   const [monacoLoaded, setMonacoLoaded] = useState(false);
   const editorRef = useRef<any>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('📝 EditorPane state:', {
+      currentFile,
+      fileContentLength: fileContent?.length || 0,
+      isLoading,
+      isDirty
+    });
+  }, [currentFile, fileContent, isLoading, isDirty]);
+
   // Dynamic import of Monaco Editor
   useEffect(() => {
     const loadMonaco = async () => {
