@@ -63,6 +63,8 @@ interface EditorContextType {
  * Editor state reducer
  */
 function editorReducer(state: EditorState, action: EditorAction): EditorState {
+  console.log('🔥 REDUCER ACTION:', action.type, action.payload);
+  
   switch (action.type) {
     case 'SET_CONNECTION':
       return {
