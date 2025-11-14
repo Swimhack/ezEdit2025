@@ -409,6 +409,19 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Validate file type and size for hero image uploads
+      if (filePath.includes('hero-image')) {
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!allowedTypes.includes(content.type) || content.size > maxSize) {
+          return NextResponse.json(
+            { error: 'Invalid file type or size' },
+            { status: 400 }
+          );
+        }
+      }
+
       // Save edit history
       await supabase
         .from('edit_history')
