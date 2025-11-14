@@ -292,12 +292,27 @@ export function getBreadcrumbs(path: string): Array<{ name: string; path: string
 export function validateFileOperation(node: FTPFileNode, operation: 'read' | 'write' | 'delete'): string | null {
   // Check permissions (simplified)
   const permissions = node.permissions || '';
+  
+  console.log('[validateFileOperation]', {
+    operation,
+    nodeName: node.name,
+    permissions,
+    hasPermissions: !!permissions,
+    permissionsLength: permissions.length
+  });
+
+  // If no permissions info, allow the operation (FTP server may not provide permissions)
+  if (!permissions || permissions.length === 0) {
+    console.log('[validateFileOperation] No permissions info, allowing operation');
+    return null;
+  }
 
   switch (operation) {
     case 'read':
       if (permissions.includes('r') || permissions.includes('4')) {
         return null;
       }
+      console.warn('[validateFileOperation] Read permission denied for:', node.name, 'permissions:', permissions);
       return 'Permission denied: Cannot read file';
 
     case 'write':
