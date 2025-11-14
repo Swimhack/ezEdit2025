@@ -590,18 +590,27 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         })
       });
 
-      console.log('[Editor] Response:', response.status);
+      console.log('[Editor] Response:', response.status, response.headers.get('content-type'));
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
+      // Check content type
+      const contentType = response.headers.get('content-type');
+      console.log('[Editor] Content-Type:', contentType);
+
       let data;
       try {
-        data = await response.json();
+        // Force text decoding for any content type
+        const text = await response.text();
+        console.log('[Editor] Raw response text length:', text.length);
+        console.log('[Editor] Raw response preview:', text.substring(0, 200));
+        
+        data = JSON.parse(text);
       } catch (parseError) {
-        console.error('[Editor] Failed to parse JSON:', parseError);
+        console.error('[Editor] Failed to parse response:', parseError);
         throw new Error('Invalid response from server');
       }
       
