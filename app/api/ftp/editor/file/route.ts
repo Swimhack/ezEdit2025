@@ -472,7 +472,17 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString()
       });
 
-      return NextResponse.json(response);
+      console.log('[API] Sending response with content length:', content.length);
+      
+      return NextResponse.json(response, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
 
     } catch (ftpError) {
       const totalDuration = Date.now() - startTime
