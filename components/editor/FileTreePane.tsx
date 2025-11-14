@@ -34,6 +34,7 @@ export default function FileTreePane() {
 
   // Handle file/directory click
   const handleNodeClick = useCallback(async (node: FTPFileNode, event: React.MouseEvent) => {
+    console.log('🔥🔥🔥 CLICK HANDLER FIRED! 🔥🔥🔥', node.name, node.type);
     event.stopPropagation();
 
     // Clear any previous errors
@@ -79,7 +80,7 @@ export default function FileTreePane() {
         console.log('[FileTree] File is not editable, skipping load');
       }
     }
-  }, [expandDirectory, collapseDirectory, selectFile, loadFile, actions]);
+  }, [expandDirectory, collapseDirectory, selectFile, loadFile, actions, currentFile, selectedFile]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent, node: FTPFileNode) => {
