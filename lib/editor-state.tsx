@@ -597,24 +597,43 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('[Editor] Failed to parse JSON:', parseError);
+        throw new Error('Invalid response from server');
+      }
+      
       const fileContent = data.content || '';
+      
+      if (!fileContent) {
+        console.warn('[Editor] Empty content received:', data);
+      }
       
       const filenameFromPath = (p: string) => p.split('/').pop() || p;
       
       console.log('[Editor] ✅ File loaded:', {
         path,
-        contentLength: fileContent.length
+        contentLength: fileContent.length,
+        preview: fileContent.substring(0, 50)
+      });
+      
+      const payload = {
+        id: path,
+        name: filenameFromPath(path),
+        path,
+        content: fileContent
+      };
+      
+      console.log('[Editor] Dispatching with payload:', {
+        ...payload,
+        content: `${fileContent.length} chars`
       });
       
       dispatch({
         type: 'LOAD_FILE_SUCCESS',
-        payload: {
-          id: path,
-          name: filenameFromPath(path),
-          path,
-          content: fileContent
-        }
+        payload
       });
       
       console.log('[Editor] ✅ Dispatch complete');
