@@ -568,17 +568,15 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
    */
   const loadFile = useCallback(async (path: string) => {
     if (!state.connectionId) {
-      alert('No connection ID!');
+      console.error('[Editor] No connection ID');
       return;
     }
 
-    alert(`Loading file: ${path}`);
+    console.log('[Editor] Loading file:', path);
     
     dispatch({ type: 'LOAD_FILE_START', payload: path });
 
     try {
-      alert('About to fetch...');
-      
       const response = await fetch(`${apiBase}/file`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -588,79 +586,27 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         })
       });
 
-      alert(`Response: ${response.status}`);
+      console.log('[Editor] Response:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-        console.error('[Editor] API error:', errorMsg, errorData);
-        
-        // If connection lost, reload the page to reconnect
-        if (errorData.reconnect || errorMsg.includes('Connection lost') || errorMsg.includes('Please reload')) {
-          console.log('[Editor] Connection lost, reloading page...');
-          setTimeout(() => window.location.reload(), 2000);
-        }
-        
-        throw new Error(errorMsg);
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-      const fileContent: FileContent = await response.json();
-      console.log('[Editor] Response received:', {
-        hasContent: !!fileContent.content,
-        contentType: typeof fileContent.content,
-        contentLength: fileContent.content?.length || 0,
-        path: fileContent.path || path
-      });
-
-      // Handle both response formats: { content } and { content, path, ... }
-      const content = fileContent.content || (fileContent as any).content || '';
+      const data = await response.json();
+      const content = data.content || '';
       
-      if (!content) {
-        console.warn('[Editor] Warning: File content is empty');
-      }
-      
-      console.log('[Editor] ✅ File loaded successfully:', {
-        path,
-        contentLength: content.length,
-        hasContent: !!content,
-        firstChars: content.substring(0, 50)
-      });
+      console.log('[Editor] ✅ File loaded, length:', content.length);
       
       dispatch({
         type: 'LOAD_FILE_SUCCESS',
         payload: { content, file: path }
       });
     } catch (error) {
-      const isAbortError = error instanceof Error && error.name === 'AbortError';
-      const errorMessage = isAbortError 
-        ? 'Request timed out. The file may be too large or the server is slow to respond.'
-        : (error instanceof Error ? error.message : 'Failed to load file');
-      
-      const errorData = {
-        error: errorMessage,
-        path,
-        connectionId: state.connectionId,
-        isTimeout: isAbortError,
-        stack: error instanceof Error ? error.stack : undefined
-      };
-      
-      console.error('[Editor] ❌ Failed to load file:', errorData);
-      
-      // Send to server log
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          level: 'error',
-          message: 'Failed to load file',
-          data: errorData,
-          context: 'Editor.loadFile'
-        })
-      }).catch(() => {});
-      
+      console.error('[Editor] ❌ Error:', error);
       dispatch({
         type: 'LOAD_FILE_ERROR',
-        payload: errorMessage
+        payload: error instanceof Error ? error.message : 'Failed to load file'
       });
     }
   }, [state.connectionId, apiBase]);
