@@ -48,6 +48,11 @@ export default function FileTreePane() {
       }
     } else {
       console.log('[FileTree] File clicked:', node.path, 'editable:', isEditableFile(node));
+      console.log('[FileTree] Current state before load:', { 
+        currentFile: currentFile, 
+        selectedFile: selectedFile,
+        hasLoadFile: !!loadFile 
+      });
       
       // Select file
       selectFile(node.path);
@@ -62,9 +67,9 @@ export default function FileTreePane() {
         }
 
         try {
-          console.log('[FileTree] Loading file content for:', node.path);
-          await loadFile(node.path);
-          console.log('[FileTree] ✅ File loaded successfully:', node.path);
+          console.log('[FileTree] About to call loadFile for:', node.path);
+          const result = await loadFile(node.path);
+          console.log('[FileTree] ✅ loadFile returned:', result);
         } catch (error) {
           console.error('[FileTree] ❌ Failed to load file:', error);
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

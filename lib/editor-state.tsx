@@ -567,6 +567,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
    * Load file content for editing
    */
   const loadFile = useCallback(async (path: string) => {
+    console.log('[Editor.loadFile] Called with path:', path);
+    console.log('[Editor.loadFile] State:', { 
+      connectionId: state.connectionId,
+      currentFile: state.currentFile,
+      isLoading: state.isLoading 
+    });
+    
     if (!state.connectionId) {
       console.error('[Editor] Cannot load file: No connection ID');
       // Send to server log
@@ -583,7 +590,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    console.log('[Editor] Loading file:', path);
+    console.log('[Editor] Dispatching LOAD_FILE_START for:', path);
     // Send to server log
     fetch('/api/debug/log', {
       method: 'POST',
