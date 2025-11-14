@@ -606,7 +606,17 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'LOAD_FILE_START', payload: path });
 
     try {
-      console.log('[Editor] Making fetch request to:', `${apiBase}/file`);
+      const url = `${apiBase}/file`;
+      const requestBody = {
+        websiteId: state.connectionId,
+        filePath: path
+      };
+      
+      console.log('[Editor] Making fetch request:', {
+        url,
+        method: 'POST',
+        body: requestBody
+      });
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -614,17 +624,14 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         controller.abort();
       }, 30000); // 30 second timeout
 
-      const response = await fetch(`${apiBase}/file`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache'
         },
-        body: JSON.stringify({
-          websiteId: state.connectionId,
-          filePath: path
-        }),
+        body: JSON.stringify(requestBody),
         cache: 'no-store',
         signal: controller.signal
       });
