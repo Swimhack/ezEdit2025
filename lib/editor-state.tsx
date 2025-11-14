@@ -603,25 +603,27 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       })
     }).catch(() => {});
     
-    console.log('[Editor] About to dispatch LOAD_FILE_START');
+    // Prepare fetch BEFORE dispatching to avoid state update interference
+    const url = `${apiBase}/file`;
+    const requestBody = {
+      websiteId: state.connectionId,
+      filePath: path
+    };
+    
+    console.log('[Editor] Starting file load:', {
+      url,
+      requestBody,
+      currentState: {
+        connectionId: state.connectionId,
+        isLoading: state.isLoading,
+        currentFile: state.currentFile
+      }
+    });
+    
     dispatch({ type: 'LOAD_FILE_START', payload: path });
-    console.log('[Editor] Dispatched LOAD_FILE_START, now preparing fetch');
 
     try {
-      const url = `${apiBase}/file`;
-      const requestBody = {
-        websiteId: state.connectionId,
-        filePath: path
-      };
-      
-      console.log('[Editor] Fetch URL and body prepared:', {
-        url,
-        method: 'POST',
-        body: requestBody,
-        apiBase
-      });
-      
-      console.log('[Editor] About to call fetch...');
+      console.log('[Editor] Calling fetch...');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
