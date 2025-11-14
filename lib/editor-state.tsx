@@ -603,7 +603,9 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       })
     }).catch(() => {});
     
+    console.log('[Editor] About to dispatch LOAD_FILE_START');
     dispatch({ type: 'LOAD_FILE_START', payload: path });
+    console.log('[Editor] Dispatched LOAD_FILE_START, now preparing fetch');
 
     try {
       const url = `${apiBase}/file`;
@@ -612,11 +614,14 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         filePath: path
       };
       
-      console.log('[Editor] Making fetch request:', {
+      console.log('[Editor] Fetch URL and body prepared:', {
         url,
         method: 'POST',
-        body: requestBody
+        body: requestBody,
+        apiBase
       });
+      
+      console.log('[Editor] About to call fetch...');
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
