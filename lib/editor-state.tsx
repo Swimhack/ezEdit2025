@@ -636,6 +636,13 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         const errorMsg = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
         console.error('[Editor] API error:', errorMsg, errorData);
+        
+        // If connection lost, reload the page to reconnect
+        if (errorData.reconnect || errorMsg.includes('Connection lost') || errorMsg.includes('Please reload')) {
+          console.log('[Editor] Connection lost, reloading page...');
+          setTimeout(() => window.location.reload(), 2000);
+        }
+        
         throw new Error(errorMsg);
       }
 

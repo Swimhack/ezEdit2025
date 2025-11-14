@@ -135,8 +135,8 @@ export async function POST(request: NextRequest) {
         duration: Date.now() - startTime
       }, 'ftp_editor_connection_not_found')
       return NextResponse.json(
-        { error: `FTP connection not found: ${connectionId}. Please reconnect.` },
-        { status: 404 }
+        { error: `Connection lost. Please reload the page to reconnect.`, reconnect: true },
+        { status: 503 }
       );
     }
 
