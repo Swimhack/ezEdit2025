@@ -209,12 +209,17 @@ export default function EditorPane() {
 
       {/* Monaco Editor */}
       <div className="flex-1 overflow-hidden" data-testid="monaco-container">
+        {console.log('🎨 Rendering Monaco with:', {
+          currentFile,
+          fileContentLength: fileContent?.length || 0,
+          fileContentPreview: fileContent?.substring(0, 50) || 'EMPTY'
+        })}
         <Editor
           key={currentFile} // Force remount when file changes to ensure content loads
           height="100%"
           language={getEditorLanguage()}
           theme="vs-dark"
-          value={fileContent}
+          value={fileContent || ''}
           onChange={handleEditorChange}
           onMount={handleEditorDidMount}
           options={{
