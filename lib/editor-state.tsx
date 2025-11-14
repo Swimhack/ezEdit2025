@@ -606,6 +606,14 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'LOAD_FILE_START', payload: path });
 
     try {
+      console.log('[Editor] Making fetch request to:', `${apiBase}/file`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.error('[Editor] Request timeout after 30 seconds');
+        controller.abort();
+      }, 30000); // 30 second timeout
+
       const response = await fetch(`${apiBase}/file`, {
         method: 'POST',
         headers: { 
@@ -617,9 +625,11 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           websiteId: state.connectionId,
           filePath: path
         }),
-        cache: 'no-store'
+        cache: 'no-store',
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       console.log('[Editor] Response status:', response.status, response.statusText);
 
       if (!response.ok) {
@@ -656,11 +666,16 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         payload: { content, file: path }
       });
     } catch (error) {
+      const isAbortError = error instanceof Error && error.name === 'AbortError';
+      const errorMessage = isAbortError 
+        ? 'Request timed out. The file may be too large or the server is slow to respond.'
+        : (error instanceof Error ? error.message : 'Failed to load file');
+      
       const errorData = {
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         path,
         connectionId: state.connectionId,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        isTimeout: isAbortError,
         stack: error instanceof Error ? error.stack : undefined
       };
       
@@ -680,7 +695,7 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       
       dispatch({
         type: 'LOAD_FILE_ERROR',
-        payload: error instanceof Error ? error.message : 'Failed to load file'
+        payload: errorMessage
       });
     }
   }, [state.connectionId, apiBase]);
