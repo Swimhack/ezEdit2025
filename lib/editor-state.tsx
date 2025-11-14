@@ -567,70 +567,24 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
    * Load file content for editing
    */
   const loadFile = useCallback(async (path: string) => {
-    console.log('[Editor.loadFile] Called with path:', path);
-    console.log('[Editor.loadFile] State:', { 
-      connectionId: state.connectionId,
-      currentFile: state.currentFile,
-      isLoading: state.isLoading 
-    });
-    
     if (!state.connectionId) {
       console.error('[Editor] Cannot load file: No connection ID');
-      // Send to server log
-      fetch('/api/debug/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          level: 'error',
-          message: 'Cannot load file: No connection ID',
-          data: { path },
-          context: 'Editor.loadFile'
-        })
-      }).catch(() => {});
       return;
     }
 
-    console.log('[Editor] Dispatching LOAD_FILE_START for:', path);
-    // Send to server log
-    fetch('/api/debug/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        level: 'info',
-        message: 'Loading file',
-        data: { path, connectionId: state.connectionId },
-        context: 'Editor.loadFile'
-      })
-    }).catch(() => {});
+    console.log('[Editor] 🔥 LOADING FILE:', path, 'connectionId:', state.connectionId);
     
-    // Prepare fetch BEFORE dispatching to avoid state update interference
+    dispatch({ type: 'LOAD_FILE_START', payload: path });
+
     const url = `${apiBase}/file`;
     const requestBody = {
       websiteId: state.connectionId,
       filePath: path
     };
-    
-    console.log('[Editor] Starting file load:', {
-      url,
-      requestBody,
-      currentState: {
-        connectionId: state.connectionId,
-        isLoading: state.isLoading,
-        currentFile: state.currentFile
-      }
-    });
-    
-    dispatch({ type: 'LOAD_FILE_START', payload: path });
 
     try {
-      console.log('[Editor] Calling fetch...');
+      console.log('[Editor] 🚀 FETCHING:', url, requestBody);
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.error('[Editor] Request timeout after 30 seconds');
-        controller.abort();
-      }, 30000); // 30 second timeout
-
       const response = await fetch(url, {
         method: 'POST',
         headers: { 
@@ -639,12 +593,10 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
           'Pragma': 'no-cache'
         },
         body: JSON.stringify(requestBody),
-        cache: 'no-store',
-        signal: controller.signal
+        cache: 'no-store'
       });
 
-      clearTimeout(timeoutId);
-      console.log('[Editor] Response status:', response.status, response.statusText);
+      console.log('[Editor] ✅ GOT RESPONSE:', response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
