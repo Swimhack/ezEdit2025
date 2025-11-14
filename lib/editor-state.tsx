@@ -599,24 +599,23 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
-      // Check content type
-      const contentType = response.headers.get('content-type');
-      console.log('[Editor] Content-Type:', contentType);
-
+      // Always read raw text first (bulletproof approach)
       let data;
+      let text;
+      
+      text = await response.text();
+      console.log('[Editor] Raw text preview:', text.substring(0, 200));
+      
+      // Try JSON parse safely
       try {
-        // Force text decoding for any content type
-        const text = await response.text();
-        console.log('[Editor] Raw response text length:', text.length);
-        console.log('[Editor] Raw response preview:', text.substring(0, 200));
-        
         data = JSON.parse(text);
-      } catch (parseError) {
-        console.error('[Editor] Failed to parse response:', parseError);
-        throw new Error('Invalid response from server');
+        console.log('[Editor] ✅ Parsed JSON successfully');
+      } catch (err) {
+        console.warn('[Editor] ⚠️ Response was not valid JSON — treating as raw file text');
+        data = { content: text };
       }
       
-      const fileContent = data.content || '';
+      const fileContent = data.content ?? '';
       
       if (!fileContent) {
         console.warn('[Editor] Empty content received:', data);
