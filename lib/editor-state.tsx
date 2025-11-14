@@ -617,28 +617,28 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       
       const fileContent = data.content ?? '';
       
+      console.log('[Editor] 🎯 FINAL CHECK:', {
+        hasContent: !!fileContent,
+        contentLength: fileContent.length,
+        contentType: typeof fileContent,
+        firstChars: fileContent.substring(0, 100)
+      });
+      
       if (!fileContent) {
-        console.warn('[Editor] Empty content received:', data);
+        console.error('[Editor] ❌ EMPTY CONTENT! Data:', data);
+        alert(`ERROR: Empty content received for ${path}`);
       }
       
       const filenameFromPath = (p: string) => p.split('/').pop() || p;
       
-      console.log('[Editor] ✅ File loaded:', {
-        path,
-        contentLength: fileContent.length,
-        preview: fileContent.substring(0, 50)
-      });
-      
       const payload = {
-        id: path,
-        name: filenameFromPath(path),
-        path,
-        content: fileContent
+        content: fileContent,
+        file: path
       };
       
-      console.log('[Editor] Dispatching with payload:', {
-        ...payload,
-        content: `${fileContent.length} chars`
+      console.log('[Editor] 🚀 DISPATCHING LOAD_FILE_SUCCESS:', {
+        path,
+        contentLength: fileContent.length
       });
       
       dispatch({
@@ -646,7 +646,15 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
         payload
       });
       
-      console.log('[Editor] ✅ Dispatch complete');
+      console.log('[Editor] ✅ Dispatch complete - checking state...');
+      
+      // Force check state after dispatch
+      setTimeout(() => {
+        console.log('[Editor] State after 100ms:', {
+          currentFile: state.currentFile,
+          fileContentLength: state.fileContent?.length || 0
+        });
+      }, 100);
     } catch (error) {
       console.error('[Editor] ❌ Error:', error);
       dispatch({
