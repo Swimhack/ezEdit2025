@@ -568,35 +568,27 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
    */
   const loadFile = useCallback(async (path: string) => {
     if (!state.connectionId) {
-      console.error('[Editor] Cannot load file: No connection ID');
+      alert('No connection ID!');
       return;
     }
 
-    console.log('[Editor] 🔥 LOADING FILE:', path, 'connectionId:', state.connectionId);
+    alert(`Loading file: ${path}`);
     
     dispatch({ type: 'LOAD_FILE_START', payload: path });
 
-    const url = `${apiBase}/file`;
-    const requestBody = {
-      websiteId: state.connectionId,
-      filePath: path
-    };
-
     try {
-      console.log('[Editor] 🚀 FETCHING:', url, requestBody);
+      alert('About to fetch...');
       
-      const response = await fetch(url, {
+      const response = await fetch(`${apiBase}/file`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        },
-        body: JSON.stringify(requestBody),
-        cache: 'no-store'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          websiteId: state.connectionId,
+          filePath: path
+        })
       });
 
-      console.log('[Editor] ✅ GOT RESPONSE:', response.status, response.statusText);
+      alert(`Response: ${response.status}`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
