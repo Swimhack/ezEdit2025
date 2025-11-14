@@ -97,6 +97,10 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
       };
 
     case 'LOAD_FILE_SUCCESS':
+      console.log('[Reducer] LOAD_FILE_SUCCESS:', {
+        file: action.payload.file,
+        contentLength: action.payload.content?.length || 0
+      });
       return {
         ...state,
         currentFile: action.payload.file,
@@ -596,12 +600,23 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       const content = data.content || '';
       
-      console.log('[Editor] ✅ File loaded, length:', content.length);
+      console.log('[Editor] ✅ File loaded:', {
+        path,
+        contentLength: content.length,
+        contentPreview: content.substring(0, 100)
+      });
+      
+      console.log('[Editor] Dispatching LOAD_FILE_SUCCESS with:', {
+        file: path,
+        contentLength: content.length
+      });
       
       dispatch({
         type: 'LOAD_FILE_SUCCESS',
         payload: { content, file: path }
       });
+      
+      console.log('[Editor] ✅ Dispatch complete');
     } catch (error) {
       console.error('[Editor] ❌ Error:', error);
       dispatch({
