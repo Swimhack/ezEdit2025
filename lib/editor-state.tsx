@@ -98,12 +98,12 @@ function editorReducer(state: EditorState, action: EditorAction): EditorState {
 
     case 'LOAD_FILE_SUCCESS':
       console.log('[Reducer] LOAD_FILE_SUCCESS:', {
-        file: action.payload.file,
+        path: action.payload.path,
         contentLength: action.payload.content?.length || 0
       });
       return {
         ...state,
-        currentFile: action.payload.file,
+        currentFile: action.payload.path,
         fileContent: action.payload.content,
         isLoading: false,
         isDirty: false,
@@ -598,22 +598,23 @@ export function EditorProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json();
-      const content = data.content || '';
+      const fileContent = data.content || '';
+      
+      const filenameFromPath = (p: string) => p.split('/').pop() || p;
       
       console.log('[Editor] ✅ File loaded:', {
         path,
-        contentLength: content.length,
-        contentPreview: content.substring(0, 100)
-      });
-      
-      console.log('[Editor] Dispatching LOAD_FILE_SUCCESS with:', {
-        file: path,
-        contentLength: content.length
+        contentLength: fileContent.length
       });
       
       dispatch({
         type: 'LOAD_FILE_SUCCESS',
-        payload: { content, file: path }
+        payload: {
+          id: path,
+          name: filenameFromPath(path),
+          path,
+          content: fileContent
+        }
       });
       
       console.log('[Editor] ✅ Dispatch complete');
