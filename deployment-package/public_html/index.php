@@ -225,10 +225,6 @@ session_start();
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <div class="logo">
-                        <div class="logo-icon">Ez</div>
-                        <span class="logo-text">EzEdit.co</span>
-                    </div>
                     <p>Edit legacy websites with AI-powered simplicity.</p>
                 </div>
                 <div class="footer-links">
