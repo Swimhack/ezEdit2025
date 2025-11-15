@@ -114,14 +114,14 @@ export default function EditorPane() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentFile, isDirty, saveFile]);
 
-  // Show loading state when file is being loaded
-  if (isLoading) {
+  // Show loading state only when file is being loaded AND we don't have content yet
+  if (isLoading && currentFile && !fileContent) {
     return (
       <div className="h-full flex items-center justify-center bg-[#1e1e1e]" data-testid="editor-loading">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007acc] mx-auto mb-4"></div>
-          <p className="text-[#cccccc]">{currentFile ? 'Loading file...' : 'Loading editor...'}</p>
-          {currentFile && <p className="text-[#858585] text-sm mt-2">{currentFile.split('/').pop()}</p>}
+          <p className="text-[#cccccc]">Loading file...</p>
+          <p className="text-[#858585] text-sm mt-2">{currentFile.split('/').pop()}</p>
         </div>
       </div>
     );
